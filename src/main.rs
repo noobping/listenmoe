@@ -32,8 +32,8 @@ fn build_ui(app: &Application) {
     let meta = Meta::new(tx);
     let win_title = WindowTitle::new("LISTEN.moe", "JPOP/KPOP Radio");
 
-    let play_button = Button::with_label("play");
-    let stop_button = Button::with_label("stop");
+    let play_button = Button::from_icon_name("media-playback-start-symbolic");
+    let stop_button = Button::from_icon_name("media-playback-pause-symbolic");
     stop_button.set_visible(false);
 
     {
