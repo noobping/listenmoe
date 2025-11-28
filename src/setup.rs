@@ -4,8 +4,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::{env, fs};
 
-const APP_ID: &str = "dev.noobping.listenmoe-radio";
-const RESOURCE_ID: &str = "/dev/noobping/listenmoe-radio";
+use crate::config::{APP_ID, RESOURCE_ID};
 
 #[cfg(target_os = "linux")]
 pub fn can_install_locally() -> bool {

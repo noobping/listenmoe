@@ -1,10 +1,12 @@
 #[cfg(feature = "setup")]
 mod setup;
 
+mod config;
 mod listen;
 mod meta;
 mod station;
 
+use crate::config::APP_ID;
 use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::meta::TrackInfo;
@@ -12,21 +14,21 @@ use crate::station::Station;
 
 #[cfg(feature = "setup")]
 use crate::setup::*;
-#[cfg(feature = "setup")]
-use adw::gio::SimpleAction;
 
 use adw::glib;
 use adw::prelude::*;
 use adw::{Application, WindowTitle};
-use gtk::{gdk::Display, gio, ApplicationWindow, Box, Button, HeaderBar, MenuButton, Orientation};
+use gtk::{
+    gdk::Display,
+    gio::{resources_register_include, Menu, SimpleAction},
+    ApplicationWindow, Box, Button, HeaderBar, MenuButton, Orientation,
+};
 use std::sync::mpsc;
 use std::sync::mpsc::TryRecvError;
 use std::time::Duration;
 
-const APP_ID: &str = "dev.noobping.listenmoe-radio";
-
 fn main() {
-    gio::resources_register_include!("compiled.gresource").expect("Failed to register resources");
+    resources_register_include!("compiled.gresource").expect("Failed to register resources");
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_activate(build_ui);
     app.run();
@@ -44,7 +46,7 @@ fn build_ui(app: &Application) {
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
     let stop_button = Button::from_icon_name("media-playback-pause-symbolic");
     stop_button.set_visible(false);
-    let play_action = gio::SimpleAction::new("play", None);
+    let play_action = SimpleAction::new("play", None);
     {
         let radio = radio.clone();
         let data = meta.clone();
@@ -60,7 +62,7 @@ fn build_ui(app: &Application) {
             stop.set_visible(true);
         });
     }
-    let stop_action = gio::SimpleAction::new("stop", None);
+    let stop_action = SimpleAction::new("stop", None);
     {
         let radio = radio.clone();
         let data = meta.clone();
@@ -79,8 +81,21 @@ fn build_ui(app: &Application) {
     play_button.set_action_name(Some("win.play"));
     stop_button.set_action_name(Some("win.stop"));
 
+    // menu
+    let menu = Menu::new();
+    // menu.append(Some("About"), Some("app.about"));
+    menu.append(Some("Copy title & artist"), Some("win.copy"));
+    menu.append(Some("Play J-pop"), Some("win.jpop"));
+    menu.append(Some("Play K-pop"), Some("win.kpop"));
+    let more_button = MenuButton::builder()
+        .icon_name("view-more-symbolic")
+        .tooltip_text("Main Menu")
+        .menu_model(&menu)
+        .build();
+
     // Headerbar with buttons
     let buttons = Box::new(Orientation::Horizontal, 0);
+    buttons.append(&more_button);
     buttons.append(&play_button);
     buttons.append(&stop_button);
 
@@ -127,7 +142,7 @@ fn build_ui(app: &Application) {
         let play = play_button.clone();
         let stop = stop_button.clone();
         let win_clone = window.clone();
-        let action = gio::SimpleAction::new("toggle", None);
+        let action = SimpleAction::new("toggle", None);
         action.connect_activate(move |_, _| {
             if play.is_visible() {
                 let _ = adw::prelude::WidgetExt::activate_action(
@@ -147,30 +162,48 @@ fn build_ui(app: &Application) {
     }
 
     {
+        let play = play_button.clone();
+        let win_clone = window.clone();
         let radio = radio.clone();
         let data = meta.clone();
-        let action = gio::SimpleAction::new("jpop", None);
+        let action = SimpleAction::new("jpop", None);
         action.connect_activate(move |_, _| {
             radio.set_station(Station::Jpop);
             data.set_station(Station::Jpop);
+            if play.is_visible() {
+                let _ = adw::prelude::WidgetExt::activate_action(
+                    &win_clone,
+                    "win.play",
+                    None::<&glib::Variant>,
+                );
+            }
         });
         window.add_action(&action);
     }
 
     {
+        let play = play_button.clone();
+        let win_clone = window.clone();
         let radio = radio.clone();
         let data = meta.clone();
-        let action = gio::SimpleAction::new("kpop", None);
+        let action = SimpleAction::new("kpop", None);
         action.connect_activate(move |_, _| {
             radio.set_station(Station::Kpop);
             data.set_station(Station::Kpop);
+            if play.is_visible() {
+                let _ = adw::prelude::WidgetExt::activate_action(
+                    &win_clone,
+                    "win.play",
+                    None::<&glib::Variant>,
+                );
+            }
         });
         window.add_action(&action);
     }
 
     {
         let win = win_title.clone();
-        let action = gio::SimpleAction::new("copy", None);
+        let action = SimpleAction::new("copy", None);
         action.connect_activate(move |_, _| {
             // Get artist and title from the WindowTitle
             let artist = win.title(); // artist

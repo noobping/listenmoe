@@ -3,6 +3,6 @@
 
 Anime/Japanese Radio powered by LISTEN.moe!
 
-![screenshot](https://github.com/noobping/listenmoe-gnome-app/blob/d68db986e1cc5606269c4212be45072dc0771ef4/screenshot.png)
+![screenshot](screenshot.png)
 
 To install or uninstall this application locally, press `F1`. It will (un)install itself in the user directory (`%AppData%` or `~/.local`).
