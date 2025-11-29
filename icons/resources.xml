@@ -3,6 +3,7 @@
 		<file>media-playback-pause-symbolic.svg</file>
 		<file>media-playback-start-symbolic.svg</file>
 		<file>view-more-symbolic.svg</file>
+		<file>window-close-symbolic.svg</file>
 		<file>listenmoe.png</file>
 	</gresource>
 </gresources>

@@ -87,6 +87,7 @@ fn build_ui(app: &Application) {
     menu.append(Some("Copy title & artist"), Some("win.copy"));
     menu.append(Some("Play J-pop"), Some("win.jpop"));
     menu.append(Some("Play K-pop"), Some("win.kpop"));
+    menu.append(Some("Quite"), Some("win.quite"));
     let more_button = MenuButton::builder()
         .icon_name("view-more-symbolic")
         .tooltip_text("Main Menu")
@@ -102,6 +103,7 @@ fn build_ui(app: &Application) {
     let header = HeaderBar::new();
     header.pack_start(&buttons);
     header.set_title_widget(Some(&win_title));
+    header.set_show_title_buttons(false);
 
     // Tiny dummy content so GTK can shrink the window
     let dummy = Box::new(Orientation::Vertical, 0);
@@ -116,6 +118,17 @@ fn build_ui(app: &Application) {
         .default_height(40)
         .resizable(false)
         .build();
+
+    let close_btn = Button::from_icon_name("window-close-symbolic");
+    close_btn.set_action_name(Some("win.quite"));
+    header.pack_end(&close_btn);
+    let close_action = SimpleAction::new("quite", None);
+    {
+        let win = window.clone();
+        close_action.connect_activate(move |_, _| {
+            win.close();
+        });
+    }
 
     window.set_titlebar(Some(&header));
     window.set_child(Some(&dummy));
@@ -137,6 +150,7 @@ fn build_ui(app: &Application) {
     window.add_action(&action);
     window.add_action(&play_action);
     window.add_action(&stop_action);
+    window.add_action(&close_action);
 
     {
         let play = play_button.clone();
@@ -233,6 +247,7 @@ fn build_ui(app: &Application) {
     #[cfg(feature = "setup")]
     app.set_accels_for_action("win.setup", &["F1"]);
     app.set_accels_for_action("win.copy", &["<primary>c"]);
+    app.set_accels_for_action("win.quite", &["<primary>q", "Escape"]);
     app.set_accels_for_action("win.play", &["XF86AudioPlay"]);
     app.set_accels_for_action("win.stop", &["XF86AudioStop", "XF86AudioPause"]);
     app.set_accels_for_action("win.jpop", &["<primary>j", "XF86AudioPrev", "<primary>z"]);
