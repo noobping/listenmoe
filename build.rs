@@ -70,7 +70,7 @@ fn desktop_file() {
     let contents = format!(
         "[Desktop Entry]
 Type=Application
-Version=\"{version}\"
+Version={version}
 Name={project}
 Comment={comment}
 Exec={project} %u

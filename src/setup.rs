@@ -126,7 +126,7 @@ fn write_desktop_file(apps_path: &Path, bin_path: &Path) -> std::io::Result<()> 
     let contents = format!(
         "[Desktop Entry]
 Type=Application
-Version=\"{version}\"
+Version={version}
 Name={project}
 Comment={comment}
 Exec={exec} %u
