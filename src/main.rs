@@ -20,8 +20,8 @@ use adw::glib;
 use adw::prelude::*;
 use adw::{Application, WindowTitle};
 use gtk::{
-    gdk::Display,
-    gio::{resources_register_include, File, Menu, SimpleAction},
+    gdk::{gdk_pixbuf, Display, Texture},
+    gio::{resources_register_include, Cancellable, File, Menu, SimpleAction},
     ApplicationWindow, Box, Button, HeaderBar, MenuButton, Orientation, Picture, Popover,
 };
 use std::sync::mpsc;
@@ -279,10 +279,26 @@ fn build_ui(app: &Application) {
                         let image_url = info.album_cover.clone().or(info.artist_image.clone());
                         if let Some(url) = image_url {
                             let file = File::for_uri(&url);
-                            art_picture.set_file(Some(&file));
-                            art_popover.popup();
+                            if let Ok(stream) = file.read(None::<&Cancellable>) {
+                                // Scale down while decoding
+                                if let Ok(pixbuf) = gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                                    &stream,
+                                    250,  // max width
+                                    250,  // max height
+                                    true, // preserve aspect ratio
+                                    None::<&Cancellable>,
+                                ) {
+                                    let texture = Texture::for_pixbuf(&pixbuf);
+                                    art_picture.set_paintable(Some(&texture));
+                                    art_popover.popup();
+                                } else {
+                                    art_popover.popdown(); // Failed to decode
+                                }
+                            } else {
+                                art_popover.popdown(); // Failed to open remote file
+                            }
                         } else {
-                            art_popover.popdown();
+                            art_popover.popdown(); // No image at all
                         }
                     }
                     Err(TryRecvError::Empty) => {
