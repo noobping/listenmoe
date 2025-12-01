@@ -1,11 +1,16 @@
 use std::{env, fs, path::Path};
 
 fn main() {
-    let project = env::var("CARGO_PKG_NAME").expect("CARGO_PKG_NAME not set");
+    let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
+    let repository = env!("CARGO_PKG_REPOSITORY");
+    let project = env!("CARGO_PKG_NAME");
     #[cfg(not(feature = "setup"))]
-    let version = env::var("CARGO_PKG_VERSION").expect("CARGO_PKG_VERSION not set");
+    let version = env!("CARGO_PKG_VERSION");
     #[cfg(not(feature = "setup"))]
-    let comment = env::var("CARGO_PKG_DESCRIPTION").unwrap_or_else(|_| "Anime/Japanese Radio".to_string());
+    let summary = env::var("CARGO_PKG_DESCRIPTION").unwrap_or_else(|_| "Anime/Japanese Radio".to_string());
+    let homepage = env::var("CARGO_PKG_HOMEPAGE").unwrap_or_else(|_| "https://listen.moe/".to_string());
+    let license = env::var("CARGO_PKG_LICENSE").unwrap_or_else(|_| "MIT".to_string());
+
     let app_id = if cfg!(debug_assertions) {
         format!("dev.noobping.{project}.develop")
     } else {
@@ -44,7 +49,10 @@ fn main() {
 
     // Generate .desktop file for non-setup builds
     #[cfg(not(feature = "setup"))]
-    desktop_file(&project, &version, &comment, &app_id);
+    {
+        desktop_file(&project, &version, &summary, &app_id);
+        metainfo_file(&data_dir, &app_id, &authors.first().expect("unknown author"), &repository, &project, &summary, &homepage, &license, &version);
+    }
 }
 
 /// Recursively collect all `.svg` files under `dir`,
@@ -80,4 +88,68 @@ Categories=AudioVideo;Player;
     );
     fs::write(dir.join(format!("{project}.desktop")), contents)
         .expect("Can not build desktop file");
+}
+
+#[cfg(not(feature = "setup"))]
+fn metainfo_file(
+    data_dir: &Path,
+    app_id: &str,
+    developer: &str,
+    repository: &str,
+    project: &str,
+    summary: &str,
+    homepage: &str,
+    license: &str,
+    version: &str,
+) {
+    let issue_tracker = read_issue_tracker();
+    let contents = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>{app_id}</id>
+  <name>LISTEN.moe</name>
+  <summary>{summary}</summary>
+
+  <developer_name>{developer}</developer_name>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>{license}</project_license>
+
+  <url type="homepage">{homepage}</url>
+  <url type="bugtracker">{issue_tracker}</url>
+  <url type="vcs-browser">{repository}</url>
+
+  <launchable type="desktop-id">{app_id}.desktop</launchable>
+
+  <description>
+    <p>{summary}</p>
+  </description>
+
+  <provides>
+    <binary>{project}</binary>
+  </provides>
+
+  <releases>
+    <release version="{version}" />
+  </releases>
+</component>
+"#
+    );
+
+    fs::write(data_dir.join(format!("{app_id}.metainfo.xml")), contents)
+        .expect("Can not write metainfo file");
+}
+
+#[cfg(not(feature = "setup"))]
+fn read_issue_tracker() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").expect("Cargo.toml missing");
+    let value: toml::Value = toml::from_str(&cargo_toml).expect("invalid Cargo.toml");
+
+    value
+        .get("package")
+        .and_then(|p| p.get("metadata"))
+        .and_then(|m| m.get("issue-tracker"))
+        .and_then(|s| s.as_str())
+        .unwrap_or("")
+        .to_string()
 }
