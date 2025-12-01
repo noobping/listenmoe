@@ -1,16 +1,20 @@
 use std::{env, fs, path::Path};
 
 fn main() {
-    let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
-    let repository = env!("CARGO_PKG_REPOSITORY");
     let project = env!("CARGO_PKG_NAME");
+    let issue_tracker = read_issue_tracker();
+    #[cfg(not(feature = "setup"))]
+    let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
+    #[cfg(not(feature = "setup"))]
+    let repository = env!("CARGO_PKG_REPOSITORY");
     #[cfg(not(feature = "setup"))]
     let version = env!("CARGO_PKG_VERSION");
     #[cfg(not(feature = "setup"))]
     let summary = env::var("CARGO_PKG_DESCRIPTION").unwrap_or_else(|_| "Anime/Japanese Radio".to_string());
+    #[cfg(not(feature = "setup"))]
     let homepage = env::var("CARGO_PKG_HOMEPAGE").unwrap_or_else(|_| "https://listen.moe/".to_string());
+    #[cfg(not(feature = "setup"))]
     let license = env::var("CARGO_PKG_LICENSE").unwrap_or_else(|_| "MIT".to_string());
-    let issue_tracker = read_issue_tracker();
 
     let app_id = if cfg!(debug_assertions) {
         format!("dev.noobping.{project}.develop")
@@ -142,7 +146,6 @@ fn metainfo_file(
         .expect("Can not write metainfo file");
 }
 
-#[cfg(not(feature = "setup"))]
 fn read_issue_tracker() -> String {
     let cargo_toml = fs::read_to_string("Cargo.toml").expect("Cargo.toml missing");
     let value: toml::Value = toml::from_str(&cargo_toml).expect("invalid Cargo.toml");
