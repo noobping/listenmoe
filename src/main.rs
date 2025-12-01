@@ -2,19 +2,22 @@
 #[cfg(feature = "setup")]
 mod setup;
 
+mod http_source;
 mod listen;
+mod locale;
 mod meta;
 mod station;
 mod ui;
-mod http_source;
 
 const APP_ID: &str = env!("APP_ID");
 const RESOURCE_ID: &str = env!("RESOURCE_ID");
+use adw::gtk::{gdk::Display, IconTheme};
 use adw::prelude::*;
 use adw::Application;
-use adw::gtk::{gdk::Display, IconTheme};
 
 fn main() {
+    locale::init_i18n();
+
     // Register resources compiled into the binary. If this fails, the app cannot find its assets.
     adw::gtk::gio::resources_register_include!("compiled.gresource")
         .expect("Failed to register resources");

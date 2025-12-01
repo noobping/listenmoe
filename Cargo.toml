@@ -24,6 +24,8 @@ serde_json = "^1.0.145"
 dirs = { version = "^6.0.0", optional = true}
 serde = "^1.0.228"
 tungstenite = { version = "^0.28.0", default-features = false, features = ["handshake", "rustls-tls-webpki-roots"] }
+gettext-rs = "0.7.7"
+locale_config = "0.3.0"
 
 [build-dependencies]
 glib-build-tools = "^0.21.0"
