@@ -54,6 +54,14 @@ jobs:
           echo "--- describe ---"
           git describe --tags --abbrev=0 || echo "git describe failed"
 
+      - name: Resolve tag to use
+        id: get_tag
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          TAG=$(git describe --tags --abbrev=0)
+          echo "Using tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - name: Build (release)
         run: cargo build --release --target ${{ matrix.target }} --features setup
 
@@ -66,19 +74,9 @@ jobs:
           name: ${{ env.BIN_NAME }}-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
 
-      - name: Mark workspace as safe for git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Set latest tag
-        run: |
-          set +e
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-          set -e
-          echo "LATEST_TAG=${TAG}" >> $GITHUB_ENV
-
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.LATEST_TAG }}
+          tag_name: ${{ steps.get_tag.outputs.tag }}
           files: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
           overwrite_files: true
