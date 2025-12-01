@@ -29,8 +29,7 @@ jobs:
           dnf -y update
           dnf -y install mold alsa-lib-devel libgpg-error-devel clang pkg-config nettle-devel \
             cairo-devel gcc git glib2-devel gtk4-devel libadwaita-devel make nettle-devel \
-            openssl-devel pango-devel pkg-config pkgconf-pkg-config
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            openssl-devel pango-devel pkg-config pkgconf-pkg-config rust cargo
 
       - name: Checkout
         uses: actions/checkout@v4
