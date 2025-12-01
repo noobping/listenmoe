@@ -74,6 +74,7 @@ jobs:
           path: listenmoe-windows.zip
 
       - run: echo "GIT_TAG=`echo $(git describe --tags --abbrev=0)`" >> $GITHUB_ENV
+        shell: bash
 
       - name: Release
         uses: softprops/action-gh-release@v2
