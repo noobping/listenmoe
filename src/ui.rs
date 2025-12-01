@@ -20,7 +20,15 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-/// Helper to create a station action that switches to the given station and starts playback if needed.
+fn make_action<F>(name: &str, f: F) -> SimpleAction
+where
+    F: Fn() + 'static,
+{
+    let action = SimpleAction::new(name, None);
+    action.connect_activate(move |_, _| f());
+    action
+}
+
 fn create_station_action(
     station: Station,
     play_button: &Button,
@@ -28,12 +36,12 @@ fn create_station_action(
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
 ) -> SimpleAction {
-    let action = SimpleAction::new(station.name(), None);
     let radio = radio.clone();
     let meta = meta.clone();
     let win_clone = window.clone();
     let play = play_button.clone();
-    action.connect_activate(move |_, _| {
+
+    make_action(station.name(), move || {
         radio.set_station(station);
         meta.set_station(station);
         if play.is_visible() {
@@ -43,8 +51,7 @@ fn create_station_action(
                 None::<&glib::Variant>,
             );
         }
-    });
-    action
+    })
 }
 
 /// Build the user interface.  This function is called once when the application
@@ -53,52 +60,128 @@ fn create_station_action(
 pub fn build_ui(app: &Application) {
     let station = Station::Jpop;
     let radio = Listen::new(station);
-    // Channel from Meta worker to main thread
     let (tx, rx) = mpsc::channel::<TrackInfo>();
     let meta = Meta::new(station, tx);
-
     let (cover_tx, cover_rx) = mpsc::channel::<Result<Vec<u8>, String>>();
     let win_title = WindowTitle::new("LISTEN.moe", "JPOP/KPOP Radio");
 
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
+    play_button.set_action_name(Some("win.play"));
     let stop_button = Button::from_icon_name("media-playback-pause-symbolic");
+    stop_button.set_action_name(Some("win.stop"));
     stop_button.set_visible(false);
-    let play_action = SimpleAction::new("play", None);
-    {
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .title("Listen.moe Radio")
+        .icon_name("listenmoe")
+        .default_width(300)
+        .default_height(40)
+        .resizable(false)
+        .build();
+
+    window.add_action(&{
         let radio = radio.clone();
         let meta = meta.clone();
         let win = win_title.clone();
         let play = play_button.clone();
         let stop = stop_button.clone();
-        play_action.connect_activate(move |_, _| {
+        make_action("play", move || {
             win.set_title("LISTEN.moe");
             win.set_subtitle("Connecting...");
             meta.start();
             radio.start();
             play.set_visible(false);
             stop.set_visible(true);
-        });
-    }
-    let stop_action = SimpleAction::new("stop", None);
-    {
+        })
+    });
+    window.add_action(&{
         let radio = radio.clone();
         let meta = meta.clone();
         let win = win_title.clone();
         let play = play_button.clone();
         let stop = stop_button.clone();
-        stop_action.connect_activate(move |_, _| {
+        make_action("stop", move || {
             meta.stop();
             radio.stop();
             stop.set_visible(false);
             play.set_visible(true);
             win.set_title("LISTEN.moe");
             win.set_subtitle("JPOP/KPOP Radio");
-        });
-    }
-    play_button.set_action_name(Some("win.play"));
-    stop_button.set_action_name(Some("win.stop"));
+        })
+    });
+    window.add_action(&{
+        let win = window.clone();
+        make_action("quite", move || win.close())
+    });
+    window.add_action(&{
+        let win_clone = window.clone();
+        make_action("about", move || {
+            let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
+            let about = adw::AboutDialog::builder()
+                .application_name(env!("CARGO_PKG_NAME"))
+                .application_icon(APP_ID)
+                .version(env!("CARGO_PKG_VERSION"))
+                .developers(&authors[..])
+                .comments(option_env!("CARGO_PKG_DESCRIPTION").unwrap_or(""))
+                .build();
+            about.present(Some(&win_clone));
+        })
+    });
+    window.add_action(&{
+        let play = play_button.clone();
+        let stop = stop_button.clone();
+        let win_clone = window.clone();
+        make_action("toggle", move || {
+            if play.is_visible() {
+                let _ = adw::prelude::WidgetExt::activate_action(
+                    &win_clone,
+                    "win.play",
+                    None::<&glib::Variant>,
+                );
+            } else if stop.is_visible() {
+                let _ = adw::prelude::WidgetExt::activate_action(
+                    &win_clone,
+                    "win.stop",
+                    None::<&glib::Variant>,
+                );
+            }
+        })
+    });
+    window.add_action(&{
+        let win = win_title.clone();
+        make_action("copy", move || {
+            let artist = win.title();
+            let title = win.subtitle();
+            if artist.is_empty() && title.is_empty() {
+                return;
+            }
+            let text = if artist.is_empty() {
+                title.to_string()
+            } else if title.is_empty() {
+                artist.to_string()
+            } else {
+                format!("{artist}, {title}")
+            };
+            if let Some(display) = Display::default() {
+                let clipboard = display.clipboard();
+                clipboard.set_text(&text);
+            }
+        })
+    });
 
-    // menu
+    #[cfg(feature = "setup")]
+    window.add_action(&make_action("copy", move || {
+        if !can_install_locally() {
+            return;
+        }
+        let _ = match is_installed_locally() {
+            true => uninstall_locally(),
+            false => install_locally(),
+        };
+    }));
+
+    // Build UI
     let menu = Menu::new();
     menu.append(Some("Copy title & artist"), Some("win.copy"));
     let more_button = MenuButton::builder()
@@ -106,13 +189,10 @@ pub fn build_ui(app: &Application) {
         .tooltip_text("Main Menu")
         .menu_model(&menu)
         .build();
-
-    // Headerbar with buttons
     let buttons = gtk::Box::new(Orientation::Horizontal, 0);
     buttons.append(&more_button);
     buttons.append(&play_button);
     buttons.append(&stop_button);
-
     let header = HeaderBar::new();
     header.pack_start(&buttons);
     header.set_title_widget(Some(&win_title));
@@ -157,87 +237,14 @@ pub fn build_ui(app: &Application) {
     dummy.set_height_request(0);
     dummy.set_vexpand(false);
 
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title("Listen.moe Radio")
-        .icon_name("listenmoe")
-        .default_width(300)
-        .default_height(40)
-        .resizable(false)
-        .build();
-
     let close_btn = Button::from_icon_name("window-close-symbolic");
     close_btn.set_action_name(Some("win.quite"));
     header.pack_end(&close_btn);
-    let close_action = SimpleAction::new("quite", None);
-    {
-        let win = window.clone();
-        close_action.connect_activate(move |_, _| {
-            win.close();
-        });
-    }
 
     window.set_titlebar(Some(&header));
     window.set_child(Some(&dummy));
 
-    let about_action = SimpleAction::new("about", None);
-    {
-        let win_clone = window.clone();
-        about_action.connect_activate(move |_, _| {
-            let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
-            let about = adw::AboutDialog::builder()
-                .application_name(env!("CARGO_PKG_NAME"))
-                .application_icon(APP_ID)
-                .version(env!("CARGO_PKG_VERSION"))
-                .developers(&authors[..])
-                .comments(option_env!("CARGO_PKG_DESCRIPTION").unwrap_or(""))
-                .build();
-            about.present(Some(&win_clone));
-        });
-    }
-    window.add_action(&about_action);
-
-    #[cfg(feature = "setup")]
-    {
-        let action = SimpleAction::new("setup", None);
-        action.connect_activate(move |_, _| {
-            if !can_install_locally() {
-                return;
-            }
-            let _ = match is_installed_locally() {
-                true => uninstall_locally(),
-                false => install_locally(),
-            };
-        });
-        window.add_action(&action);
-    }
-    window.add_action(&play_action);
-    window.add_action(&stop_action);
-    window.add_action(&close_action);
-
-    {
-        let play = play_button.clone();
-        let stop = stop_button.clone();
-        let win_clone = window.clone();
-        let action = SimpleAction::new("toggle", None);
-        action.connect_activate(move |_, _| {
-            if play.is_visible() {
-                let _ = adw::prelude::WidgetExt::activate_action(
-                    &win_clone,
-                    "win.play",
-                    None::<&glib::Variant>,
-                );
-            } else if stop.is_visible() {
-                let _ = adw::prelude::WidgetExt::activate_action(
-                    &win_clone,
-                    "win.stop",
-                    None::<&glib::Variant>,
-                );
-            }
-        });
-        window.add_action(&action);
-    }
-
+    // Stations
     for station in vec![Station::Jpop, Station::Kpop] {
         let action = create_station_action(station, &play_button, &window, &radio, &meta);
         window.add_action(&action);
@@ -249,35 +256,7 @@ pub fn build_ui(app: &Application) {
     menu.append(Some("About"), Some("win.about"));
     menu.append(Some("Quite"), Some("win.quite"));
 
-    {
-        let win = win_title.clone();
-        let action = SimpleAction::new("copy", None);
-        action.connect_activate(move |_, _| {
-            // Get artist and title from the WindowTitle
-            let artist = win.title(); // artist
-            let title = win.subtitle(); // song title
-
-            // If nothing is playing yet, do nothing
-            if artist.is_empty() && title.is_empty() {
-                return;
-            }
-
-            let text = if artist.is_empty() {
-                title.to_string()
-            } else if title.is_empty() {
-                artist.to_string()
-            } else {
-                format!("{artist}, {title}")
-            };
-
-            if let Some(display) = Display::default() {
-                let clipboard = display.clipboard();
-                clipboard.set_text(&text);
-            }
-        });
-        window.add_action(&action);
-    }
-
+    // shortcuts
     #[cfg(feature = "setup")]
     app.set_accels_for_action("win.setup", &["F2"]);
     app.set_accels_for_action("win.about", &["F1"]);
