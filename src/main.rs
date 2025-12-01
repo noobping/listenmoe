@@ -12,11 +12,11 @@ const APP_ID: &str = env!("APP_ID");
 const RESOURCE_ID: &str = env!("RESOURCE_ID");
 use adw::prelude::*;
 use adw::Application;
-use gtk::{gdk::Display, IconTheme};
+use adw::gtk::{gdk::Display, IconTheme};
 
 fn main() {
     // Register resources compiled into the binary. If this fails, the app cannot find its assets.
-    gtk::gio::resources_register_include!("compiled.gresource")
+    adw::gtk::gio::resources_register_include!("compiled.gresource")
         .expect("Failed to register resources");
 
     // Initialize libadwaita/GTK. This must be called before any UI code.

@@ -6,13 +6,14 @@ use crate::station::Station;
 use crate::setup::{can_install_locally, install_locally, is_installed_locally, uninstall_locally};
 
 use adw::glib;
-use adw::prelude::*;
-use adw::{Application, WindowTitle};
-use gtk::{
+use adw::gtk::{
+    self,
     gdk::{gdk_pixbuf::Pixbuf, Display, Texture},
     gio::{Cancellable, MemoryInputStream, Menu, SimpleAction},
     ApplicationWindow, Button, GestureClick, HeaderBar, MenuButton, Orientation, Picture, Popover,
 };
+use adw::prelude::*;
+use adw::{Application, WindowTitle};
 use std::error::Error;
 use std::rc::Rc;
 use std::sync::mpsc;
