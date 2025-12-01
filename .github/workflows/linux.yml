@@ -1,74 +1,50 @@
-name: Linux Build
+name: Build Linux
 
 on:
-  workflow_dispatch:
   push:
-    tags:
-      - "v*"
+    branches: [ main, master ]
+    tags: [ "v*" ]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    # Use Fedora container with newer GNOME/libadwaita
+    container:
+      image: fedora:41
 
     strategy:
       fail-fast: false
       matrix:
         target:
           - x86_64-unknown-linux-gnu
-          - aarch64-unknown-linux-gnu
+          # you can add aarch64 later
 
     env:
       CARGO_TERM_COLOR: always
       BIN_NAME: listenmoe
 
     steps:
+      - name: Install build deps
+        run: |
+          dnf -y update
+          dnf -y install \
+            git \
+            gcc \
+            clang \
+            pkg-config \
+            make \
+            rust cargo \
+            gtk4-devel \
+            libadwaita-devel \
+            alsa-lib-devel \
+            glib2-devel
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: |
-            x86_64-unknown-linux-gnu
-            aarch64-unknown-linux-gnu
-
-      - name: Install system dependencies (GTK4 + libadwaita + ALSA)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libasound2-dev \
-            libgtk-4-dev \
-            libadwaita-1-dev \
-            libglib2.0-dev-bin
-
-      - name: Extra deps for aarch64 cross-compilation
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          # Enable arm64 architecture
-          sudo dpkg --add-architecture arm64
-          sudo apt-get update
-
-          # Cross toolchain + arm64 dev packages
-          sudo apt-get install -y \
-            crossbuild-essential-arm64 \
-            libasound2-dev:arm64 \
-            libgtk-4-dev:arm64 \
-            libadwaita-1-dev:arm64 \
-            libglib2.0-dev:arm64 \
-            pkg-config-aarch64-linux-gnu
-
-          # Use the arm64 pkg-config when building for aarch64
-          echo "PKG_CONFIG=aarch64-linux-gnu-pkg-config" >> $GITHUB_ENV
-          echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
-
       - name: Build (release)
-        run: |
-          cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: List produced binary
         run: ls -R target/${{ matrix.target }}/release
@@ -78,9 +54,3 @@ jobs:
         with:
           name: ${{ env.BIN_NAME }}-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
-          overwrite_files: true
