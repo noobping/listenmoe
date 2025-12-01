@@ -1,10 +1,10 @@
-name: Build Linux
+name: Linux
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main, master]
-    tags: ["v*"]
-  pull_request:
+    tags:
+      - "v*"
 
 jobs:
   build:
