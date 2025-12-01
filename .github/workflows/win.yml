@@ -13,7 +13,7 @@ jobs:
     env:
       MSYS2_PATH: C:\tools\msys64
       PKG_CONFIG_PATH: C:\tools\msys64\mingw64\lib\pkgconfig
-      PATH: C:\tools\msys64\mingw64\bin;C:\tools\msys64\usr\bin;${{ env.PATH }}
+      PATH: C:\tools\msys64\mingw64\bin;C:\tools\msys64\usr\bin
 
     steps:
       - uses: actions/checkout@v4
