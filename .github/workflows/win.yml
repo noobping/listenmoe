@@ -52,35 +52,39 @@ jobs:
       - name: Build
         run: cargo build --release --target x86_64-pc-windows-gnu
 
-      - name: Bundle executable and all DLL dependencies
+      - name: Bundle exe + DLLs
         run: |
           C:\tools\msys64\usr\bin\bash -lc "
-            set -e
+          set -euo pipefail
 
-            WIN_DIST=\"$GITHUB_WORKSPACE/dist\"
-            mkdir -p \"$WIN_DIST\"
+          EXE=\"$GITHUB_WORKSPACE/target/x86_64-pc-windows-gnu/release/listenmoe.exe\"
+          OUT=\"$RUNNER_TEMP/bundle\"
+          mkdir -p \"$OUT\"
 
-            EXE=\"$GITHUB_WORKSPACE/target/x86_64-pc-windows-gnu/release/listenmoe.exe\"
+          # copy the exe
+          cp \"$EXE\" \"$OUT/\"
 
-            cp \"$EXE\" \"$WIN_DIST/\"
-
-            echo 'Collecting DLL dependencies with ntldd...'
-            ntldd -R \"$EXE\" \
-              | awk '/=>/ { print \$3 }' \
-              | sort -u \
-              | while read -r dll; do
-                  case \"\$dll\" in
-                    *mingw64/bin/*)
-                      echo \"Copying \$dll\"
-                      cp -u \"\$dll\" \"$WIN_DIST/\"
-                      ;;
-                  esac
-                done
+          echo 'Collecting DLL dependencies with ntldd...'
+          ntldd -R \"$EXE\" \
+          | awk '/=>/ { print \$3 }' \
+          | tr -d '\r' \
+          | sort -u \
+          | while read -r dll; do
+            # only copy real files and only from mingw64 (skip system DLLs)
+            if [ -n \"\$dll\" ] && [ -f \"\$dll\" ] && echo \"\$dll\" | grep -q 'mingw64/bin'; then
+              echo \"Copying \$dll\"
+              cp -u \"\$dll\" \"$OUT/\"
+            fi
+          done
           "
 
-      - name: Zip dist
+      - name: Create release zip
+        shell: pwsh
         run: |
-          powershell -Command "Compress-Archive -Force -Path \"$env:GITHUB_WORKSPACE/dist/*\" -DestinationPath \"$env:GITHUB_WORKSPACE/listenmoe-windows.zip\""
+          $zip = Join-Path $env:GITHUB_WORKSPACE 'listenmoe-windows.zip'
+          $src = Join-Path $env:RUNNER_TEMP 'bundle\*'
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path $src -DestinationPath $zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
