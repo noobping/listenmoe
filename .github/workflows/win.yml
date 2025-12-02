@@ -79,7 +79,8 @@ jobs:
           "
 
       - name: Zip dist
-        run: powershell Compress-Archive "$GITHUB_WORKSPACE/dist" listenmoe-windows.zip
+        run: |
+          powershell -Command "Compress-Archive -Force -Path \"$env:GITHUB_WORKSPACE/dist/*\" -DestinationPath \"$env:GITHUB_WORKSPACE/listenmoe-windows.zip\""
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -97,5 +98,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.LATEST_TAG }}
-          files: "listenmoe-windows.zip"
+          files: listenmoe-windows.zip
           overwrite_files: true
