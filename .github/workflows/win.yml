@@ -36,6 +36,7 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-libadwaita"
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-pkgconf"
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-make"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-ntldd"
 
       - name: Add MSYS2 paths
         run: |
@@ -51,21 +52,30 @@ jobs:
       - name: Build
         run: cargo build --release --target x86_64-pc-windows-gnu
 
-      - name: Create dist folder
+      - name: Bundle executable and all DLL dependencies
         run: |
-          mkdir dist
-          copy target\x86_64-pc-windows-gnu\release\listenmoe.exe dist\
+          C:\tools\msys64\usr\bin\bash -lc "
+            set -e
+            cd \"$GITHUB_WORKSPACE\"
 
-      - name: Copy GTK/libadwaita runtime DLLs
-        run: |
-          copy C:\tools\msys64\mingw64\bin\libadwaita-1-0.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libgtk-4-1.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libgdk_pixbuf-2.0-0.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libpango-1.0-0.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libcairo-2.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libgio-2.0-0.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libglib-2.0-0.dll dist\
-          copy C:\tools\msys64\mingw64\bin\libgobject-2.0-0.dll dist\
+            EXE=target/x86_64-pc-windows-gnu/release/listenmoe.exe
+            mkdir -p dist
+            cp \"$EXE\" dist/
+
+            echo 'Collecting DLL dependencies with ntldd...'
+            ntldd -R \"$EXE\" \
+              | awk '/=>/ { print \$3 }' \
+              | sort -u \
+              | while read -r dll; do
+                  # Only bundle MinGW runtime/libs, skip system DLLs
+                  case \"\$dll\" in
+                    *mingw64/bin/*)
+                      echo \"Copying \$dll\"
+                      cp -u \"\$dll\" dist/
+                      ;;
+                  esac
+                done
+          "
 
       - name: Zip dist
         run: powershell Compress-Archive dist listenmoe-windows.zip
