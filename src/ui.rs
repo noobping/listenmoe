@@ -5,6 +5,8 @@ use crate::station::Station;
 #[cfg(all(target_os = "linux", feature = "setup"))]
 use crate::setup::{can_install_locally, install_locally, is_installed_locally, uninstall_locally};
 
+#[cfg(target_os = "windows")]
+use adw::gtk::gdk::SurfaceExtWindows;
 use adw::glib;
 use adw::gtk::{
     self,
@@ -86,11 +88,14 @@ pub fn build_ui(app: &Application) {
         .build();
 
     let platform_config = PlatformConfig {
-        dbus_name: APP_ID,
         display_name: "LISTEN.moe",
+        dbus_name: APP_ID,
+        #[cfg(target_os = "windows")]
+        hwnd: window.surface().and_then(|s| s.downcast::<gdk4_win32::Win32Surface>().ok()).map(|s| s.handle()),
+        #[cfg(not(target_os = "windows"))]
         hwnd: None,
     };
-    let mut controls = MediaControls::new(platform_config).expect("Failed to init media controls");
+    let controls = MediaControls::new(platform_config).expect("Failed to init media controls");
     let controls = Rc::new(RefCell::new(controls));
     let (ctrl_tx, ctrl_rx) = mpsc::channel::<MediaControlEvent>();
     {
