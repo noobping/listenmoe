@@ -319,6 +319,7 @@ pub fn build_ui(app: &Application) {
         let cover_rx = cover_rx;
         let cover_tx = cover_tx.clone();
         let window = window.clone();
+        let media_controls = controls.clone();
         let ctrl_rx = ctrl_rx;
         glib::timeout_add_local(Duration::from_millis(100), move || {
             for event in ctrl_rx.try_iter() {
@@ -335,6 +336,16 @@ pub fn build_ui(app: &Application) {
             for info in rx.try_iter() {
                 win.set_title(&info.artist);
                 win.set_subtitle(&info.title);
+
+                let cover = info.album_cover.as_ref().or(info.artist_image.as_ref()).map(|s| s.as_str());
+                let mut controls = media_controls.borrow_mut();
+                let _ = controls.set_metadata(MediaMetadata {
+                    title: Some(&info.title),
+                    artist: Some(&info.artist),
+                    album: Some("LISTEN.moe"),
+                    cover_url: cover,
+                    ..Default::default()
+                });
 
                 if let Some(url) = info.album_cover.as_ref().or(info.artist_image.as_ref()) {
                     let tx = cover_tx.clone();
