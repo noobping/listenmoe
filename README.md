@@ -42,3 +42,7 @@ mkdir -p ~/.config/firejail
 cp /path/to/extracted/usr/share/firejail/listenmoe.profile ~/.config/firejail/
 firejail listenmoe
 ```
+
+## Development
+
+This project is developed primarily on Linux. It can also run on Windows, but only when the icon feature is enabled (it's off by default).
