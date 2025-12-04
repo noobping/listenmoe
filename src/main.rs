@@ -1,5 +1,6 @@
-#[cfg(target_os = "linux")]
-#[cfg(feature = "setup")]
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
+#[cfg(all(target_os = "linux", feature = "setup"))]
 mod setup;
 
 mod http_source;

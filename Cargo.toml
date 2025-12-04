@@ -1,11 +1,11 @@
 [package]
 name = "listenmoe"
-description = "Anime/Japanese Radio powered by LISTEN.moe!"
+description = "The world's cutest radio. Powered by LISTEN.moe!"
 repository = "https://github.com/noobping/listenmoe-gnome-app"
 license = "MIT"
 homepage = "https://listen.moe/"
-authors = ["noobping"]
-version = "0.1.4"
+authors = ["Nick <hello@noobping.dev>"]
+version = "0.1.5"
 edition = "2021"
 
 [package.metadata]
@@ -14,19 +14,23 @@ discord = "https://listen.moe/discord"
 
 [features]
 setup = ["dirs"]
+icon = ["winresource", "gdk4-win32"]
 
 [dependencies]
 rodio = { version = "^0.21.1", default-features = false, features = ["playback"] }
 symphonia = { version = "^0.5.5", features = ["ogg", "vorbis"] }
 reqwest = { version = "^0.12", default-features = false, features = ["blocking", "rustls-tls-webpki-roots"] }
-adw = { version = "^0.8.0", package = "libadwaita", features = ["v1_8"] }
+adw = { version = "^0.8.0", package = "libadwaita", features = ["v1_5"] }
 serde_json = "^1.0.145"
 dirs = { version = "^6.0.0", optional = true}
 serde = "^1.0.228"
 tungstenite = { version = "^0.28.0", default-features = false, features = ["handshake", "rustls-tls-webpki-roots"] }
 gettext-rs = "0.7.7"
 locale_config = "0.3.0"
+souvlaki = { version = "^0.8.3", default-features = false, features = ["use_zbus"] }
+gdk4-win32 = { version = "^0.10.3", optional = true}
 
 [build-dependencies]
 glib-build-tools = "^0.21.0"
 toml = "^0.9.8"
+winresource = { version = "^0.1.28", optional = true}

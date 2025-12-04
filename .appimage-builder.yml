@@ -1,10 +1,11 @@
 version: 1
 
 script:
-  - mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/{192x192,scalable}/apps
+  - mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/{192x192,scalable}/apps AppDir/usr/share/firejail
   - cp data/listenmoe.png AppDir/usr/share/icons/hicolor/192x192/apps/listenmoe.png
   - cp -r data/scalable/apps/* AppDir/usr/share/icons/hicolor/scalable/apps/
   - cp target/release/listenmoe AppDir/usr/bin/
+  - cp .listenmoe.profile AppDir/usr/share/firejail/listenmoe.profile
 
 AppDir:
   path: ./AppDir
@@ -13,8 +14,18 @@ AppDir:
     id: dev.noobping.listenmoe
     name: "LISTEN.moe"
     icon: listenmoe
-    version: "0.1.4"
+    version: "0.1.5"
     exec: usr/bin/listenmoe
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: "deb http://deb.debian.org/debian trixie main"
+        key_url: "https://ftp-master.debian.org/keys/archive-key-12.asc"
+    include:
+      - ca-certificates
+      - libssl3
+      - libcurl4
 
 AppImage:
   arch: x86_64

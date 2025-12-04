@@ -1,0 +1,104 @@
+name: Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    env:
+      PKG_CONFIG_ALLOW_CROSS: 1
+      MSYS2_PATH: C:\tools\msys64
+      PKG_CONFIG_PATH: C:\tools\msys64\mingw64\lib\pkgconfig
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Install MSYS2
+        run: choco install msys2 --no-progress -y
+
+      - name: Update MSYS2
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -Syu --noconfirm"
+
+      - name: Install GTK4 + Libadwaita
+        run: |
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-toolchain"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gtk4"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-libadwaita"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-pkgconf"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-make"
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-ntldd"
+
+      - name: Add MSYS2 paths
+        run: |
+          echo "C:\tools\msys64\mingw64\bin" >> $env:GITHUB_PATH
+          echo "C:\tools\msys64\usr\bin" >> $env:GITHUB_PATH
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add GNU Windows target
+        run: rustup target add x86_64-pc-windows-gnu
+
+      - name: Build
+        run: cargo build --release --features icon --target x86_64-pc-windows-gnu
+
+      - name: Bundle
+        shell: pwsh
+        run: |
+         $workspace = $env:GITHUB_WORKSPACE
+         Write-Host "Workspace: $workspace"
+         $bundleDir = Join-Path $workspace 'bundle'
+         if (Test-Path $bundleDir) {
+          Remove-Item $bundleDir -Recurse -Force
+         }
+         New-Item -ItemType Directory -Path $bundleDir | Out-Null
+         $exe = Join-Path $workspace 'target\x86_64-pc-windows-gnu\release\listenmoe.exe'
+         if (-not (Test-Path $exe)) {
+          Write-Error "EXE not found at: $exe"
+         }
+         Write-Host "Copying exe: $exe"
+         Copy-Item $exe $bundleDir -Force
+         $mingwBin = 'C:\tools\msys64\mingw64\bin'
+         if (-not (Test-Path $mingwBin)) {
+          Write-Error "MinGW bin dir not found: $mingwBin"
+         }
+         Write-Host "Copying DLLs from: $mingwBin"
+         Get-ChildItem -Path $mingwBin -Filter '*.dll' |
+         Copy-Item -Destination $bundleDir -Force
+         Write-Host "Bundle contents:"
+         Get-ChildItem $bundleDir
+         $zip = Join-Path $workspace 'listenmoe-windows.zip'
+         if (Test-Path $zip) {
+          Remove-Item $zip -Force
+         }
+         $src = Join-Path $bundleDir '*'
+         Compress-Archive -Path $src -DestinationPath $zip -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: listenmoe-windows
+          path: listenmoe-windows.zip
+
+      - name: Get latest tag
+        run: |
+          $latest_tag = git describe --tags $(git rev-list --tags --max-count=1)
+          echo "Latest tag: $latest_tag"
+          "LATEST_TAG=$latest_tag" >> $env:GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.LATEST_TAG }}
+          files: listenmoe-windows.zip
+          overwrite_files: true

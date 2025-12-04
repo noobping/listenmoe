@@ -2,7 +2,7 @@ use crate::listen::Listen;
 use crate::meta::{Meta, TrackInfo};
 use crate::station::Station;
 
-#[cfg(feature = "setup")]
+#[cfg(all(target_os = "linux", feature = "setup"))]
 use crate::setup::{can_install_locally, install_locally, is_installed_locally, uninstall_locally};
 
 use adw::glib;
@@ -14,6 +14,8 @@ use adw::gtk::{
 };
 use adw::prelude::*;
 use adw::{Application, WindowTitle};
+use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, PlatformConfig};
+use std::cell::RefCell;
 use std::error::Error;
 use std::rc::Rc;
 use std::sync::mpsc;
@@ -77,18 +79,37 @@ pub fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Listen.moe Radio")
-        .icon_name("listenmoe")
+        .icon_name(APP_ID)
         .default_width(300)
         .default_height(40)
         .resizable(false)
         .build();
 
+    let platform_config = PlatformConfig {
+        display_name: "LISTEN.moe",
+        dbus_name: APP_ID,
+        #[cfg(target_os = "windows")]
+        hwnd: window.surface().and_then(|s| s.downcast::<gdk4_win32::Win32Surface>().ok()).map(|s| s.handle()),
+        #[cfg(not(target_os = "windows"))]
+        hwnd: None,
+    };
+    let controls = MediaControls::new(platform_config).expect("Failed to init media controls");
+    let controls = Rc::new(RefCell::new(controls));
+    let (ctrl_tx, ctrl_rx) = mpsc::channel::<MediaControlEvent>();
+    {
+        let tx = ctrl_tx.clone();
+        controls
+            .borrow_mut()
+            .attach(move |event| { let _ = tx.send(event); })
+            .expect("Failed to attach media control events");
+    }
     window.add_action(&{
         let radio = radio.clone();
         let meta = meta.clone();
         let win = win_title.clone();
         let play = play_button.clone();
         let stop = stop_button.clone();
+        let controls = controls.clone();
         make_action("play", move || {
             win.set_title("LISTEN.moe");
             win.set_subtitle("Connecting...");
@@ -96,6 +117,7 @@ pub fn build_ui(app: &Application) {
             radio.start();
             play.set_visible(false);
             stop.set_visible(true);
+            let _ = controls.borrow_mut().set_playback(MediaPlayback::Playing { progress: None });
         })
     });
     window.add_action(&{
@@ -104,6 +126,7 @@ pub fn build_ui(app: &Application) {
         let win = win_title.clone();
         let play = play_button.clone();
         let stop = stop_button.clone();
+        let controls = controls.clone();
         make_action("stop", move || {
             meta.stop();
             radio.stop();
@@ -111,6 +134,7 @@ pub fn build_ui(app: &Application) {
             play.set_visible(true);
             win.set_title("LISTEN.moe");
             win.set_subtitle("JPOP/KPOP Radio");
+            let _ = controls.borrow_mut().set_playback(MediaPlayback::Paused { progress: None });
         })
     });
     window.add_action(&{
@@ -175,17 +199,6 @@ pub fn build_ui(app: &Application) {
             }
         })
     });
-
-    #[cfg(feature = "setup")]
-    window.add_action(&make_action("setup", move || {
-        if !can_install_locally() {
-            return;
-        }
-        let _ = match is_installed_locally() {
-            true => uninstall_locally(),
-            false => install_locally(),
-        };
-    }));
 
     // Build UI
     let menu = Menu::new();
@@ -259,11 +272,33 @@ pub fn build_ui(app: &Application) {
         );
     }
     menu.append(Some("About"), Some("win.about"));
-    #[cfg(feature = "setup")]
+
+    #[cfg(all(target_os = "linux", feature = "setup"))]
+    let setup_index = menu.n_items();
+    #[cfg(all(target_os = "linux", feature = "setup"))]
     menu.append(Some(if is_installed_locally() { "Uninstall" } else { "Install" } ), Some("win.setup"));
+
     menu.append(Some("Quit"), Some("win.quit"));
 
-    #[cfg(feature = "setup")]
+    #[cfg(all(target_os = "linux", feature = "setup"))]
+    window.add_action(&{
+        let menu_clone = menu.clone();
+        make_action("setup", move || {
+            if !can_install_locally() {
+                return;
+            }
+            let was_installed = is_installed_locally();
+            let _ = match was_installed {
+                true => uninstall_locally(),
+                false => install_locally(),
+            };
+            let new_label = if was_installed { "Install" } else { "Uninstall" };
+            menu_clone.remove(setup_index);
+            menu_clone.insert(setup_index, Some(new_label), Some("win.setup"));
+        })
+    });
+
+    #[cfg(all(target_os = "linux", feature = "setup"))]
     app.set_accels_for_action("win.setup", &["F2"]);
     app.set_accels_for_action("win.about", &["F1"]);
     app.set_accels_for_action("win.copy", &["<primary>c"]);
@@ -282,10 +317,33 @@ pub fn build_ui(app: &Application) {
         let cover_rx = cover_rx;
         let cover_tx = cover_tx.clone();
         let window = window.clone();
+        let media_controls = controls.clone();
+        let ctrl_rx = ctrl_rx;
         glib::timeout_add_local(Duration::from_millis(100), move || {
+            for event in ctrl_rx.try_iter() {
+                let _ = match event {
+                    MediaControlEvent::Play => adw::prelude::WidgetExt::activate_action(&window, "win.play", None::<&glib::Variant>),
+                    MediaControlEvent::Pause | MediaControlEvent::Stop => adw::prelude::WidgetExt::activate_action(&win, "win.stop", None::<&glib::Variant>),
+                    MediaControlEvent::Toggle => adw::prelude::WidgetExt::activate_action(&window, "win.toggle", None::<&glib::Variant>),
+                    MediaControlEvent::Next => adw::prelude::WidgetExt::activate_action(&window, "win.kpop", None::<&glib::Variant>),
+                    MediaControlEvent::Previous => adw::prelude::WidgetExt::activate_action(&window, "win.jpop", None::<&glib::Variant>),
+                    _ => Ok(())
+                };
+            }
+
             for info in rx.try_iter() {
                 win.set_title(&info.artist);
                 win.set_subtitle(&info.title);
+
+                let cover = info.album_cover.as_ref().or(info.artist_image.as_ref()).map(|s| s.as_str());
+                let mut controls = media_controls.borrow_mut();
+                let _ = controls.set_metadata(MediaMetadata {
+                    title: Some(&info.title),
+                    artist: Some(&info.artist),
+                    album: Some("LISTEN.moe"),
+                    cover_url: cover,
+                    ..Default::default()
+                });
 
                 if let Some(url) = info.album_cover.as_ref().or(info.artist_image.as_ref()) {
                     let tx = cover_tx.clone();

@@ -1,0 +1,94 @@
+name: Linux
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: write
+
+    env:
+      PKG_CONFIG_ALLOW_CROSS: 1
+      CARGO_TERM_COLOR: always
+      BIN_NAME: listenmoe
+      PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Version
+        id: tag
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "TAG_NAME=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+          else
+            latest_tag=$(git describe --tags --abbrev=0)
+            echo "TAG_NAME=$latest_tag" >> "$GITHUB_ENV"
+          fi
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential \
+            cargo \
+            clang \
+            gcc \
+            libadwaita-1-dev \
+            libasound2-dev \
+            libasound2-dev \
+            libcairo2-dev \
+            libgdk-pixbuf2.0-dev \
+            libglib2.0-dev \
+            libgpg-error-dev \
+            libgtk-4-dev \
+            libpango1.0-dev \
+            librust-gtk4-dev \
+            librust-libadwaita-dev \
+            libssl-dev \
+            make \
+            mold \
+            nettle-dev \
+            pkg-config \
+            pkgconf
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Build
+        run: cargo build --release --features setup
+
+      - name: Rename
+        run: mv target/release/${{ env.BIN_NAME }} ${{ env.BIN_NAME }}-${{ matrix.target }}
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BIN_NAME }}-${{ matrix.target }}
+          path: ${{ env.BIN_NAME }}-${{ matrix.target }}
+
+      - name: Release
+        if: ${{ env.TAG_NAME != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: ${{ env.BIN_NAME }}-${{ matrix.target }}
+          overwrite_files: true
