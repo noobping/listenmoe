@@ -22,7 +22,6 @@ serde_json = "^1.0.145"
 serde = "^1.0.228"
 tungstenite = { version = "^0.28.0", default-features = false, features = ["handshake", "rustls-tls-webpki-roots"] }
 gettext-rs = "^0.7.7"
-locale_config = "^0.3.0"
 souvlaki = { version = "^0.8.3", optional = true, default-features = false, features = ["use_zbus"] }
 dirs-next = "^2.0.0"
 
