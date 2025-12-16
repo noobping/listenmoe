@@ -4,7 +4,7 @@ description = "The world's cutest radio. Powered by LISTEN.moe!"
 repository = "https://github.com/noobping/listenmoe"
 homepage = "https://listen.moe/"
 license = "MIT"
-authors = ["Nick <hello@noobping.dev>"]
+authors = ["noobping <hello@noobping.dev>"]
 version = "0.2.0"
 edition = "2021"
 
