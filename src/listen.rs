@@ -22,11 +22,14 @@ type Result<T> = std::result::Result<T, DynError>;
 #[derive(Debug)]
 enum Control {
     Stop,
+    Pause,
+    Resume
 }
 
 #[derive(Debug)]
 enum State {
     Stopped,
+    Paused { tx: mpsc::Sender<Control> },
     Playing { tx: mpsc::Sender<Control> },
 }
 
@@ -53,12 +56,12 @@ impl Listen {
 
     pub fn set_station(&self, station: Station) {
         let mut inner = self.inner.borrow_mut();
-        let was_playing = matches!(inner.state, State::Playing { .. });
-        if was_playing {
+        let was_playing_or_paused = matches!(inner.state, State::Playing { .. } | State::Paused { .. });
+        if was_playing_or_paused {
             Self::stop_inner(&mut inner);
         }
         inner.station = station;
-        if was_playing {
+        if was_playing_or_paused {
             Self::start_inner(&mut inner);
         }
     }
@@ -68,22 +71,38 @@ impl Listen {
         Self::start_inner(&mut inner);
     }
 
+    pub fn pause(&self) {
+        let mut inner = self.inner.borrow_mut();
+        match &inner.state {
+            State::Playing { tx } => {
+                let _ = tx.send(Control::Pause);
+                inner.state = State::Paused { tx: tx.clone() };
+            }
+            _ => {}
+        }
+    }
+
     pub fn stop(&self) {
         let mut inner = self.inner.borrow_mut();
         Self::stop_inner(&mut inner);
     }
 
     fn start_inner(inner: &mut Inner) {
-        match inner.state {
+        match &inner.state {
             State::Playing { .. } => {
                 // already playing
+                return;
+            }
+            State::Paused { tx } => {
+                let _ = tx.send(Control::Resume);
+                inner.state = State::Playing { tx: tx.clone() };
                 return;
             }
             State::Stopped => {
                 let (tx, rx) = mpsc::channel::<Control>();
                 let station = inner.station;
 
-                inner.state = State::Playing { tx };
+                inner.state = State::Playing { tx: tx.clone() };
 
                 // detached worker thread; will exit on Stop or error
                 thread::spawn(move || {
@@ -158,16 +177,26 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
     let mut sample_rate: u32 = 0;
 
     loop {
-        while let Ok(Control::Stop) = rx.try_recv() {
-            println!("Stop requested, shutting down stream.");
-            sink.stop();
-            return Ok(());
+        loop {
+            match rx.try_recv() {
+                Ok(Control::Stop) => {
+                    println!("Stop requested, shutting down stream.");
+                    sink.stop();
+                    return Ok(());
+                }
+                Ok(Control::Pause) => {
+                    sink.pause();
+                }
+                Ok(Control::Resume) => {
+                    sink.play();
+                }
+                Err(mpsc::TryRecvError::Empty) => break,
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    sink.stop();
+                    return Ok(());
+                }
+            }
         }
-        if matches!(rx.try_recv(), Err(mpsc::TryRecvError::Disconnected)) {
-            sink.stop();
-            return Ok(());
-        }
-
         let packet = match format.next_packet() {
             Ok(p) => p,
             Err(SymphoniaError::ResetRequired) => {

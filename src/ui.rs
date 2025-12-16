@@ -75,9 +75,9 @@ pub fn build_ui(app: &Application) {
 
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
     play_button.set_action_name(Some("win.play"));
-    let stop_button = Button::from_icon_name("media-playback-pause-symbolic");
-    stop_button.set_action_name(Some("win.stop"));
-    stop_button.set_visible(false);
+    let pause_button = Button::from_icon_name("media-playback-pause-symbolic");
+    pause_button.set_action_name(Some("win.pause"));
+    pause_button.set_visible(false);
 
     let window = ApplicationWindow::builder()
         .application(app)
@@ -116,7 +116,7 @@ pub fn build_ui(app: &Application) {
         let meta = meta.clone();
         let win = win_title.clone();
         let play = play_button.clone();
-        let stop = stop_button.clone();
+        let pause = pause_button.clone();
         #[cfg(all(target_os = "linux", feature = "controls"))]
         let controls = controls.clone();
         make_action("play", move || {
@@ -125,7 +125,7 @@ pub fn build_ui(app: &Application) {
             meta.start();
             radio.start();
             play.set_visible(false);
-            stop.set_visible(true);
+            pause.set_visible(true);
             #[cfg(all(target_os = "linux", feature = "controls"))]
             let _ = controls.borrow_mut().set_playback(MediaPlayback::Playing { progress: None });
         })
@@ -135,7 +135,26 @@ pub fn build_ui(app: &Application) {
         let meta = meta.clone();
         let win = win_title.clone();
         let play = play_button.clone();
-        let stop = stop_button.clone();
+        let pause = pause_button.clone();
+        #[cfg(all(target_os = "linux", feature = "controls"))]
+        let controls = controls.clone();
+        make_action("pause", move || {
+            meta.stop();
+            radio.pause();
+            pause.set_visible(false);
+            play.set_visible(true);
+            win.set_title("LISTEN.moe");
+            win.set_subtitle(&gettext("JPOP/KPOP Radio"));
+            #[cfg(all(target_os = "linux", feature = "controls"))]
+            let _ = controls.borrow_mut().set_playback(MediaPlayback::Paused { progress: None });
+        })
+    });
+    window.add_action(&{
+        let radio = radio.clone();
+        let meta = meta.clone();
+        let win = win_title.clone();
+        let play = play_button.clone();
+        let stop = pause_button.clone();
         #[cfg(all(target_os = "linux", feature = "controls"))]
         let controls = controls.clone();
         make_action("stop", move || {
@@ -173,7 +192,7 @@ pub fn build_ui(app: &Application) {
     });
     window.add_action(&{
         let play = play_button.clone();
-        let stop = stop_button.clone();
+        let pause = pause_button.clone();
         let win_clone = window.clone();
         make_action("toggle", move || {
             if play.is_visible() {
@@ -182,10 +201,10 @@ pub fn build_ui(app: &Application) {
                     "win.play",
                     None::<&glib::Variant>,
                 );
-            } else if stop.is_visible() {
+            } else if pause.is_visible() {
                 let _ = adw::prelude::WidgetExt::activate_action(
                     &win_clone,
-                    "win.stop",
+                    "win.pause",
                     None::<&glib::Variant>,
                 );
             }
@@ -224,7 +243,7 @@ pub fn build_ui(app: &Application) {
     let buttons = gtk::Box::new(Orientation::Horizontal, 0);
     buttons.append(&more_button);
     buttons.append(&play_button);
-    buttons.append(&stop_button);
+    buttons.append(&pause_button);
     let header = HeaderBar::new();
     header.pack_start(&buttons);
     header.set_title_widget(Some(&win_title));
@@ -291,7 +310,8 @@ pub fn build_ui(app: &Application) {
     app.set_accels_for_action("win.copy", &["<primary>c"]);
     app.set_accels_for_action("win.quit", &["<primary>q", "Escape"]);
     app.set_accels_for_action("win.play", &["XF86AudioPlay"]);
-    app.set_accels_for_action("win.stop", &["XF86AudioStop", "XF86AudioPause"]);
+    app.set_accels_for_action("win.stop", &["XF86AudioStop"]);
+    app.set_accels_for_action("win.pause", &["XF86AudioPause"]);
     app.set_accels_for_action("win.jpop", &["<primary>j", "XF86AudioPrev", "<primary>z"]);
     app.set_accels_for_action("win.kpop", &["<primary>k", "XF86AudioNext", "<primary><shift>z", "<primary>y"]);
     app.set_accels_for_action("win.toggle", &["<primary>p", "space", "Return", "<primary>s"]);
@@ -313,7 +333,8 @@ pub fn build_ui(app: &Application) {
             for event in ctrl_rx.try_iter() {
                 let _ = match event {
                     MediaControlEvent::Play => adw::prelude::WidgetExt::activate_action(&window, "win.play", None::<&glib::Variant>),
-                    MediaControlEvent::Pause | MediaControlEvent::Stop => adw::prelude::WidgetExt::activate_action(&win, "win.stop", None::<&glib::Variant>),
+                    MediaControlEvent::Pause => adw::prelude::WidgetExt::activate_action(&win, "win.pause", None::<&glib::Variant>),
+                    MediaControlEvent::Stop => adw::prelude::WidgetExt::activate_action(&win, "win.stop", None::<&glib::Variant>),
                     MediaControlEvent::Toggle => adw::prelude::WidgetExt::activate_action(&window, "win.toggle", None::<&glib::Variant>),
                     MediaControlEvent::Next => adw::prelude::WidgetExt::activate_action(&window, "win.kpop", None::<&glib::Variant>),
                     MediaControlEvent::Previous => adw::prelude::WidgetExt::activate_action(&window, "win.jpop", None::<&glib::Variant>),
