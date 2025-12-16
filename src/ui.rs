@@ -62,6 +62,13 @@ fn create_station_action(
     })
 }
 
+fn other_station(s: Station) -> Station {
+    match s {
+        Station::Jpop => Station::Kpop,
+        Station::Kpop => Station::Jpop,
+    }
+}
+
 /// Build the user interface.  This function is called once when the application
 /// is activated.  It constructs the window, header bar, actions and spawns
 /// background tasks for streaming audio and metadata.
@@ -231,6 +238,40 @@ pub fn build_ui(app: &Application) {
             }
         })
     });
+    window.add_action(&{
+        let radio = radio.clone();
+        let meta = meta.clone();
+        let win_clone = window.clone();
+        let play = play_button.clone();
+        make_action("next_station", move || {
+            if play.is_visible() {
+                let _ = adw::prelude::WidgetExt::activate_action(
+                    &win_clone,
+                    "win.play",
+                    None::<&glib::Variant>,
+                );
+                return;
+            }
+            let current = radio.get_station();
+            let next = other_station(current);
+            radio.set_station(next);
+            meta.set_station(next);
+        })
+    });
+    window.add_action(&{
+        let radio = radio.clone();
+        let meta = meta.clone();
+        let play = play_button.clone();
+        make_action("prev_station", move || {
+            if play.is_visible() {
+                return; // paused -> do nothing
+            }
+            let current = radio.get_station();
+            let prev = other_station(current);
+            radio.set_station(prev);
+            meta.set_station(prev);
+        })
+    });
 
     // Build UI
     let menu = Menu::new();
@@ -308,13 +349,15 @@ pub fn build_ui(app: &Application) {
 
     app.set_accels_for_action("win.about", &["F1"]);
     app.set_accels_for_action("win.copy", &["<primary>c"]);
+    app.set_accels_for_action("win.jpop", &["<primary>j"]);
+    app.set_accels_for_action("win.kpop", &["<primary>k"]);
     app.set_accels_for_action("win.quit", &["<primary>q", "Escape"]);
+    app.set_accels_for_action("win.prev_station", &["<primary>z", "XF86AudioPrev"]);
+    app.set_accels_for_action("win.next_station", &["<primary>y", "<primary><shift>z", "XF86AudioNext"]);
+    app.set_accels_for_action("win.toggle", &["<primary>p", "space", "Return", "<primary>s"]);
     app.set_accels_for_action("win.play", &["XF86AudioPlay"]);
     app.set_accels_for_action("win.stop", &["XF86AudioStop"]);
     app.set_accels_for_action("win.pause", &["XF86AudioPause"]);
-    app.set_accels_for_action("win.jpop", &["<primary>j", "XF86AudioPrev", "<primary>z"]);
-    app.set_accels_for_action("win.kpop", &["<primary>k", "XF86AudioNext", "<primary><shift>z", "<primary>y"]);
-    app.set_accels_for_action("win.toggle", &["<primary>p", "space", "Return", "<primary>s"]);
 
     // Poll the channels on the GTK main thread and update the UI.
     {
@@ -336,8 +379,8 @@ pub fn build_ui(app: &Application) {
                     MediaControlEvent::Pause => adw::prelude::WidgetExt::activate_action(&win, "win.pause", None::<&glib::Variant>),
                     MediaControlEvent::Stop => adw::prelude::WidgetExt::activate_action(&win, "win.stop", None::<&glib::Variant>),
                     MediaControlEvent::Toggle => adw::prelude::WidgetExt::activate_action(&window, "win.toggle", None::<&glib::Variant>),
-                    MediaControlEvent::Next => adw::prelude::WidgetExt::activate_action(&window, "win.kpop", None::<&glib::Variant>),
-                    MediaControlEvent::Previous => adw::prelude::WidgetExt::activate_action(&window, "win.jpop", None::<&glib::Variant>),
+                    MediaControlEvent::Next => adw::prelude::WidgetExt::activate_action(&window, "win.next_station", None::<&glib::Variant>),
+                    MediaControlEvent::Previous => adw::prelude::WidgetExt::activate_action(&window, "win.prev_station", None::<&glib::Variant>),
                     _ => Ok(())
                 };
             }
