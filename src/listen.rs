@@ -175,25 +175,29 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
     let mut sample_buf: Option<SampleBuffer<f32>> = None;
     let mut channels: u16 = 0;
     let mut sample_rate: u32 = 0;
+    let mut paused = false;
 
     loop {
-        loop {
-            match rx.try_recv() {
-                Ok(Control::Stop) => {
+        while let Ok(cmd) = rx.try_recv() {
+            match cmd {
+                Control::Stop => {
                     println!("Stop requested, shutting down stream.");
                     sink.stop();
                     return Ok(());
                 }
-                Ok(Control::Pause) => {
-                    sink.pause();
+                Control::Pause => {
+                    if !paused {
+                        println!("Pausing playback.");
+                        paused = true;
+                        sink.pause();
+                    }
                 }
-                Ok(Control::Resume) => {
-                    sink.play();
-                }
-                Err(mpsc::TryRecvError::Empty) => break,
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    sink.stop();
-                    return Ok(());
+                Control::Resume => {
+                    if paused {
+                        println!("Resuming playback.");
+                        paused = false;
+                        sink.play();
+                    }
                 }
             }
         }
