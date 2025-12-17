@@ -3,8 +3,12 @@ use rodio::{buffer::SamplesBuffer, OutputStreamBuilder, Sink};
 use std::cell::RefCell;
 use std::error::Error;
 use std::rc::Rc;
-use std::sync::mpsc;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    mpsc, Arc,
+};
 use std::thread;
+use std::time::Instant;
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::errors::Error as SymphoniaError;
@@ -14,6 +18,8 @@ use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 
 use crate::http_source::HttpSource;
+#[cfg(debug_assertions)]
+use crate::log::now_string;
 use crate::station::Station;
 
 type DynError = Box<dyn Error + Send + Sync + 'static>;
@@ -23,7 +29,7 @@ type Result<T> = std::result::Result<T, DynError>;
 enum Control {
     Stop,
     Pause,
-    Resume
+    Resume,
 }
 
 #[derive(Debug)]
@@ -42,6 +48,8 @@ struct Inner {
 #[derive(Debug)]
 pub struct Listen {
     inner: RefCell<Inner>,
+    lag_ms: Arc<AtomicU64>,
+    pause_started: RefCell<Option<Instant>>,
 }
 
 impl Listen {
@@ -51,7 +59,13 @@ impl Listen {
                 station,
                 state: State::Stopped,
             }),
+            lag_ms: Arc::new(AtomicU64::new(0)),
+            pause_started: RefCell::new(None),
         })
+    }
+
+    pub fn lag_ms(&self) -> Arc<AtomicU64> {
+        self.lag_ms.clone()
     }
 
     pub fn get_station(&self) -> Station {
@@ -71,6 +85,12 @@ impl Listen {
     }
 
     pub fn start(&self) {
+        if matches!(self.inner.borrow().state, State::Paused { .. }) {
+            if let Some(t0) = self.pause_started.borrow_mut().take() {
+                let add = t0.elapsed().as_millis() as u64;
+                self.lag_ms.fetch_add(add, Ordering::Relaxed);
+            }
+        }
         let mut inner = self.inner.borrow_mut();
         Self::start_inner(&mut inner);
     }
@@ -84,6 +104,7 @@ impl Listen {
             }
             _ => {}
         }
+        *self.pause_started.borrow_mut() = Some(Instant::now());
     }
 
     pub fn stop(&self) {
@@ -136,14 +157,15 @@ impl Drop for Listen {
 
 fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result<()> {
     let url = station.stream_url();
-    println!("Connecting to {url}…");
+    #[cfg(debug_assertions)]
+    println!("[{}] Connecting to {url}…", now_string());
 
     let client = Client::new();
     let response = client
         .get(url)
         .header("User-Agent", "listenmoe-rodio-symphonia/0.1")
         .send()?;
-    println!("HTTP status: {}", response.status());
+    println!("[{}] HTTP status: {}", now_string(), response.status());
     if !response.status().is_success() {
         return Err(format!("HTTP status {}", response.status()).into());
     }
@@ -172,7 +194,8 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
     let stream = OutputStreamBuilder::open_default_stream()?;
     let sink = Sink::connect_new(&stream.mixer());
 
-    println!("Started decoding + playback.");
+    #[cfg(debug_assertions)]
+    println!("[{}] Started decoding + playback.", now_string());
 
     let mut sample_buf: Option<SampleBuffer<f32>> = None;
     let mut channels: u16 = 0;
@@ -183,20 +206,23 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
         while let Ok(cmd) = rx.try_recv() {
             match cmd {
                 Control::Stop => {
-                    println!("Stop requested, shutting down stream.");
+                    #[cfg(debug_assertions)]
+                    println!("[{}] Stop requested, shutting down stream.", now_string());
                     sink.stop();
                     return Ok(());
                 }
                 Control::Pause => {
                     if !paused {
-                        println!("Pausing playback.");
+                        #[cfg(debug_assertions)]
+                        println!("[{}] Pausing playback.", now_string());
                         paused = true;
                         sink.pause();
                     }
                 }
                 Control::Resume => {
                     if paused {
-                        println!("Resuming playback.");
+                        #[cfg(debug_assertions)]
+                        println!("[{}] Resuming playback.", now_string());
                         paused = false;
                         sink.play();
                     }
@@ -206,7 +232,8 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
         let packet = match format.next_packet() {
             Ok(p) => p,
             Err(SymphoniaError::ResetRequired) => {
-                println!("Stream reset, reconfiguring decoder…");
+                #[cfg(debug_assertions)]
+                println!("[{}] Stream reset, reconfiguring decoder…", now_string());
                 let new_track = format
                     .tracks()
                     .iter()
@@ -233,7 +260,8 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
             Ok(buf) => buf,
             Err(SymphoniaError::DecodeError(_)) => continue,
             Err(SymphoniaError::ResetRequired) => {
-                println!("Decoder reset required, rebuilding decoder…");
+                #[cfg(debug_assertions)]
+                println!("[{}] Decoder reset required, rebuilding decoder…", now_string());
                 let new_track = format
                     .tracks()
                     .iter()

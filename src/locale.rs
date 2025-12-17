@@ -60,6 +60,7 @@ pub fn init_i18n() {
     setlocale(LocaleCategory::LcAll, "");
 
     let dir = find_locale_dir();
+    #[cfg(debug_assertions)]
     println!("Using locale dir: {}", dir.display());
 
     let dir_str = dir

@@ -5,7 +5,7 @@ repository = "https://github.com/noobping/listenmoe"
 homepage = "https://listen.moe/"
 license = "MIT"
 authors = ["noobping <hello@noobping.dev>"]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [features]
@@ -24,6 +24,7 @@ tungstenite = { version = "^0.28.0", default-features = false, features = ["hand
 gettext-rs = "^0.7.7"
 souvlaki = { version = "^0.8.3", optional = true, default-features = false, features = ["use_zbus"] }
 dirs-next = "^2.0.0"
+time = { version = "0.3.44", features = ["parsing"] }
 
 [build-dependencies]
 glib-build-tools = { version = "^0.21.0", optional = true}

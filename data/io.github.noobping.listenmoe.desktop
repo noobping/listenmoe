@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Version=0.2.0
+Version=0.3.0
 Name=LISTEN.moe
 Comment=The world's cutest radio. Powered by LISTEN.moe!
 Exec=listenmoe %u

@@ -1,15 +1,25 @@
 use serde::Deserialize;
 use serde_json::Value;
 use std::cell::RefCell;
+use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::rc::Rc;
 use std::sync::mpsc;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
+use time::format_description::well_known::Rfc3339;
+use time::OffsetDateTime;
 use tungstenite::client::connect;
 use tungstenite::protocol::WebSocket;
+use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message;
 
+#[cfg(debug_assertions)]
+use crate::log::now_string;
 use crate::station::Station;
 
 const ALBUM_COVER_BASE: &str = "https://cdn.listen.moe/covers/";
@@ -25,11 +35,15 @@ pub struct TrackInfo {
     pub title: String,
     pub album_cover: Option<String>,
     pub artist_image: Option<String>,
+    pub start_time_utc: SystemTime,
+    pub duration_secs: u32,
 }
 
 #[derive(Debug)]
 enum Control {
     Stop,
+    Pause,
+    Resume,
 }
 
 #[derive(Debug)]
@@ -43,6 +57,8 @@ struct Inner {
     station: Station,
     state: State,
     sender: mpsc::Sender<TrackInfo>,
+    lag_ms: Arc<AtomicU64>,
+    ui_sched_id: Arc<AtomicU64>,
 }
 
 #[derive(Debug)]
@@ -51,12 +67,18 @@ pub struct Meta {
 }
 
 impl Meta {
-    pub fn new(station: Station, sender: mpsc::Sender<TrackInfo>) -> Rc<Self> {
+    pub fn new(
+        station: Station,
+        sender: mpsc::Sender<TrackInfo>,
+        lag_ms: Arc<AtomicU64>,
+    ) -> Rc<Self> {
         Rc::new(Self {
             inner: RefCell::new(Inner {
                 station,
                 state: State::Stopped,
                 sender,
+                lag_ms,
+                ui_sched_id: Arc::new(AtomicU64::new(0)),
             }),
         })
     }
@@ -74,8 +96,27 @@ impl Meta {
     }
 
     pub fn start(&self) {
+        let tx_opt = {
+            let inner = self.inner.borrow();
+            match &inner.state {
+                State::Running { tx } => Some(tx.clone()),
+                State::Stopped => None,
+            }
+        };
+        if let Some(tx) = tx_opt {
+            let _ = tx.send(Control::Resume);
+            return;
+        }
+        // stopped: actually start thread
         let mut inner = self.inner.borrow_mut();
         Self::start_inner(&mut inner);
+    }
+
+    pub fn pause(&self) {
+        let inner = self.inner.borrow();
+        if let State::Running { tx } = &inner.state {
+            let _ = tx.send(Control::Pause);
+        }
     }
 
     pub fn stop(&self) {
@@ -85,19 +126,18 @@ impl Meta {
 
     fn start_inner(inner: &mut Inner) {
         match inner.state {
-            State::Running { .. } => {
-                // Already running.
-                return;
-            }
+            State::Running { .. } => return,
             State::Stopped => {
                 let (tx, rx) = mpsc::channel::<Control>();
                 let station = inner.station;
                 let sender = inner.sender.clone();
+                let lag_ms = inner.lag_ms.clone();
+                let ui_sched_id = inner.ui_sched_id.clone();
 
                 inner.state = State::Running { tx: tx.clone() };
 
                 thread::spawn(move || {
-                    if let Err(err) = run_meta_loop(station, sender, rx) {
+                    if let Err(err) = run_meta_loop(station, sender, rx, lag_ms, ui_sched_id) {
                         eprintln!("Gateway error in metadata loop: {err}");
                     }
                 });
@@ -107,7 +147,6 @@ impl Meta {
 
     fn stop_inner(inner: &mut Inner) {
         if let State::Running { tx } = &inner.state {
-            // Ignore send errors (thread might already be gone).
             let _ = tx.send(Control::Stop);
         }
         inner.state = State::Stopped;
@@ -116,7 +155,6 @@ impl Meta {
 
 impl Drop for Meta {
     fn drop(&mut self) {
-        // Best-effort cleanup, same idea as in `Listen`.
         let mut inner = self.inner.borrow_mut();
         Self::stop_inner(&mut inner);
     }
@@ -132,6 +170,8 @@ struct GatewayHello {
 #[derive(Debug, Deserialize)]
 struct GatewaySongPayload {
     song: Song,
+    #[serde(rename = "startTime")]
+    start_time: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -141,6 +181,7 @@ struct Song {
     artists: Vec<Artist>,
     #[serde(default)]
     albums: Vec<Album>,
+    duration: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -173,32 +214,37 @@ fn run_meta_loop(
     station: Station,
     sender: mpsc::Sender<TrackInfo>,
     rx: mpsc::Receiver<Control>,
+    lag_ms: Arc<AtomicU64>,
+    ui_sched_id: Arc<AtomicU64>,
 ) -> MetaResult<()> {
     loop {
-        // Before we try a connection, see if we've been asked to stop.
-        match rx.try_recv() {
-            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-            Err(mpsc::TryRecvError::Empty) => {}
+        if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
+            return Ok(());
         }
-
-        match run_once(station, sender.clone(), &rx) {
+        match run_once(
+            station,
+            sender.clone(),
+            &rx,
+            lag_ms.clone(),
+            ui_sched_id.clone(),
+        ) {
             Ok(()) => {
-                // Normal end (server closed the connection).
+                // Normal end (server closed the connection). Respect stop; otherwise retry.
                 match rx.try_recv() {
                     Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-                    Err(mpsc::TryRecvError::Empty) => {
-                        thread::sleep(Duration::from_secs(5));
-                    }
+                    Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
+                    Ok(_) => thread::sleep(Duration::from_secs(1)),
                 }
             }
             Err(err) => {
-                eprintln!("Gateway connection error: {err}, retrying in 5s…");
-                // Allow a stop request to cancel the retry delay.
+                eprintln!(
+                    "[{}] Gateway connection error: {err}, retrying in 5s…",
+                    now_string()
+                );
                 match rx.try_recv() {
                     Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-                    Err(mpsc::TryRecvError::Empty) => {
-                        thread::sleep(Duration::from_secs(5));
-                    }
+                    Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
+                    Ok(_) => thread::sleep(Duration::from_secs(1)),
                 }
             }
         }
@@ -206,30 +252,67 @@ fn run_meta_loop(
 }
 
 /// Single websocket session, with a simple heartbeat loop.
+/// Keeps history and does "snap-to-buffered-track" on Resume.
 fn run_once(
     station: Station,
     sender: mpsc::Sender<TrackInfo>,
     rx: &mpsc::Receiver<Control>,
+    lag_ms: Arc<AtomicU64>,
+    ui_sched_id: Arc<AtomicU64>,
 ) -> MetaResult<()> {
-    // Early stop check.
-    match rx.try_recv() {
-        Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-        Err(mpsc::TryRecvError::Empty) => {}
+    if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
+        return Ok(());
     }
 
     let url = station.ws_url();
     let (mut ws, _response) = connect(url)?;
-    println!("Gateway connected to LISTEN.moe");
+    set_maybe_tls_read_timeout(ws.get_mut(), Duration::from_millis(200))?;
+    #[cfg(debug_assertions)]
+    println!("[{}] Gateway connected to LISTEN.moe", now_string());
 
     // Read hello and get heartbeat interval (if any).
     let heartbeat_ms = read_hello_heartbeat(&mut ws)?;
+    // Send an immediate heartbeat once after HELLO, then continue on the interval.
+    let _ = ws.send(Message::Text(r#"{"op":9}"#.into()));
+
     let heartbeat_dur = heartbeat_ms.map(Duration::from_millis);
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
+
+    let mut paused = false;
+    let mut history: VecDeque<TrackInfo> = VecDeque::with_capacity(32);
 
     loop {
         // Check for control messages first.
         match rx.try_recv() {
-            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
+            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => {
+                ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                break;
+            }
+            Ok(Control::Pause) => {
+                #[cfg(debug_assertions)]
+                println!("[{}] Pausing meta data", now_string());
+                paused = true;
+                ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate any pending scheduled sends
+            }
+            Ok(Control::Resume) => {
+                #[cfg(debug_assertions)]
+                println!("[{}] Resuming meta data", now_string());
+                paused = false;
+                ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate timers from before pause
+
+                // Snap UI to the track that matches buffered playback time.
+                let lag = lag_ms.load(Ordering::Relaxed);
+                #[cfg(debug_assertions)]
+                if let Some(t) = pick_track_for_playback(&history, lag) {
+                    println!("[{}] ui snap: {} - {}", now_string(), t.artist, t.title);
+                }
+                // Immediately snap UI to what playback should be on resume
+                if let Some(correct) = pick_track_for_playback(&history, lag) {
+                    let _ = sender.send(correct);
+                }
+                // Also schedule the next switch that should happen after resume
+                schedule_next_from_history(sender.clone(), &history, lag, ui_sched_id.clone());
+            }
             Err(mpsc::TryRecvError::Empty) => {}
         }
 
@@ -248,9 +331,13 @@ fn run_once(
         let msg = match ws.read() {
             Ok(msg) => msg,
             Err(tungstenite::Error::ConnectionClosed) => break,
-            Err(err) => {
-                return Err(Box::new(err));
+            Err(tungstenite::Error::Io(ref e))
+                if e.kind() == std::io::ErrorKind::WouldBlock
+                    || e.kind() == std::io::ErrorKind::TimedOut =>
+            {
+                continue; // No websocket message right now; loop again so the process can pause
             }
+            Err(err) => return Err(Box::new(err)),
         };
 
         if !msg.is_text() {
@@ -268,16 +355,48 @@ fn run_once(
 
         match (env.op, env.t.as_deref()) {
             (OP_HEARTBEAT_ACK, _) => {
-                println!("Gateway heartbeat ACK");
+                #[cfg(debug_assertions)]
+                println!("[{}] Gateway heartbeat", now_string());
             }
             (OP_DISPATCH, Some(EVENT_TRACK_UPDATE)) => {
                 if let Some(info) = parse_track_info(&env.d) {
-                    let _ = sender.send(info);
+                    #[cfg(debug_assertions)]
+                    println!(
+                        "[{}] live track update: {} - {} (duration={})",
+                        now_string(),
+                        info.artist,
+                        info.title,
+                        info.duration_secs
+                    );
+                    if history.len() == 32 {
+                        history.pop_front();
+                    }
+                    history.push_back(info);
+
+                    if !paused {
+                        let lag = lag_ms.load(Ordering::Relaxed);
+                        let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
+                        #[cfg(debug_assertions)]
+                        println!(
+                            "[{}] ui {} scheduled: {} - {} (lag_ms={})",
+                            now_string(),
+                            my_id,
+                            history.back().unwrap().artist,
+                            history.back().unwrap().title,
+                            lag
+                        );
+                        // Schedule the *new* track to appear when playback reaches it
+                        schedule_ui_switch(
+                            sender.clone(),
+                            history.back().unwrap().clone(),
+                            lag,
+                            ui_sched_id.clone(),
+                            my_id,
+                        );
+                    }
                 }
             }
-            _ => {
-                // Ignore other ops/events.
-            }
+            _ => {}
         }
     }
 
@@ -314,7 +433,11 @@ fn parse_track_info(d: &Value) -> Option<TrackInfo> {
         title,
         artists,
         albums,
+        duration,
     } = payload.song;
+
+    let start_time_utc = parse_rfc3339_system_time(&payload.start_time)?;
+    let duration_secs = duration.unwrap_or(0);
 
     let title = title.unwrap_or_else(|| "unknown title".to_owned());
 
@@ -344,5 +467,117 @@ fn parse_track_info(d: &Value) -> Option<TrackInfo> {
         title,
         album_cover,
         artist_image,
+        start_time_utc,
+        duration_secs,
     })
+}
+
+fn parse_rfc3339_system_time(s: &str) -> Option<SystemTime> {
+    let odt = OffsetDateTime::parse(s, &Rfc3339).ok()?;
+    let unix = odt.unix_timestamp(); // seconds
+    let nanos = odt.nanosecond(); // 0..1e9
+
+    let t = if unix >= 0 {
+        SystemTime::UNIX_EPOCH
+            .checked_add(Duration::from_secs(unix as u64))?
+            .checked_add(Duration::from_nanos(nanos as u64))?
+    } else {
+        SystemTime::UNIX_EPOCH
+            .checked_sub(Duration::from_secs((-unix) as u64))?
+            .checked_add(Duration::from_nanos(nanos as u64))?
+    };
+
+    Some(t)
+}
+
+fn pick_track_for_playback(history: &VecDeque<TrackInfo>, lag_ms: u64) -> Option<TrackInfo> {
+    let playback_now = SystemTime::now().checked_sub(Duration::from_millis(lag_ms))?;
+
+    // Prefer a proper [start, end) window when duration is known and > 0.
+    if let Some(hit) = history.iter().rev().find(|t| {
+        if t.duration_secs == 0 {
+            return false;
+        }
+        let start = t.start_time_utc;
+        let end = start.checked_add(Duration::from_secs(t.duration_secs as u64));
+        end.map(|end| playback_now >= start && playback_now < end)
+            .unwrap_or(false)
+    }) {
+        return Some(hit.clone());
+    }
+
+    // Fallback: duration is missing/0 => pick the latest track that started before playback_now.
+    history
+        .iter()
+        .rev()
+        .find(|t| playback_now >= t.start_time_utc)
+        .cloned()
+}
+
+fn set_maybe_tls_read_timeout(
+    stream: &mut MaybeTlsStream<std::net::TcpStream>,
+    dur: std::time::Duration,
+) -> std::io::Result<()> {
+    match stream {
+        MaybeTlsStream::Plain(tcp) => tcp.set_read_timeout(Some(dur)),
+        MaybeTlsStream::Rustls(tls) => tls.get_mut().set_read_timeout(Some(dur)),
+        _ => Ok(()),
+    }
+}
+
+fn schedule_ui_switch(
+    sender: mpsc::Sender<TrackInfo>,
+    track: TrackInfo,
+    lag_ms: u64,
+    ui_sched_id: Arc<AtomicU64>,
+    my_id: u64,
+) {
+    thread::spawn(move || {
+        let lag = Duration::from_millis(lag_ms);
+        let target = track.start_time_utc.checked_add(lag);
+        if let Some(target) = target {
+            if let Ok(wait) = target.duration_since(SystemTime::now()) {
+                thread::sleep(wait);
+            }
+        }
+        if ui_sched_id.load(Ordering::Relaxed) == my_id {
+            let _ = sender.send(track);
+        }
+    });
+}
+
+fn schedule_next_from_history(
+    sender: mpsc::Sender<TrackInfo>,
+    history: &VecDeque<TrackInfo>,
+    lag_ms: u64,
+    ui_sched_id: Arc<AtomicU64>,
+) {
+    let playback_now = match SystemTime::now().checked_sub(Duration::from_millis(lag_ms)) {
+        Some(t) => t,
+        None => return,
+    };
+
+    // Find the earliest track whose (start_time_utc) is still in the future for playback time.
+    // i.e. playback_now < track.start_time_utc
+    let next = history
+        .iter()
+        .filter(|t| playback_now < t.start_time_utc)
+        .min_by_key(|t| t.start_time_utc)
+        .cloned();
+
+    let Some(next) = next else { return };
+
+    let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
+
+    #[cfg(debug_assertions)]
+    println!(
+        "[{}] ui {} resched-next: {} - {} (lag_ms={})",
+        now_string(),
+        my_id,
+        next.artist,
+        next.title,
+        lag_ms
+    );
+
+    schedule_ui_switch(sender, next, lag_ms, ui_sched_id, my_id);
 }

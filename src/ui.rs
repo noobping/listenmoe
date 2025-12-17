@@ -76,7 +76,7 @@ pub fn build_ui(app: &Application) {
     let station = Station::Jpop;
     let radio = Listen::new(station);
     let (tx, rx) = mpsc::channel::<TrackInfo>();
-    let meta = Meta::new(station, tx);
+    let meta = Meta::new(station, tx, radio.lag_ms());
     let (cover_tx, cover_rx) = mpsc::channel::<Result<Vec<u8>, String>>();
     let win_title = WindowTitle::new("LISTEN.moe", "JPOP/KPOP Radio");
 
@@ -146,7 +146,7 @@ pub fn build_ui(app: &Application) {
         #[cfg(all(target_os = "linux", feature = "controls"))]
         let controls = controls.clone();
         make_action("pause", move || {
-            meta.stop();
+            meta.pause();
             radio.pause();
             pause.set_visible(false);
             play.set_visible(true);

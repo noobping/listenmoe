@@ -16,7 +16,7 @@ AppDir:
     id: io.github.noobping.listenmoe
     name: "LISTEN.moe"
     icon: io.github.noobping.listenmoe
-    version: "0.2.0"
+    version: "0.3.0"
     exec: usr/bin/listenmoe
 
   apt:

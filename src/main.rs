@@ -6,6 +6,8 @@ mod locale;
 mod meta;
 mod station;
 mod ui;
+#[cfg(debug_assertions)]
+mod log;
 
 #[cfg(debug_assertions)]
 const APP_ID: &str = "io.github.noobping.listenmoe_develop";

@@ -79,6 +79,6 @@
   </provides>
 
   <releases>
-    <release version="0.2.0" />
+    <release version="0.3.0" />
   </releases>
 </component>
