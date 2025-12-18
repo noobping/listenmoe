@@ -28,3 +28,7 @@ mkdir -p ~/.config/firejail
 cp /path/to/extracted/usr/share/firejail/listenmoe.profile ~/.config/firejail/
 firejail listenmoe
 ```
+
+## Translations
+
+The `po/` folder contains translation files in `.po` (Portable Object) format. If you find a typo, unclear wording, or can improve a translation, you are welcome to contribute.
