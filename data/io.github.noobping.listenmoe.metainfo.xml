@@ -65,6 +65,7 @@
       <li>Displays the currently playing song</li>
       <li>System media control integration</li>
       <li>Pause and resume the radio</li>
+      <li>Dynamic theming based on album artwork, with automatic light and dark mode switching</li>
     </ul>
   </description>
 
