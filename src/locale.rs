@@ -2,7 +2,7 @@ use dirs_next as dirs;
 use gettextrs::{
     bind_textdomain_codeset, bindtextdomain, setlocale, textdomain, LocaleCategory,
 };
-use std::{env, fs, path::{Path, PathBuf}};
+use std::{env, path::{Path, PathBuf}};
 
 const APP_ID: &str = "io.github.noobping.listenmoe";
 
