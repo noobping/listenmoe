@@ -1,5 +1,6 @@
 use crate::listen::Listen;
 use crate::meta::{Meta, TrackInfo};
+use crate::metainfo::metainfo_description;
 use crate::station::Station;
 
 use adw::glib;
@@ -201,6 +202,7 @@ pub fn build_ui(app: &Application) {
             let authors: Vec<_> = env!("CARGO_PKG_AUTHORS").split(':').collect();
             let homepage = option_env!("CARGO_PKG_HOMEPAGE").unwrap_or("");
             let issues = format!("{}/issues", env!("CARGO_PKG_REPOSITORY"));
+            let comments = metainfo_description().unwrap_or_else(|| gettext(env!("CARGO_PKG_DESCRIPTION")));
             let about = adw::AboutDialog::builder()
                 .application_name("LISTEN.moe")
                 .application_icon(APP_ID)
@@ -210,7 +212,7 @@ pub fn build_ui(app: &Application) {
                 .issue_url(issues)
                 .support_url(format!("{}/discord", homepage))
                 .license_type(gtk::License::MitX11)
-                .comments(gettext(env!("CARGO_PKG_DESCRIPTION")))
+                .comments(comments)
                 .build();
             about.present(Some(&win_clone));
         })

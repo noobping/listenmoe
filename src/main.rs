@@ -3,11 +3,12 @@
 mod http_source;
 mod listen;
 mod locale;
-mod meta;
-mod station;
-mod ui;
 #[cfg(debug_assertions)]
 mod log;
+mod meta;
+mod metainfo;
+mod station;
+mod ui;
 
 #[cfg(debug_assertions)]
 const APP_ID: &str = "io.github.noobping.listenmoe_develop";
@@ -15,10 +16,10 @@ const APP_ID: &str = "io.github.noobping.listenmoe_develop";
 const APP_ID: &str = "io.github.noobping.listenmoe";
 #[cfg(feature = "icon")]
 const RESOURCE_ID: &str = "/io/github/noobping/listenmoe";
-use adw::prelude::*;
-use adw::Application;
 #[cfg(feature = "icon")]
 use adw::gtk::{gdk::Display, IconTheme};
+use adw::prelude::*;
+use adw::Application;
 
 fn main() {
     locale::init_i18n();

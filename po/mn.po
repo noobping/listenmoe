@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 0.4.0\n"
+"Project-Id-Version: io.github.noobping.listenmoe 0.5.0\n"
 "Language: mn\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
