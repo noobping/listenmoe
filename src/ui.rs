@@ -210,7 +210,7 @@ pub fn build_ui(app: &Application) {
                 .developers(&authors[..])
                 .website(homepage)
                 .issue_url(issues)
-                .support_url(format!("{}/discord", homepage))
+                .support_url(format!("{}discord", homepage))
                 .license_type(gtk::License::MitX11)
                 .comments(comments)
                 .build();
