@@ -161,10 +161,25 @@ fn run_listenmoe_stream(station: Station, rx: mpsc::Receiver<Control>) -> Result
     println!("[{}] Connecting to {url}…", now_string());
 
     let client = Client::new();
-    let response = client
-        .get(url)
-        .header("User-Agent", "listenmoe-rodio-symphonia/0.1")
-        .send()?;
+    let platform = if cfg!(target_os = "linux") {
+        "linux"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else {
+        "other"
+    };
+    #[cfg(not(debug_assertions))]
+    let build = "release";
+    #[cfg(debug_assertions)]
+    let build = "debug";
+    let useragent = format!(
+        "{}-v{}-{}-{}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION"),
+        platform,
+        build
+    );
+    let response = client.get(url).header("User-Agent", useragent).send()?;
     #[cfg(debug_assertions)]
     println!("[{}] HTTP status: {}", now_string(), response.status());
     if !response.status().is_success() {
