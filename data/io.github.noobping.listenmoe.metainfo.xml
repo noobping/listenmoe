@@ -3,6 +3,34 @@
   <id>io.github.noobping.listenmoe</id>
   <name>LISTEN.moe</name>
   <summary>The world's cutest radio. Powered by LISTEN.moe!</summary>
+  <summary xml:lang="bg">Най-сладкото радио в света. Захранвано от LISTEN.moe!</summary>
+  <summary xml:lang="cs">Nejroztomilejší rádio na světě. Poháněno LISTEN.moe!</summary>
+  <summary xml:lang="da">Verdens sødeste radio. Drevet af LISTEN.moe!</summary>
+  <summary xml:lang="de">Das niedlichste Radio der Welt. Bereitgestellt von LISTEN.moe!</summary>
+  <summary xml:lang="el">Το πιο χαριτωμένο ραδιόφωνο στον κόσμο. Με την υποστήριξη του LISTEN.moe!</summary>
+  <summary xml:lang="es">La radio más adorable del mundo. Impulsada por LISTEN.moe!</summary>
+  <summary xml:lang="et">Maailma kõige armsam raadio. Toetatud LISTEN.moe poolt!</summary>
+  <summary xml:lang="fi">Maailman suloisin radio. LISTEN.moe:n voimin!</summary>
+  <summary xml:lang="fr">La radio la plus mignonne du monde. Propulsée par LISTEN.moe&nbsp;!</summary>
+  <summary xml:lang="he">הרדיו החמוד ביותר בעולם. מופעל על ידי LISTEN.moe!</summary>
+  <summary xml:lang="hr">Najslađi radio na svijetu. Pokreće LISTEN.moe!</summary>
+  <summary xml:lang="hu">A világ legaranyosabb rádiója. A LISTEN.moe működteti!</summary>
+  <summary xml:lang="id">Radio paling imut di dunia. Didukung oleh LISTEN.moe!</summary>
+  <summary xml:lang="it">La radio più carina del mondo. Offerta da LISTEN.moe!</summary>
+  <summary xml:lang="ja">世界で一番かわいいラジオ。LISTEN.moeがお送りします！</summary>
+  <summary xml:lang="ko">세상에서 가장 귀여운 라디오. LISTEN.moe 제공!</summary>
+  <summary xml:lang="lt">Mieliausias radijas pasaulyje. Palaikomas LISTEN.moe!</summary>
+  <summary xml:lang="lv">Pasaulē jaukākais radio. Nodrošina LISTEN.moe!</summary>
+  <summary xml:lang="nl">De schattigste radio ter wereld. Mogelijk gemaakt door LISTEN.moe!</summary>
+  <summary xml:lang="pl">Najbardziej urocze radio na świecie. Napędzane przez LISTEN.moe!</summary>
+  <summary xml:lang="pt">A rádio mais fofa do mundo. Desenvolvida por LISTEN.moe!</summary>
+  <summary xml:lang="ro">Cel mai drăguț radio din lume. Susținut de LISTEN.moe!</summary>
+  <summary xml:lang="sk">Najroztomilejšie rádio na svete. Poháňané LISTEN.moe!</summary>
+  <summary xml:lang="sl">Najbolj prikupen radio na svetu. Poganja LISTEN.moe!</summary>
+  <summary xml:lang="sv">Världens sötaste radio. Drivs av LISTEN.moe!</summary>
+  <summary xml:lang="tr">Dünyanın en sevimli radyosu. LISTEN.moe tarafından desteklenmektedir!</summary>
+  <summary xml:lang="zh-CN">世界上最可爱的电台，由 LISTEN.moe 提供！</summary>
+  <summary xml:lang="zh-TW">世界上最可愛的電台，由 LISTEN.moe 提供！</summary>
 
   <developer_name>noobping</developer_name>
 
@@ -66,6 +94,141 @@
       <li>System media control integration</li>
       <li>Pause and resume the radio</li>
       <li>Dynamic theming based on album artwork, with automatic light and dark mode switching</li>
+    </ul>
+  </description>
+
+  <description xml:lang="de">
+    <p>Erlebe pure Kawaii-Energie mit nonstop japanischer und koreanischer Musik,
+      rund um die Uhr direkt von LISTEN.moe gestreamt.</p>
+    <p>
+      Genieße ein sauberes Hörerlebnis ohne Werbung, mit Echtzeit-Songinformationen
+      und nahtloser System-Mediensteuerung.
+    </p>
+    <ul>
+      <li>24/7 Radiostreaming</li>
+      <li>Keine Werbung</li>
+      <li>Anzeige des aktuell gespielten Songs</li>
+      <li>Integration der System-Mediensteuerung</li>
+      <li>Radio pausieren und fortsetzen</li>
+      <li>Dynamische Themes basierend auf Albumcovern mit automatischem Hell-/Dunkelmodus</li>
+    </ul>
+  </description>
+
+  <description xml:lang="es">
+    <p>Disfruta de pura energía kawaii con música japonesa y coreana sin interrupciones,
+      transmitida las 24 horas directamente desde LISTEN.moe.</p>
+    <p>
+      Una experiencia de escucha limpia y sin anuncios, con información de canciones en tiempo real
+      y compatibilidad total con los controles multimedia del sistema.
+    </p>
+    <ul>
+      <li>Radio en streaming 24/7</li>
+      <li>Sin anuncios</li>
+      <li>Muestra la canción que se está reproduciendo</li>
+      <li>Integración con los controles multimedia del sistema</li>
+      <li>Pausar y reanudar la radio</li>
+      <li>Temas dinámicos basados en la carátula del álbum con cambio automático claro/oscuro</li>
+    </ul>
+  </description>
+
+  <description xml:lang="fr">
+    <p>Plongez dans une énergie kawaii pure avec de la musique japonaise et coréenne en continu,
+      diffusée 24h/24 directement depuis LISTEN.moe.</p>
+    <p>
+      Profitez d’une expérience d’écoute propre et sans publicité, avec des informations sur les
+      titres en temps réel
+      et une intégration complète des contrôles multimédias du système.
+    </p>
+    <ul>
+      <li>Diffusion radio 24h/24</li>
+      <li>Aucune publicité</li>
+      <li>Affichage du titre en cours de lecture</li>
+      <li>Intégration des contrôles multimédias système</li>
+      <li>Mise en pause et reprise de la radio</li>
+      <li>Thèmes dynamiques basés sur les pochettes d’album avec bascule automatique clair/sombre</li>
+    </ul>
+  </description>
+
+  <description xml:lang="it">
+    <p>Sintonizzati su pura energia kawaii con musica giapponese e coreana senza interruzioni,
+      trasmessa 24 ore su 24 direttamente da LISTEN.moe.</p>
+    <p>
+      Goditi un’esperienza di ascolto pulita e senza pubblicità, con informazioni sui brani in tempo
+      reale
+      e supporto completo ai controlli multimediali di sistema.
+    </p>
+    <ul>
+      <li>Streaming radio 24/7</li>
+      <li>Nessuna pubblicità</li>
+      <li>Visualizzazione del brano in riproduzione</li>
+      <li>Integrazione con i controlli multimediali di sistema</li>
+      <li>Pausa e ripresa della radio</li>
+      <li>Temi dinamici basati sulla copertina dell’album con cambio automatico chiaro/scuro</li>
+    </ul>
+  </description>
+
+  <description xml:lang="ja">
+    <p>LISTEN.moe から24時間365日配信される、日本・韓国音楽のノンストップな「カワイイ」エネルギーを楽しもう。</p>
+    <p>
+      広告なしのクリーンな再生体験、リアルタイムの楽曲情報表示、
+      そしてシステム全体から操作できるメディアコントロールに対応しています。
+    </p>
+    <ul>
+      <li>24時間365日のラジオ配信</li>
+      <li>広告なし</li>
+      <li>再生中の楽曲を表示</li>
+      <li>システムメディアコントロール対応</li>
+      <li>再生の一時停止・再開</li>
+      <li>アルバムアートに基づく動的テーマ（ライト／ダーク自動切替）</li>
+    </ul>
+  </description>
+
+  <description xml:lang="ko">
+    <p>LISTEN.moe에서 24시간 스트리밍되는 일본 및 한국 음악으로 가득한 순수한 카와이 에너지를 즐겨보세요.</p>
+    <p>
+      광고 없는 깔끔한 청취 경험, 실시간 곡 정보 표시,
+      그리고 시스템 전반에서 제어 가능한 미디어 컨트롤을 지원합니다.
+    </p>
+    <ul>
+      <li>24시간 라디오 스트리밍</li>
+      <li>광고 없음</li>
+      <li>현재 재생 중인 곡 표시</li>
+      <li>시스템 미디어 컨트롤 통합</li>
+      <li>라디오 일시 정지 및 재개</li>
+      <li>앨범 아트워크 기반 동적 테마 및 자동 라이트/다크 모드 전환</li>
+    </ul>
+  </description>
+
+  <description xml:lang="nl">
+    <p>Stem af op pure kawaii-energie met non-stop Japanse en Koreaanse muziek,
+      24/7 gestreamd rechtstreeks vanaf LISTEN.moe.</p>
+    <p>
+      Geniet van een schone luisterervaring zonder advertenties, met realtime songinformatie
+      en naadloze ondersteuning voor systeemmediabediening.
+    </p>
+    <ul>
+      <li>24/7 radiostreaming</li>
+      <li>Geen advertenties</li>
+      <li>Toont het momenteel afgespeelde nummer</li>
+      <li>Integratie met systeemmediabediening</li>
+      <li>Radio pauzeren en hervatten</li>
+      <li>Dynamische thema’s gebaseerd op albumhoezen met automatische licht-/donkermodus</li>
+    </ul>
+  </description>
+
+  <description xml:lang="zh-CN">
+    <p>来自 LISTEN.moe 的 24/7 不间断日本与韩国音乐，尽情感受纯粹的可爱能量。</p>
+    <p>
+      无广告的纯净聆听体验，实时显示歌曲信息，
+      并支持系统级媒体控制，让你随时随地掌控播放。
+    </p>
+    <ul>
+      <li>24/7 电台直播</li>
+      <li>无广告</li>
+      <li>显示当前播放的歌曲</li>
+      <li>系统媒体控制集成</li>
+      <li>暂停与继续播放</li>
+      <li>基于专辑封面的动态主题，自动切换浅色与深色模式</li>
     </ul>
   </description>
 
