@@ -208,7 +208,7 @@ pub fn build_ui(app: &Application) {
                 .application_icon(APP_ID)
                 .version(env!("CARGO_PKG_VERSION"))
                 .developers(&authors[..])
-                .translator_credits("AI translation (GPT-5.2); partial review by Nick and Kana")
+                .translator_credits("AI translation (GPT-5.2); reviewed by Nick and Kana")
                 .website(homepage)
                 .issue_url(issues)
                 .support_url(format!("{}discord", homepage))
