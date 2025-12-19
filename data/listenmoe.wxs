@@ -40,6 +40,7 @@
         </Directory>
 
         <Feature Id="MainFeature" Title="$(var.ProductName)" Level="1">
+            <ComponentRef Id="StartMenuShortcut" />
             <ComponentGroupRef Id="AppFiles" />
         </Feature>
     </Product>
