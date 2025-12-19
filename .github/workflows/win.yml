@@ -150,13 +150,6 @@ jobs:
       - name: Install WiX Toolset
         run: choco install wixtoolset --no-progress -y
 
-      - name: Debug WiX installation
-        shell: pwsh
-        run: |
-          choco list --local-only wixtoolset
-          Get-Command candle.exe, light.exe, heat.exe -ErrorAction SilentlyContinue | Format-List
-          Get-ChildItem "C:\ProgramData\chocolatey\lib" -Filter "wixtoolset*" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 50
-
       - name: Bundle
         shell: pwsh
         run: |
