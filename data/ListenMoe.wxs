@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?include Product.wxi?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <?include Product.wxi?>
-
     <Product
         Id="*"
         Name="$(var.ProductName)"
