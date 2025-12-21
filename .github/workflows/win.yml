@@ -7,6 +7,25 @@ on:
       - "v*"
 
 jobs:
+  locales:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext zip tree
+      - name: Locales
+        run: sh ./po.sh locale
+      - run: zip -r locales.zip locale
+      - run: tree -a locale || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: locales
+          path: locales.zip
+
   build:
     runs-on: windows-latest
     permissions:
@@ -101,7 +120,25 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
-      - name: Download artifact
+      - name: Download locales artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: locales
+          path: dist
+
+      - name: Extract locales
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:GITHUB_WORKSPACE 'dist\locales.zip'
+          if (-not (Test-Path $zip)) { throw "locales.zip not found: $zip" }
+
+          if (Test-Path locale) { Remove-Item locale -Recurse -Force }
+          Expand-Archive -Path $zip -DestinationPath $env:GITHUB_WORKSPACE -Force
+
+          Write-Host "Locales extracted:"
+          Get-ChildItem -Recurse -Depth 4 locale | Select-Object FullName
+
+      - name: Download application artifact
         uses: actions/download-artifact@v4
         with:
           name: listenmoe-windows
