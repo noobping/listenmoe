@@ -1,7 +1,7 @@
 
 # Translations
 
-This folder contains translation files in `.po` (Portable Object) format. If you find a typo, unclear wording, or can improve a translation, you are welcome to contribute. Some translations (like app description) are in the [metainfo file](../data/io.github.noobping.listenmoe.metainfo.xml).
+This folder contains translation files in `.po` (Portable Object) format. Other translations (such as the app description) are located in the [metainfo file](../data/io.github.noobping.listenmoe.metainfo.xml). If you spot a typo, unclear wording, or have a better translation, contributions are welcome.
 
 ## What to edit
 
