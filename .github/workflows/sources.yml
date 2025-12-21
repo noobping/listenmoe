@@ -1,0 +1,64 @@
+name: Flatpak Cargo Sources
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "**/Cargo.toml"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python + tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip git
+          python3 --version
+
+      - name: Ensure Cargo.lock exists
+        run: |
+          if [ ! -f Cargo.lock ]; then
+            echo "Cargo.lock missing; generating..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+            cargo generate-lockfile
+          fi
+
+      - name: Fetch flatpak-builder-tools
+        run: |
+          rm -rf /tmp/flatpak-builder-tools
+          git clone --depth 1 https://github.com/flatpak/flatpak-builder-tools.git /tmp/flatpak-builder-tools
+
+      - name: Generate cargo-sources.yml
+        run: |
+          python3 /tmp/flatpak-builder-tools/cargo/flatpak-cargo-generator.py \
+            --yaml Cargo.lock > cargo-sources.yml
+
+          test -s cargo-sources.yml
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- cargo-sources.yml; then
+            echo "No changes to cargo-sources.yml"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cargo-sources.yml
+          git commit -m "chore(flatpak): update cargo-sources.yml"
+          git push
