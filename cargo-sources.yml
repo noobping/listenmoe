@@ -1980,16 +1980,6 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/quick-xml/quick-xml-0.38.4.crate
-  sha256: b66c2058c55a409d601666cffe35f04333cf1013010882cec174a7467cd4e21c
-  dest: cargo/vendor/quick-xml-0.38.4
-- type: inline
-  contents: '{"package": "b66c2058c55a409d601666cffe35f04333cf1013010882cec174a7467cd4e21c",
-    "files": {}}'
-  dest: cargo/vendor/quick-xml-0.38.4
-  dest-filename: .cargo-checksum.json
-- type: archive
-  archive-type: tar-gzip
   url: https://static.crates.io/crates/quinn/quinn-0.11.9.crate
   sha256: b9e20a958963c291dc322d98411f541009df2ced7b5a4f2bd52337638cfccf20
   dest: cargo/vendor/quinn-0.11.9
@@ -2140,13 +2130,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/reqwest/reqwest-0.12.26.crate
-  sha256: 3b4c14b2d9afca6a60277086b0cc6a6ae0b568f6f7916c943a8cdc79f8be240f
-  dest: cargo/vendor/reqwest-0.12.26
+  url: https://static.crates.io/crates/reqwest/reqwest-0.12.27.crate
+  sha256: 8e893f6bece5953520ddbb3f8f46f3ef36dd1fef4ee9b087c4b4a725fd5d10e4
+  dest: cargo/vendor/reqwest-0.12.27
 - type: inline
-  contents: '{"package": "3b4c14b2d9afca6a60277086b0cc6a6ae0b568f6f7916c943a8cdc79f8be240f",
+  contents: '{"package": "8e893f6bece5953520ddbb3f8f46f3ef36dd1fef4ee9b087c4b4a725fd5d10e4",
     "files": {}}'
-  dest: cargo/vendor/reqwest-0.12.26
+  dest: cargo/vendor/reqwest-0.12.27
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
@@ -2320,13 +2310,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/serde_json/serde_json-1.0.145.crate
-  sha256: 402a6f66d8c709116cf22f558eab210f5a50187f702eb4d7e5ef38d9a7f1c79c
-  dest: cargo/vendor/serde_json-1.0.145
+  url: https://static.crates.io/crates/serde_json/serde_json-1.0.146.crate
+  sha256: 217ca874ae0207aac254aa02c957ded05585a90892cc8d87f9e5fa49669dadd8
+  dest: cargo/vendor/serde_json-1.0.146
 - type: inline
-  contents: '{"package": "402a6f66d8c709116cf22f558eab210f5a50187f702eb4d7e5ef38d9a7f1c79c",
+  contents: '{"package": "217ca874ae0207aac254aa02c957ded05585a90892cc8d87f9e5fa49669dadd8",
     "files": {}}'
-  dest: cargo/vendor/serde_json-1.0.145
+  dest: cargo/vendor/serde_json-1.0.146
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
