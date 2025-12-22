@@ -5,7 +5,7 @@ repository = "https://github.com/noobping/listenmoe"
 homepage = "https://listen.moe/"
 license = "MIT"
 authors = ["noobping <hello@noobping.dev>"]
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 
 [features]
