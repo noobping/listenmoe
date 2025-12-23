@@ -60,12 +60,13 @@ pub fn build_ui(app: &Application) {
     pause_button.set_action_name(Some("win.pause"));
     pause_button.set_visible(false);
 
+    let height = 50;
     let window = ApplicationWindow::builder()
         .application(app)
         .title(&gettext("Listen.moe Radio"))
         .icon_name(APP_ID)
         .default_width(300)
-        .default_height(40)
+        .default_height(height)
         .resizable(false)
         .build();
 
@@ -284,6 +285,7 @@ pub fn build_ui(app: &Application) {
     header.set_title_widget(Some(&win_title));
     header.set_show_title_buttons(false);
     header.add_css_class("cover-tint");
+    header.set_height_request(height);
 
     let art_picture = Picture::builder()
         .can_shrink(true)
@@ -326,9 +328,10 @@ pub fn build_ui(app: &Application) {
 
     let overlay = gtk::Overlay::new();
     overlay.add_css_class("titlebar-tint");
+    overlay.set_height_request(height);
 
     // Create bars visualizer and add it behind headerbar
-    let (viz, viz_handle) = make_bars_visualizer(48, 40);
+    let (viz, viz_handle) = make_bars_visualizer(48, height);
     overlay.set_child(Some(&viz));
 
     header.add_css_class("viz-transparent");
