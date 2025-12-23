@@ -57,7 +57,7 @@
   <launchable type="desktop-id">io.github.noobping.listenmoe.desktop</launchable>
 
   <screenshots>
-    <screenshot type="default">
+    <screenshot type="default" xml:lang="en">
       <image>
         https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.screenshot.png</image>
       <caption>Main window when connected</caption>
