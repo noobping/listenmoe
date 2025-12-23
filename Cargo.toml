@@ -1,6 +1,6 @@
 [package]
 name = "listenmoe"
-description = "A cute little radio app. Powered by LISTEN.moe!"
+description = "A cute radio app for listen.moe"
 repository = "https://github.com/noobping/listenmoe"
 homepage = "https://listen.moe/"
 license = "MIT"

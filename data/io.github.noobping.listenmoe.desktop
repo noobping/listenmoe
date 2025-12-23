@@ -3,7 +3,7 @@ Version=1.0
 Type=Application
 
 Name=Listen.moe
-Comment=A cute little radio app. Powered by LISTEN.moe!
+Comment=A cute radio app for listen.moe
 Categories=AudioVideo;Player;
 
 Icon=io.github.noobping.listenmoe

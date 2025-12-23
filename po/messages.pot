@@ -24,7 +24,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-msgid "A cute little radio app. Powered by LISTEN.moe!"
+msgid "A cute radio app for listen.moe"
 msgstr ""
 
 msgid "This is an unofficial app for LISTEN.moe. Stream and metadata provided by LISTEN.moe."
