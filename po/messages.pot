@@ -24,12 +24,6 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-msgid "Install"
-msgstr ""
-
-msgid "Uninstall"
-msgstr ""
-
 msgid "A cute little radio app. Powered by LISTEN.moe!"
 msgstr ""
 

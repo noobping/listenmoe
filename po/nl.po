@@ -24,12 +24,6 @@ msgstr "Over"
 msgid "Quit"
 msgstr "Afsluiten"
 
-msgid "Install"
-msgstr "Installeren"
-
-msgid "Uninstall"
-msgstr "Verwijderen"
-
 msgid "A cute little radio app. Powered by LISTEN.moe!"
 msgstr "Een schattige kleine radio-app. Mogelijk gemaakt door LISTEN.moe!"
 
