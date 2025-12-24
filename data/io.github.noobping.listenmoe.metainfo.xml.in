@@ -10,6 +10,8 @@
     <ul>
       <li>Listen to J-POP and K-POP</li>
       <li>Pause and resume the live stream</li>
+      <li>No ads</li>
+      <li>Written in Rust</li>
     </ul>
   </description>
 

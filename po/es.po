@@ -30,6 +30,12 @@ msgstr "Escucha J-POP/K-POP"
 msgid "Pause and resume the live stream"
 msgstr "Pausa y reanuda la transmisión en vivo"
 
+msgid "No ads"
+msgstr "Sin anuncios"
+
+msgid "Made with Rust"
+msgstr "Hecho con Rust"
+
 msgid "Initial release."
 msgstr "Lanzamiento inicial."
 

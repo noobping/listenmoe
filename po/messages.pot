@@ -30,6 +30,12 @@ msgstr ""
 msgid "Pause and resume the live stream"
 msgstr ""
 
+msgid "No ads"
+msgstr ""
+
+msgid "Made with Rust"
+msgstr ""
+
 msgid "Initial release."
 msgstr ""
 
