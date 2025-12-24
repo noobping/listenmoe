@@ -30,6 +30,12 @@ msgstr ""
 msgid "Pause and resume the live stream"
 msgstr ""
 
+msgid "Animated sound bars that react to the music"
+msgstr ""
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr ""
+
 msgid "No ads"
 msgstr ""
 

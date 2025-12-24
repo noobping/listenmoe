@@ -30,6 +30,12 @@ msgstr "J-POP/K-POP hören"
 msgid "Pause and resume the live stream"
 msgstr "Live-Stream pausieren und fortsetzen"
 
+msgid "Animated sound bars that react to the music"
+msgstr "Animierte Soundbalken, die auf die Musik reagieren"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Dynamische Farben basierend auf dem aktuellen Album- oder Künstlercover"
+
 msgid "No ads"
 msgstr "Keine Werbung"
 

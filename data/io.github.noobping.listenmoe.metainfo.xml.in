@@ -10,6 +10,8 @@
     <ul>
       <li>Listen to J-POP and K-POP</li>
       <li>Pause and resume the live stream</li>
+      <li>Animated sound bars that react to the music</li>
+      <li>Dynamic colors based on the current album or artist cover</li>
       <li>No ads</li>
       <li>Written in Rust</li>
     </ul>
@@ -59,20 +61,30 @@
   <launchable type="desktop-id">io.github.noobping.listenmoe.desktop</launchable>
 
   <screenshots>
+    <screenshot xml:lang="en">
+      <image>
+        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.screenshot_blue.png</image>
+      <caption>Blue colored window when connected</caption>
+    </screenshot>
+    <screenshot xml:lang="en">
+      <image>
+        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_green.png</image>
+      <caption>Green colored window when disconnected</caption>
+    </screenshot>
     <screenshot type="default" xml:lang="en">
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.screenshot.png</image>
-      <caption>Window when connected</caption>
+        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_light.png</image>
+      <caption>Light colored window when disconnected</caption>
     </screenshot>
     <screenshot xml:lang="en">
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.light.png</image>
-      <caption>Light window when disconnected</caption>
+        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_pink.png</image>
+      <caption>Light colored window when disconnected</caption>
     </screenshot>
     <screenshot xml:lang="en">
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.dark.png</image>
-      <caption>Dark window when disconnected</caption>
+        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_gold.png</image>
+      <caption>Gold colored window when disconnected</caption>
     </screenshot>
   </screenshots>
 
