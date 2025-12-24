@@ -6,9 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "ListenMoe Radio"
-msgstr "ListenMoe Radio"
-
 msgid "Copy title & artist"
 msgstr "Copy title & artist"
 
