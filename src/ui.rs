@@ -774,7 +774,6 @@ fn make_bars_visualizer(n_bars: usize, height: i32) -> (gtk::DrawingArea, VizHan
         let vals = values.borrow();
         let n = vals.len().max(1) as f64;
 
-        let gap = 1.5_f64;
         let bar_w = (w / n).max(1.0);
 
         for (i, v) in vals.iter().enumerate() {
@@ -784,7 +783,7 @@ fn make_bars_visualizer(n_bars: usize, height: i32) -> (gtk::DrawingArea, VizHan
             let bh = (*v as f64) * (h * 0.85);
             let y = h - bh;
 
-            cr.rectangle(x + gap, y, (bar_w - gap * 2.0).max(1.0), bh.max(1.0));
+            cr.rectangle(x, y, (bar_w * 2.0).max(1.0), bh.max(1.0));
         }
 
         let _ = cr.fill();
