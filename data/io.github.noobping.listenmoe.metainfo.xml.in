@@ -69,17 +69,7 @@
     <screenshot xml:lang="en">
       <image>
         https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.listenmoe.screenshot_blue.png</image>
-      <caption>Blue colored window when connected</caption>
-    </screenshot>
-    <screenshot xml:lang="en">
-      <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_green.png</image>
-      <caption>Green colored window when disconnected</caption>
-    </screenshot>
-    <screenshot xml:lang="en">
-      <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/main/data/io.github.noobping.screenshot_pink.png</image>
-      <caption>Pink colored window when disconnected</caption>
+      <caption>Colored window when connected</caption>
     </screenshot>
   </screenshots>
 
