@@ -31,8 +31,8 @@
   <url type="vcs-browser">https://github.com/noobping/listenmoe</url>
 
   <branding>
-    <color type="primary" scheme_preference="light">#ffa348</color>
-    <color type="primary" scheme_preference="dark">#ff015b</color>
+    <color type="primary" scheme_preference="light">#00FFA5</color>
+    <color type="primary" scheme_preference="dark">#AC003D</color>
   </branding>
 
   <supports>
