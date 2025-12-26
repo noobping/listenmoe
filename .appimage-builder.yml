@@ -1,8 +1,8 @@
 version: 1
 
 script:
-  - mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/{192x192,scalable,symbolic}/apps AppDir/usr/share/firejail AppDir/usr/share/metainfo
-  - cp data/io.github.noobping.listenmoe.png AppDir/usr/share/icons/hicolor/192x192/apps/
+  - mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/{128x128,scalable,symbolic}/apps AppDir/usr/share/firejail AppDir/usr/share/metainfo
+  - cp data/128x128/apps/io.github.noobping.listenmoe.png AppDir/usr/share/icons/hicolor/128x128/apps/
   - cp -r data/scalable/apps/* AppDir/usr/share/icons/hicolor/scalable/apps/
   - cp -r data/symbolic/apps/* AppDir/usr/share/icons/hicolor/symbolic/apps/
   - cp target/release/listenmoe AppDir/usr/bin/
