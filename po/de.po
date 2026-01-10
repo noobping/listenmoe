@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.0.5\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.0.6\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -50,9 +50,6 @@ msgstr "Verbunden, wenn kein Album- oder Künstlerbild vorhanden ist"
 
 msgid "Colored window when connected"
 msgstr "Farbiger Fenstermodus bei aktiver Verbindung"
-
-msgid "Album or artist image popover"
-msgstr "Album- oder Künstlerbild-Popover"
 
 msgid "AI translation (GPT-5.2); reviewed by nobody"
 msgstr "KI-Übersetzung (GPT-5.2); geprüft von Eric"

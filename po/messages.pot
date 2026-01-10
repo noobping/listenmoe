@@ -51,9 +51,6 @@ msgstr ""
 msgid "Colored window when connected"
 msgstr ""
 
-msgid "Album or artist image popover"
-msgstr ""
-
 # You may change this with your name
 msgid "AI translation (GPT-5.2); reviewed by nobody"
 msgstr ""

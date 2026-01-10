@@ -30,7 +30,7 @@
   <url type="vcs-browser">https://github.com/noobping/listenmoe</url>
 
   <branding>
-    <color type="primary" scheme_preference="light">#00FFA5</color>
+    <color type="primary" scheme_preference="light">#DC8ADD</color>
     <color type="primary" scheme_preference="dark">#AC003D</color>
   </branding>
 
@@ -65,18 +65,13 @@
   <screenshots>
     <screenshot type="default">
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/v1.0.5/data/io.github.noobping.listenmoe.screenshot.png</image>
+        https://raw.githubusercontent.com/noobping/listenmoe/v1.0.6/data/io.github.noobping.listenmoe.screenshot.png</image>
       <caption>When connected and there is no album or artist image</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/v1.0.5/data/io.github.noobping.listenmoe.screenshot_color.png</image>
+        https://raw.githubusercontent.com/noobping/listenmoe/v1.0.6/data/io.github.noobping.listenmoe.screenshot_green.png</image>
       <caption>Colored window when connected</caption>
-    </screenshot>
-    <screenshot>
-      <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/v1.0.5/data/io.github.noobping.listenmoe.screenshot_popover.png</image>
-      <caption>Album or artist image popover</caption>
     </screenshot>
   </screenshots>
 
@@ -85,6 +80,14 @@
   </provides>
 
   <releases>
+    <release version="1.0.6" date="2026-01-11">
+      <description>
+        <ul>
+          <li>Updated screenshots to use a more reasonable window size</li>
+          <li>Updated application icon</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.5" date="2026-01-10">
       <description>
         <ul>
