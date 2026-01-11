@@ -69,7 +69,7 @@ msgstr "Ruimte tussen geluidsbalken verwijderd."
 msgid "Streaming logic now better handles connection issues and stream changes."
 msgstr "Streaminglogica kan nu beter omgaan met verbindingsproblemen en streamwijzigingen."
 
-msgid "Clarified the application description to avoid confusion."
+msgid "Clarified the application description."
 msgstr "De applicatiebeschrijving verduidelijkt."
 
 msgid "Translated image captions"
