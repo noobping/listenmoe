@@ -8,13 +8,10 @@ use adw::gtk::{
 };
 use adw::{prelude::*, Application, WindowTitle};
 use gettextrs::gettext;
-#[cfg(target_os = "linux")]
 use mpris_server::PlaybackStatus;
 use std::rc::Rc;
-#[cfg(target_os = "linux")]
 use std::sync::mpsc;
 
-#[cfg(target_os = "linux")]
 use super::controls::{build_controls, MediaControlEvent, MediaControls};
 use crate::listen::Listen;
 use crate::meta::Meta;
@@ -35,7 +32,6 @@ where
     action
 }
 
-#[cfg(target_os = "linux")]
 pub fn build_actions(
     window: &ApplicationWindow,
     app: &Application,
@@ -120,65 +116,6 @@ pub fn build_actions(
     add_accels(app);
 
     (controls, ctrl_rx)
-}
-
-#[cfg(not(target_os = "linux"))]
-pub fn build_actions(
-    window: &ApplicationWindow,
-    app: &Application,
-    win_title: &WindowTitle,
-    play_button: &Button,
-    pause_button: &Button,
-    radio: &Rc<Listen>,
-    meta: &Rc<Meta>,
-) {
-    window.add_action(&{
-        let radio = radio.clone();
-        let meta = meta.clone();
-        let win = win_title.clone();
-        let play = play_button.clone();
-        let pause = pause_button.clone();
-        make_action("play", move || {
-            win.set_title("Listen Moe");
-            win.set_subtitle("Connecting...");
-            meta.start();
-            radio.start();
-            play.set_visible(false);
-            pause.set_visible(true);
-        })
-    });
-    window.add_action(&{
-        let radio = radio.clone();
-        let meta = meta.clone();
-        let win = win_title.clone();
-        let play = play_button.clone();
-        let pause = pause_button.clone();
-        make_action("pause", move || {
-            meta.pause();
-            radio.pause();
-            pause.set_visible(false);
-            play.set_visible(true);
-            win.set_title("Listen Moe");
-            win.set_subtitle(&gettext("J-POP and K-POP radio"));
-        })
-    });
-    window.add_action(&{
-        let radio = radio.clone();
-        let meta = meta.clone();
-        let win = win_title.clone();
-        let play = play_button.clone();
-        let stop = pause_button.clone();
-        make_action("stop", move || {
-            meta.stop();
-            radio.stop();
-            stop.set_visible(false);
-            play.set_visible(true);
-            win.set_title("Listen Moe");
-            win.set_subtitle(&gettext("J-POP and K-POP radio"));
-        })
-    });
-    add_actions(window, win_title, play_button, pause_button, radio, meta);
-    add_accels(app);
 }
 
 fn add_actions(

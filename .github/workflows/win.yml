@@ -57,7 +57,7 @@ jobs:
       - name: Update MSYS2
         run: C:\tools\msys64\usr\bin\bash -lc "pacman -Syu --noconfirm"
 
-      - name: Install GTK4 + Libadwaita
+      - name: Install Libadwaita
         run: |
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-toolchain"
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gtk4"

@@ -22,7 +22,6 @@ use std::{
     time::Duration,
 };
 
-#[cfg(target_os = "linux")]
 use super::controls::MediaControlEvent;
 use super::{actions, cover, viz};
 
@@ -60,7 +59,6 @@ pub fn build_ui(app: &Application) {
     style_manager.set_color_scheme(adw::ColorScheme::Default);
     let css_provider = cover::install_css_provider();
 
-    #[cfg(target_os = "linux")]
     let (controls, ctrl_rx) = actions::build_actions(
         &window,
         &app,
@@ -70,7 +68,6 @@ pub fn build_ui(app: &Application) {
         &radio,
         &meta,
     );
-    #[cfg(target_os = "linux")]
     let set_metadata = {
         let controls = controls.clone();
         move |title: String, artist: String, art_url: Option<&str>| {
@@ -79,16 +76,6 @@ pub fn build_ui(app: &Application) {
             }
         }
     };
-    #[cfg(not(target_os = "linux"))]
-    actions::build_actions(
-        &window,
-        &app,
-        &win_title,
-        &play_button,
-        &pause_button,
-        &radio,
-        &meta,
-    );
 
     // Build UI
     let menu = Menu::new();
@@ -174,9 +161,7 @@ pub fn build_ui(app: &Application) {
         let art_picture = art_picture.clone();
         let cover_rx = cover_rx;
         let cover_tx = cover_tx.clone();
-        #[cfg(target_os = "linux")]
         let window = window.clone();
-        #[cfg(target_os = "linux")]
         let set_metadata = set_metadata.clone();
 
         let clear_art_ui = |art_picture: &gtk::Picture,
@@ -193,7 +178,6 @@ pub fn build_ui(app: &Application) {
         };
 
         glib::timeout_add_local(Duration::from_millis(100), move || {
-            #[cfg(target_os = "linux")]
             if let Some(ctrl_rx) = &ctrl_rx {
                 for event in ctrl_rx.try_iter() {
                     let _ = match event {
@@ -235,14 +219,12 @@ pub fn build_ui(app: &Application) {
                 win.set_title(&info.artist);
                 win.set_subtitle(&info.title);
 
-                #[cfg(target_os = "linux")]
                 let cover_url = info
                     .album_cover
                     .as_ref()
                     .or(info.artist_image.as_ref())
                     .map(|s| s.as_str());
 
-                #[cfg(target_os = "linux")]
                 set_metadata(info.title.clone(), info.artist.clone(), cover_url.clone());
 
                 if let Some(url) = info.album_cover.as_ref().or(info.artist_image.as_ref()) {

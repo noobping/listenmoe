@@ -57,7 +57,6 @@ pub fn build_controls(
 ) -> Result<(Rc<MediaControls>, mpsc::Receiver<MediaControlEvent>), mpris_server::zbus::Error> {
     let (tx, rx) = mpsc::channel();
 
-    // Create player (async) on the GLib main context
     let ctx = glib::MainContext::default();
     let player = ctx.block_on(async {
         Player::builder(bus_suffix)
@@ -93,7 +92,6 @@ pub fn build_controls(
         connect_previous => Previous,
     );
 
-    // Run event handler task (required) :contentReference[oaicite:1]{index=1}
     let player = Rc::new(player);
     ctx.spawn_local(player.clone().run());
 
