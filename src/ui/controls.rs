@@ -72,43 +72,26 @@ pub fn build_controls(
             .await
     })?;
 
-    // Wire MPRIS calls -> our events
-    {
-        let tx = tx.clone();
-        player.connect_play(move |_| {
-            let _ = tx.send(MediaControlEvent::Play);
-        });
+    macro_rules! connect_media_events {
+        ($player:expr, $tx:expr, $($method:ident => $event:ident),+ $(,)?) => {
+            $(
+                {
+                    let tx = $tx.clone();
+                    $player.$method(move |_| {
+                        let _ = tx.send(MediaControlEvent::$event);
+                    });
+                }
+            )+
+        };
     }
-    {
-        let tx = tx.clone();
-        player.connect_pause(move |_| {
-            let _ = tx.send(MediaControlEvent::Pause);
-        });
-    }
-    {
-        let tx = tx.clone();
-        player.connect_stop(move |_| {
-            let _ = tx.send(MediaControlEvent::Stop);
-        });
-    }
-    {
-        let tx = tx.clone();
-        player.connect_play_pause(move |_| {
-            let _ = tx.send(MediaControlEvent::Toggle);
-        });
-    }
-    {
-        let tx = tx.clone();
-        player.connect_next(move |_| {
-            let _ = tx.send(MediaControlEvent::Next);
-        });
-    }
-    {
-        let tx = tx.clone();
-        player.connect_previous(move |_| {
-            let _ = tx.send(MediaControlEvent::Previous);
-        });
-    }
+    connect_media_events!(player, tx,
+        connect_play => Play,
+        connect_pause => Pause,
+        connect_stop => Stop,
+        connect_play_pause => Toggle,
+        connect_next => Next,
+        connect_previous => Previous,
+    );
 
     // Run event handler task (required) :contentReference[oaicite:1]{index=1}
     let player = Rc::new(player);
