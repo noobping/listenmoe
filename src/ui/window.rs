@@ -1,4 +1,5 @@
 use crate::listen::Listen;
+#[cfg(debug_assertions)]
 use crate::log::now_string;
 use crate::meta::{Meta, TrackInfo};
 use crate::station::Station;
