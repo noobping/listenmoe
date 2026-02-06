@@ -13,6 +13,7 @@
       <li>Animated sound bars that react to the music</li>
       <li>Dynamic colors based on the current album or artist cover</li>
       <li>No ads</li>
+      <li>Optional Discord activity sharing</li>
     </ul>
   </description>
 
@@ -79,6 +80,13 @@
   </provides>
 
   <releases>
+    <release version="1.0.12" date="2026-02-06">
+      <description>
+        <p>
+          Added Discord activity sharing.
+        </p>
+      </description>
+    </release>
     <release version="1.0.11" date="2026-01-23">
       <description>
         <p>

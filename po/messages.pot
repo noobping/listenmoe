@@ -84,3 +84,9 @@ msgstr ""
 
 msgid "Display the application icon in media controls."
 msgstr ""
+
+msgid "Optional Discord activity sharing"
+msgstr ""
+
+msgid "Added Discord activity sharing."
+msgstr ""

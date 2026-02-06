@@ -1,6 +1,8 @@
 use crate::listen::Listen;
+use crate::log::now_string;
 use crate::meta::{Meta, TrackInfo};
 use crate::station::Station;
+use crate::ui::discord::Discord;
 
 use adw::{
     glib,
@@ -177,6 +179,14 @@ pub fn build_ui(app: &Application) {
             cover::apply_cover_tint_css_clear(css_provider);
         };
 
+        let mut discord = match Discord::new() {
+            Ok(d) => Some(d),
+            Err(e) => {
+                eprintln!("Discord disabled: {e}");
+                None
+            }
+        };
+
         glib::timeout_add_local(Duration::from_millis(100), move || {
             if let Some(ctrl_rx) = &ctrl_rx {
                 for event in ctrl_rx.try_iter() {
@@ -218,6 +228,12 @@ pub fn build_ui(app: &Application) {
             for info in rx.try_iter() {
                 win.set_title(&info.artist);
                 win.set_subtitle(&info.title);
+
+                if let Some(d) = discord.as_mut() {
+                    #[cfg(debug_assertions)]
+                    println!("[{}] Update discord: {} {}", now_string(), &info.artist, &info.title);
+                    let _ = d.set(&info.artist, &info.title);
+                }
 
                 let cover_url = info
                     .album_cover

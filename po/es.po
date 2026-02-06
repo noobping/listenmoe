@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.0.11\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.0.12\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -83,3 +83,9 @@ msgstr "Icono de la aplicación actualizado"
 
 msgid "Display the application icon in media controls."
 msgstr "Mostrar el icono de la aplicación en los controles multimedia."
+
+msgid "Optional Discord activity sharing"
+msgstr "Uso compartido opcional de actividad en Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "Se añadió el uso compartido de actividad en Discord."
