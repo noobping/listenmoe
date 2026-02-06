@@ -28,13 +28,7 @@ The `po` folder contains translation files in `.po` (Portable Object) format. If
 
 ### Build
 
-Build the flatpak App:
-
-```sh
-flatpak-builder --user --install --force-clean flatpak-build io.github.noobping.listenmoe.yml
-```
-
-Or build a AppImage:
+Build the AppImage:
 
 ```sh
 ./.appimage-po.sh
