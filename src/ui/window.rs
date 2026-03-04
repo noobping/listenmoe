@@ -25,6 +25,8 @@ use std::{
     thread,
     time::Duration,
 };
+#[cfg(feature = "discord")]
+use std::time::Instant;
 
 use super::controls::MediaControlEvent;
 use super::{actions, cover, viz};
@@ -187,6 +189,14 @@ pub fn build_ui(app: &Application) {
         let mut discord = Discord::new();
         #[cfg(feature = "discord")]
         let mut was_playing = pause.is_visible();
+        #[cfg(feature = "discord")]
+        let mut last_track: Option<(String, String)> = None;
+        #[cfg(feature = "discord")]
+        let mut next_discord_refresh = Instant::now();
+        #[cfg(feature = "discord")]
+        const DISCORD_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
+        #[cfg(feature = "discord")]
+        const DISCORD_RETRY_INTERVAL: Duration = Duration::from_millis(500);
 
         glib::timeout_add_local(Duration::from_millis(100), move || {
             if let Some(ctrl_rx) = &ctrl_rx {
@@ -231,8 +241,20 @@ pub fn build_ui(app: &Application) {
                 let is_playing = pause.is_visible();
                 if was_playing && !is_playing {
                     let _ = discord.clear();
+                    last_track = None;
                 }
                 was_playing = is_playing;
+
+                if is_playing && Instant::now() >= next_discord_refresh {
+                    if let Some((artist, title)) = last_track.as_ref() {
+                        let retry_after = if discord.set(artist, title).is_ok() {
+                            DISCORD_REFRESH_INTERVAL
+                        } else {
+                            DISCORD_RETRY_INTERVAL
+                        };
+                        next_discord_refresh = Instant::now() + retry_after;
+                    }
+                }
             }
 
             for info in rx.try_iter() {
@@ -242,7 +264,15 @@ pub fn build_ui(app: &Application) {
                 #[cfg(all(debug_assertions, feature = "discord"))]
                 println!("[{}] Update discord: {} {}", now_string(), &info.artist, &info.title);
                 #[cfg(feature = "discord")]
-                let _ = discord.set(&info.artist, &info.title);
+                {
+                    last_track = Some((info.artist.clone(), info.title.clone()));
+                    let retry_after = if discord.set(&info.artist, &info.title).is_ok() {
+                        DISCORD_REFRESH_INTERVAL
+                    } else {
+                        DISCORD_RETRY_INTERVAL
+                    };
+                    next_discord_refresh = Instant::now() + retry_after;
+                }
 
                 let cover_url = info
                     .album_cover
