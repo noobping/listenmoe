@@ -16,37 +16,25 @@ When album or artist artwork is available, a dominant color is extracted and use
 
 The background includes subtle, animated sound bars that respond to the music. Their color adapts to the extracted palette while remaining unobtrusive. Text readability is preserved using a soft overlay behind the title and subtitle.
 
+## Installation
+
+You can install ListenMoe using one of the following options:
+
+- **Windows / Linux (AppImage):**  
+  Download the latest release from the [GitHub releases page](https://github.com/noobping/listenmoe/releases/latest).
+- **Linux (Flatpak):**  
+  Install it from [Flathub](https://flathub.org/apps/details/io.github.noobping.listenmoe).
+
 <a href="https://flathub.org/apps/details/io.github.noobping.listenmoe">
   <img alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en"/>
 </a>
 
-## Translations
+## Options
 
-The `po` folder contains translation files in `.po` (Portable Object) format. If you spot a typo, unclear wording, or have a better translation, contributions are welcome.
-
-## Development
-
-### Build
-
-Build the AppImage:
+The application can be started with optional flags. For example:
 
 ```sh
-./.appimage-po.sh
-appimage-builder --recipe .appimage-builder.yml
-```
-
-### Run (debug)
-
-```sh
-cargo run
-```
-
-### CLI flags
-
-Run with `--` when using `cargo run`:
-
-```sh
-cargo run -- -a -k --no-discord
+flatpak run io.github.noobping.listenmoe --autoplay --kpop --stop --no-discord
 ```
 
 Available flags:
@@ -57,7 +45,31 @@ Available flags:
 - `--no-discord`: disable Discord Rich Presence at runtime
 - `-s`, `--stop`: use stop behavior instead of pause
 
-### Update
+## Translations
+
+The `po` folder contains translation files in `.po` (Portable Object) format. If you spot a typo, unclear wording, or have a better translation, contributions are welcome.
+
+## Development
+
+Dependencies:
+
+```sh
+sudo dnf install -y @development-tools cargo clang gcc gcc-c++ gettext libadwaita-devel alsa-lib-devel cairo-devel gdk-pixbuf2-devel glib2-devel libgpg-error-devel gtk4-devel pango-devel openssl-devel make mold nettle-devel pkgconf-pkg-config pkgconf
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+```
+
+Build the AppImage:
+
+```sh
+./.appimage-po.sh
+appimage-builder --recipe .appimage-builder.yml
+```
+
+Run (debug):
+
+```sh
+cargo run
+```
 
 Use `cargo-edit` to update the dependencies.
 
