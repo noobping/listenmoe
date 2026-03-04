@@ -23,7 +23,54 @@ use adw::gtk::{gdk::Display, IconTheme};
 use adw::prelude::*;
 use adw::Application;
 
+fn parse_ui_options() -> (ui::UiOptions, Vec<String>) {
+    let mut options = ui::UiOptions::default();
+    let mut passthrough_args = Vec::new();
+
+    let mut args = std::env::args_os();
+    if let Some(program) = args.next() {
+        passthrough_args.push(program.to_string_lossy().into_owned());
+    }
+
+    let mut parse_flags = true;
+    for arg in args {
+        let arg = arg.to_string_lossy().into_owned();
+        if !parse_flags {
+            passthrough_args.push(arg);
+            continue;
+        }
+
+        match arg.as_str() {
+            "--" => {
+                parse_flags = false;
+                passthrough_args.push(arg);
+            }
+            "-a" | "--autoplay" => {
+                options.autoplay = true;
+            }
+            "-j" | "--jpop" => {
+                options.station = station::Station::Jpop;
+            }
+            "-k" | "--kpop" => {
+                options.station = station::Station::Kpop;
+            }
+            "-s" | "--stop" => {
+                options.stop_instead_pause = true;
+            }
+            "--no-discord" => {
+                options.discord_enabled = false;
+            }
+            _ => {
+                passthrough_args.push(arg);
+            }
+        }
+    }
+
+    (options, passthrough_args)
+}
+
 fn main() {
+    let (ui_options, app_args) = parse_ui_options();
     locale::init_i18n();
 
     // Register resources compiled into the binary. If this fails, the app cannot find its assets.
@@ -43,6 +90,6 @@ fn main() {
 
     // Create the GTK application. The application ID must be unique and corresponds to the desktop file name.
     let app = Application::builder().application_id(APP_ID).build();
-    app.connect_activate(ui::build_ui); // Build the UI when the application is activated.
-    app.run(); // Run the application. This function does not return until the last window is closed.
+    app.connect_activate(move |app| ui::build_ui(app, ui_options)); // Build the UI when the application is activated.
+    app.run_with_args(&app_args); // Run the application. This function does not return until the last window is closed.
 }

@@ -21,6 +21,7 @@ pub(super) struct ActionCtx {
     pause_button: Button,
     radio: Rc<Listen>,
     meta: Rc<Meta>,
+    stop_instead_pause: bool,
 }
 
 impl ActionCtx {
@@ -31,6 +32,7 @@ impl ActionCtx {
         pause_button: &Button,
         radio: &Rc<Listen>,
         meta: &Rc<Meta>,
+        stop_instead_pause: bool,
     ) -> Self {
         Self {
             window: window.clone(),
@@ -39,6 +41,7 @@ impl ActionCtx {
             pause_button: pause_button.clone(),
             radio: radio.clone(),
             meta: meta.clone(),
+            stop_instead_pause,
         }
     }
 
@@ -61,6 +64,10 @@ impl ActionCtx {
     }
 
     pub(super) fn pause(&self, set_playback: &dyn Fn(PlaybackStatus)) {
+        if self.stop_instead_pause {
+            self.stop(set_playback);
+            return;
+        }
         self.meta.pause();
         self.radio.pause();
         self.set_idle_ui();
@@ -78,7 +85,11 @@ impl ActionCtx {
         if self.play_button.is_visible() {
             activate_window_action(&self.window, "win.play");
         } else if self.pause_button.is_visible() {
-            activate_window_action(&self.window, "win.pause");
+            if self.stop_instead_pause {
+                activate_window_action(&self.window, "win.stop");
+            } else {
+                activate_window_action(&self.window, "win.pause");
+            }
         }
     }
 

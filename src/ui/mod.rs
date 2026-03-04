@@ -5,4 +5,4 @@ mod cover;
 mod discord;
 mod viz;
 mod window;
-pub use window::build_ui;
+pub use window::{build_ui, UiOptions};

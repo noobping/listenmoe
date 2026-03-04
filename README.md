@@ -41,6 +41,22 @@ appimage-builder --recipe .appimage-builder.yml
 cargo run
 ```
 
+### CLI flags
+
+Run with `--` when using `cargo run`:
+
+```sh
+cargo run -- -a -k --no-discord
+```
+
+Available flags:
+
+- `-a`, `--autoplay`: start playing automatically on launch
+- `-j`, `--jpop`: use J-POP as default station
+- `-k`, `--kpop`: use K-POP as default station
+- `--no-discord`: disable Discord Rich Presence at runtime
+- `-s`, `--stop`: use stop behavior instead of pause
+
 ### Update
 
 Use `cargo-edit` to update the dependencies.

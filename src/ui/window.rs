@@ -34,8 +34,27 @@ const COVER_MAX_SIZE: i32 = 250;
 const APP_NAME: &str = "Listen Moe";
 const APP_ID: &str = "io.github.noobping.listenmoe";
 
-pub fn build_ui(app: &Application) {
-    let station = Station::Jpop;
+#[derive(Debug, Clone, Copy)]
+pub struct UiOptions {
+    pub station: Station,
+    pub autoplay: bool,
+    pub stop_instead_pause: bool,
+    pub discord_enabled: bool,
+}
+
+impl Default for UiOptions {
+    fn default() -> Self {
+        Self {
+            station: Station::Jpop,
+            autoplay: false,
+            stop_instead_pause: false,
+            discord_enabled: true,
+        }
+    }
+}
+
+pub fn build_ui(app: &Application, options: UiOptions) {
+    let station = options.station;
     let radio = Listen::new(station);
     let spectrum_bits = radio.spectrum_bars();
     let (tx, rx) = mpsc::channel::<TrackInfo>();
@@ -45,7 +64,12 @@ pub fn build_ui(app: &Application) {
 
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
     play_button.set_action_name(Some("win.play"));
-    let pause_button = Button::from_icon_name("media-playback-pause-symbolic");
+    let pause_button_icon = if options.stop_instead_pause {
+        "media-playback-stop-symbolic"
+    } else {
+        "media-playback-pause-symbolic"
+    };
+    let pause_button = Button::from_icon_name(pause_button_icon);
     pause_button.set_action_name(Some("win.pause"));
     pause_button.set_visible(false);
 
@@ -72,6 +96,7 @@ pub fn build_ui(app: &Application) {
         &pause_button,
         &radio,
         &meta,
+        options.stop_instead_pause,
     );
     let set_metadata = {
         let controls = controls.clone();
@@ -185,7 +210,11 @@ pub fn build_ui(app: &Application) {
         };
 
         #[cfg(feature = "discord")]
-        let mut discord = Discord::new();
+        let mut discord = if options.discord_enabled {
+            Some(Discord::new())
+        } else {
+            None
+        };
         #[cfg(feature = "discord")]
         let mut was_playing = pause.is_visible();
         #[cfg(feature = "discord")]
@@ -212,13 +241,17 @@ pub fn build_ui(app: &Application) {
             {
                 let is_playing = pause.is_visible();
                 if was_playing && !is_playing {
-                    let _ = discord.clear();
+                    if let Some(discord) = discord.as_mut() {
+                        let _ = discord.clear();
+                    }
                     last_track = None;
                 }
                 was_playing = is_playing;
 
                 if is_playing && Instant::now() >= next_discord_refresh {
-                    if let Some((artist, title)) = last_track.as_ref() {
+                    if let (Some((artist, title)), Some(discord)) =
+                        (last_track.as_ref(), discord.as_mut())
+                    {
                         let retry_after = if discord.set(artist, title).is_ok() {
                             DISCORD_REFRESH_INTERVAL
                         } else {
@@ -234,14 +267,16 @@ pub fn build_ui(app: &Application) {
                 win.set_subtitle(&info.title);
 
                 #[cfg(all(debug_assertions, feature = "discord"))]
-                println!(
-                    "[{}] Update discord: {} {}",
-                    now_string(),
-                    &info.artist,
-                    &info.title
-                );
+                if discord.is_some() {
+                    println!(
+                        "[{}] Update discord: {} {}",
+                        now_string(),
+                        &info.artist,
+                        &info.title
+                    );
+                }
                 #[cfg(feature = "discord")]
-                {
+                if let Some(discord) = discord.as_mut() {
                     last_track = Some((info.artist.clone(), info.title.clone()));
                     let retry_after = if discord.set(&info.artist, &info.title).is_ok() {
                         DISCORD_REFRESH_INTERVAL
@@ -348,4 +383,9 @@ pub fn build_ui(app: &Application) {
     }
 
     window.present();
+
+    if options.autoplay {
+        let _ =
+            adw::prelude::WidgetExt::activate_action(&window, "win.play", None::<&glib::Variant>);
+    }
 }

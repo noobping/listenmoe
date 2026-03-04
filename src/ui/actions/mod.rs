@@ -57,6 +57,7 @@ pub fn build_actions(
     pause_button: &Button,
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
+    stop_instead_pause: bool,
 ) -> (
     Option<Rc<MediaControls>>,
     Option<mpsc::Receiver<MediaControlEvent>>,
@@ -78,7 +79,15 @@ pub fn build_actions(
         })
     };
 
-    let ctx = ActionCtx::new(window, win_title, play_button, pause_button, radio, meta);
+    let ctx = ActionCtx::new(
+        window,
+        win_title,
+        play_button,
+        pause_button,
+        radio,
+        meta,
+        stop_instead_pause,
+    );
     add_transport_actions(window, &ctx, &set_playback);
     add_window_actions(window, &ctx);
     add_accels(app);
