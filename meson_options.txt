@@ -1,0 +1,21 @@
+option(
+  'cargo_profile',
+  type: 'combo',
+  choices: ['debug', 'release'],
+  value: 'debug',
+  description: 'Cargo profile to use for Meson builds',
+)
+
+option(
+  'cargo_features',
+  type: 'array',
+  value: [],
+  description: 'Cargo features to enable',
+)
+
+option(
+  'cargo_default_features',
+  type: 'boolean',
+  value: true,
+  description: 'Build with Cargo default features',
+)

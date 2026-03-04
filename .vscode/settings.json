@@ -6,5 +6,14 @@
         "PATH": "/var/home/${env:USER}/.cargo/bin:/app/bin:/usr/bin"
     },
     "rust-analyzer.cargo.buildScripts.enable": true,
-    "rust-analyzer.checkOnSave": false
+    "rust-analyzer.checkOnSave": false,
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/.hg/store/**": true,
+        ".flatpak/**": true,
+        "_build/**": true
+    },
+    "rust-analyzer.server.path": "${workspaceFolder}/.flatpak/rust-analyzer.sh",
+    "rust-analyzer.runnables.command": "${workspaceFolder}/.flatpak/cargo.sh"
 }

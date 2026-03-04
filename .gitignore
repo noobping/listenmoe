@@ -14,3 +14,4 @@ vendor/
 .flatpak
 data/*/apps/*.xml
 *.webm
+*~

@@ -1,0 +1,48 @@
+{
+    "id" : "io.github.noobping.listenmoe.Devel",
+    "runtime" : "org.gnome.Platform",
+    "runtime-version" : "49",
+    "sdk" : "org.gnome.Sdk",
+    "command" : "listenmoe",
+    "sdk-extensions" : [
+        "org.freedesktop.Sdk.Extension.rust-stable"
+    ],
+    "build-options" : {
+        "append-path" : "/usr/lib/sdk/rust-stable/bin",
+        "append-ld-library-path" : "/usr/lib/sdk/rust-stable/lib",
+        "build-args" : [
+            "--share=network"
+        ],
+        "env" : {
+            "CARGO_HOME" : "/run/build/listenmoe/cargo",
+            "LISTENMOE_APP_ID" : "io.github.noobping.listenmoe.Devel",
+            "LISTENMOE_APP_NON_UNIQUE" : "1"
+        }
+    },
+    "finish-args" : [
+        "--share=network",
+        "--share=ipc",
+        "--socket=session-bus",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri",
+        "--talk-name=org.freedesktop.Notifications"
+    ],
+    "modules" : [
+        {
+            "name" : "listenmoe",
+            "buildsystem" : "meson",
+            "config-opts" : [
+                "-Dcargo_profile=debug",
+                "--libdir=lib"
+            ],
+            "sources" : [
+                {
+                    "type" : "dir",
+                    "path" : "."
+                }
+            ]
+        }
+    ]
+}
