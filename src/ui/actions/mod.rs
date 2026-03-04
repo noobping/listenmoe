@@ -7,6 +7,7 @@ use adw::gtk::{
 };
 use adw::{Application, WindowTitle};
 use mpris_server::PlaybackStatus;
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc;
 
@@ -28,6 +29,8 @@ const APP_ID: &str = "io.github.noobping.listenmoe_beta";
 const APP_ID: &str = "io.github.noobping.listenmoe";
 
 type PlaybackSetter = Rc<dyn Fn(PlaybackStatus)>;
+type TransportAction = fn(&ActionCtx, &dyn Fn(PlaybackStatus));
+type CtxAction = fn(&ActionCtx);
 
 fn make_action<F>(name: &str, f: F) -> SimpleAction
 where
@@ -57,6 +60,7 @@ pub fn build_actions(
     pause_button: &Button,
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
+    current_track: &Rc<RefCell<Option<(String, String)>>>,
     stop_instead_pause: bool,
 ) -> (
     Option<Rc<MediaControls>>,
@@ -86,6 +90,7 @@ pub fn build_actions(
         pause_button,
         radio,
         meta,
+        current_track,
         stop_instead_pause,
     );
     add_transport_actions(window, &ctx, &set_playback);
@@ -100,22 +105,14 @@ fn add_transport_actions(
     ctx: &ActionCtx,
     set_playback: &PlaybackSetter,
 ) {
-    {
+    for (name, handler) in [
+        ("play", ActionCtx::play as TransportAction),
+        ("pause", ActionCtx::pause as TransportAction),
+        ("stop", ActionCtx::stop as TransportAction),
+    ] {
         let ctx = ctx.clone();
         let set_playback = set_playback.clone();
-        register_window_action(window, "play", move || ctx.play(&*set_playback));
-    }
-
-    {
-        let ctx = ctx.clone();
-        let set_playback = set_playback.clone();
-        register_window_action(window, "pause", move || ctx.pause(&*set_playback));
-    }
-
-    {
-        let ctx = ctx.clone();
-        let set_playback = set_playback.clone();
-        register_window_action(window, "stop", move || ctx.stop(&*set_playback));
+        register_window_action(window, name, move || handler(&ctx, &*set_playback));
     }
 }
 
@@ -130,24 +127,14 @@ fn add_window_actions(window: &ApplicationWindow, ctx: &ActionCtx) {
         register_window_action(window, "about", move || show_about_dialog(&ctx.window));
     }
 
-    {
+    for (name, handler) in [
+        ("toggle", ActionCtx::toggle as CtxAction),
+        ("copy", ActionCtx::copy_current_track as CtxAction),
+        ("next_station", ActionCtx::next_station as CtxAction),
+        ("prev_station", ActionCtx::prev_station as CtxAction),
+    ] {
         let ctx = ctx.clone();
-        register_window_action(window, "toggle", move || ctx.toggle());
-    }
-
-    {
-        let ctx = ctx.clone();
-        register_window_action(window, "copy", move || ctx.copy_current_track());
-    }
-
-    {
-        let ctx = ctx.clone();
-        register_window_action(window, "next_station", move || ctx.next_station());
-    }
-
-    {
-        let ctx = ctx.clone();
-        register_window_action(window, "prev_station", move || ctx.prev_station());
+        register_window_action(window, name, move || handler(&ctx));
     }
 }
 

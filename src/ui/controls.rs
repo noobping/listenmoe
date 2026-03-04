@@ -1,6 +1,6 @@
 use adw::glib;
 use mpris_server::{Metadata, PlaybackStatus, Player};
-use std::{cell::RefCell, rc::Rc, sync::mpsc};
+use std::{rc::Rc, sync::mpsc};
 
 #[derive(Debug, Clone, Copy)]
 pub enum MediaControlEvent {
@@ -27,7 +27,6 @@ impl MediaControlEvent {
 
 pub struct MediaControls {
     player: Rc<Player>,
-    track_n: Rc<RefCell<u64>>,
 }
 
 impl MediaControls {
@@ -40,15 +39,12 @@ impl MediaControls {
 
     pub fn set_metadata(&self, title: &str, artist: &str, album: &str, art_url: Option<&str>) {
         let player = self.player.clone();
-        let track_n = self.track_n.clone();
         let title = title.to_string();
         let artist = artist.to_string();
         let album = album.to_string();
         let art_url = art_url.map(str::to_string);
 
         glib::MainContext::default().spawn_local(async move {
-            *track_n.borrow_mut() += 1;
-
             let mut b = Metadata::builder()
                 .title(title)
                 .artist([artist])
@@ -108,10 +104,7 @@ pub fn build_controls(
     let player = Rc::new(player);
     ctx.spawn_local(player.clone().run());
 
-    let controls = Rc::new(MediaControls {
-        player,
-        track_n: Rc::new(RefCell::new(0)),
-    });
+    let controls = Rc::new(MediaControls { player });
 
     Ok((controls, rx))
 }

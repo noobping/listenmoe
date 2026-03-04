@@ -69,7 +69,7 @@ impl Listen {
     }
 
     pub fn get_station(&self) -> Station {
-        self.inner.borrow_mut().station
+        self.inner.borrow().station
     }
 
     pub fn set_station(&self, station: Station) {

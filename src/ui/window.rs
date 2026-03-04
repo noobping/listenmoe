@@ -23,6 +23,8 @@ use gettextrs::gettext;
 #[cfg(feature = "discord")]
 use std::time::Instant;
 use std::{
+    cell::RefCell,
+    rc::Rc,
     sync::{atomic::Ordering, mpsc},
     thread,
     time::Duration,
@@ -33,6 +35,7 @@ use super::{actions, cover, viz};
 const COVER_MAX_SIZE: i32 = 250;
 const APP_NAME: &str = "Listen Moe";
 const APP_ID: &str = "io.github.noobping.listenmoe";
+type CoverFetchResult = (String, Result<Vec<u8>, String>);
 
 #[derive(Debug, Clone, Copy)]
 pub struct UiOptions {
@@ -59,8 +62,9 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     let spectrum_bits = radio.spectrum_bars();
     let (tx, rx) = mpsc::channel::<TrackInfo>();
     let meta = Meta::new(station, tx, radio.lag_ms());
-    let (cover_tx, cover_rx) = mpsc::channel::<Result<Vec<u8>, String>>();
+    let (cover_tx, cover_rx) = mpsc::channel::<CoverFetchResult>();
     let win_title = WindowTitle::new(APP_NAME, &gettext("J-POP and K-POP radio"));
+    let current_track = Rc::new(RefCell::new(None::<(String, String)>));
 
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
     play_button.set_action_name(Some("win.play"));
@@ -96,13 +100,14 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &pause_button,
         &radio,
         &meta,
+        &current_track,
         options.stop_instead_pause,
     );
     let set_metadata = {
         let controls = controls.clone();
-        move |title: String, artist: String, art_url: Option<&str>| {
+        move |title: &str, artist: &str, art_url: Option<&str>| {
             if let Some(c) = controls.as_ref() {
-                c.set_metadata(title.as_str(), artist.as_str(), APP_NAME, art_url);
+                c.set_metadata(title, artist, APP_NAME, art_url);
             }
         }
     };
@@ -189,12 +194,13 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         let win = win_title.clone();
         #[cfg(feature = "discord")]
         let pause = pause_button.clone();
+        let current_track = current_track.clone();
         let art_popover = art_popover.clone();
         let art_picture = art_picture.clone();
         let cover_rx = cover_rx;
         let cover_tx = cover_tx.clone();
         let window = window.clone();
-        let set_metadata = set_metadata.clone();
+        let set_metadata = set_metadata;
 
         let clear_art_ui = |art_picture: &gtk::Picture,
                             art_popover: &gtk::Popover,
@@ -225,6 +231,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         const DISCORD_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
         #[cfg(feature = "discord")]
         const DISCORD_RETRY_INTERVAL: Duration = Duration::from_millis(500);
+        let mut latest_cover_url: Option<String> = None;
 
         glib::timeout_add_local(Duration::from_millis(100), move || {
             if let Some(ctrl_rx) = &ctrl_rx {
@@ -263,22 +270,25 @@ pub fn build_ui(app: &Application, options: UiOptions) {
             }
 
             for info in rx.try_iter() {
-                win.set_title(&info.artist);
-                win.set_subtitle(&info.title);
+                let TrackInfo {
+                    artist,
+                    title,
+                    album_cover,
+                    artist_image,
+                    ..
+                } = info;
+                win.set_title(&artist);
+                win.set_subtitle(&title);
+                *current_track.borrow_mut() = Some((artist.clone(), title.clone()));
 
                 #[cfg(all(debug_assertions, feature = "discord"))]
                 if discord.is_some() {
-                    println!(
-                        "[{}] Update discord: {} {}",
-                        now_string(),
-                        &info.artist,
-                        &info.title
-                    );
+                    println!("[{}] Update discord: {} {}", now_string(), &artist, &title);
                 }
                 #[cfg(feature = "discord")]
                 if let Some(discord) = discord.as_mut() {
-                    last_track = Some((info.artist.clone(), info.title.clone()));
-                    let retry_after = if discord.set(&info.artist, &info.title).is_ok() {
+                    last_track = Some((artist.clone(), title.clone()));
+                    let retry_after = if discord.set(&artist, &title).is_ok() {
                         DISCORD_REFRESH_INTERVAL
                     } else {
                         DISCORD_RETRY_INTERVAL
@@ -286,28 +296,29 @@ pub fn build_ui(app: &Application, options: UiOptions) {
                     next_discord_refresh = Instant::now() + retry_after;
                 }
 
-                let cover_url = info
-                    .album_cover
-                    .as_ref()
-                    .or(info.artist_image.as_ref())
-                    .map(|s| s.as_str());
+                let cover_url = album_cover.as_deref().or(artist_image.as_deref());
+                set_metadata(&title, &artist, cover_url);
 
-                set_metadata(info.title.clone(), info.artist.clone(), cover_url.clone());
+                latest_cover_url = cover_url.map(str::to_owned);
 
-                if let Some(url) = info.album_cover.as_ref().or(info.artist_image.as_ref()) {
+                if let Some(url) = cover_url {
                     let tx = cover_tx.clone();
                     let url = url.to_string();
                     thread::spawn(move || {
                         let result =
                             cover::fetch_cover_bytes_blocking(&url).map_err(|e| e.to_string());
-                        let _ = tx.send(result);
+                        let _ = tx.send((url, result));
                     });
                 } else {
                     clear_art_ui(&art_picture, &art_popover, &style_manager, &css_provider);
                 }
             }
 
-            for result in cover_rx.try_iter() {
+            for (url, result) in cover_rx.try_iter() {
+                if latest_cover_url.as_deref() != Some(url.as_str()) {
+                    continue;
+                }
+
                 match result {
                     Ok(bytes_vec) => {
                         let bytes = glib::Bytes::from_owned(bytes_vec);

@@ -3,6 +3,7 @@ use adw::prelude::DisplayExt;
 use adw::WindowTitle;
 use gettextrs::gettext;
 use mpris_server::PlaybackStatus;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::listen::Listen;
@@ -21,6 +22,7 @@ pub(super) struct ActionCtx {
     pause_button: Button,
     radio: Rc<Listen>,
     meta: Rc<Meta>,
+    current_track: Rc<RefCell<Option<(String, String)>>>,
     stop_instead_pause: bool,
 }
 
@@ -32,6 +34,7 @@ impl ActionCtx {
         pause_button: &Button,
         radio: &Rc<Listen>,
         meta: &Rc<Meta>,
+        current_track: &Rc<RefCell<Option<(String, String)>>>,
         stop_instead_pause: bool,
     ) -> Self {
         Self {
@@ -41,6 +44,7 @@ impl ActionCtx {
             pause_button: pause_button.clone(),
             radio: radio.clone(),
             meta: meta.clone(),
+            current_track: current_track.clone(),
             stop_instead_pause,
         }
     }
@@ -51,11 +55,13 @@ impl ActionCtx {
         self.win_title.set_title(APP_NAME);
         self.win_title
             .set_subtitle(&gettext("J-POP and K-POP radio"));
+        *self.current_track.borrow_mut() = None;
     }
 
     pub(super) fn play(&self, set_playback: &dyn Fn(PlaybackStatus)) {
         self.win_title.set_title(APP_NAME);
         self.win_title.set_subtitle("Connecting...");
+        *self.current_track.borrow_mut() = None;
         self.meta.start();
         self.radio.start();
         self.play_button.set_visible(false);
@@ -94,18 +100,18 @@ impl ActionCtx {
     }
 
     pub(super) fn copy_current_track(&self) {
-        let artist = self.win_title.title();
-        let title = self.win_title.subtitle();
-        if artist.is_empty() && title.is_empty() {
-            return;
-        }
+        let text = {
+            let track = self.current_track.borrow();
+            let Some((artist, title)) = track.as_ref() else {
+                return;
+            };
 
-        let text = if artist.is_empty() {
-            title.to_string()
-        } else if title.is_empty() {
-            artist.to_string()
-        } else {
-            format!("{artist}, {title}")
+            match (artist.is_empty(), title.is_empty()) {
+                (true, true) => return,
+                (true, false) => title.clone(),
+                (false, true) => artist.clone(),
+                (false, false) => format!("{artist}, {title}"),
+            }
         };
 
         if let Some(display) = Display::default() {
