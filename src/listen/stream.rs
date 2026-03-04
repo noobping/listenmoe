@@ -287,6 +287,9 @@ pub(super) fn run_listenmoe_stream(
         // On reconnect: clear sink queue + reset viz
         sink.stop();
         sink = Player::connect_new(stream.mixer());
+        if paused {
+            sink.pause();
+        }
         reset_fft_state(
             &mut fft_state.mono_ring,
             &mut fft_state.bars_smooth,
@@ -295,7 +298,7 @@ pub(super) fn run_listenmoe_stream(
         );
 
         #[cfg(debug_assertions)]
-        println!("[{}] Started decoding + playback.", now_string());
+        println!("[{}] Started decoding.", now_string());
 
         let outcome = run_one_connection(
             &rx,
