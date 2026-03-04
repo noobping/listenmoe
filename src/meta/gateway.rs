@@ -48,6 +48,45 @@ struct Song {
     duration: Option<u32>,
 }
 
+impl Song {
+    fn display_title(self: &Self) -> String {
+        self.title
+            .clone()
+            .unwrap_or_else(|| "unknown title".to_owned())
+    }
+
+    fn display_artist(self: &Self) -> String {
+        if self.artists.is_empty() {
+            return "Unknown artist".to_owned();
+        }
+
+        self.artists
+            .iter()
+            .filter_map(|a| a.name.as_deref())
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    fn album_cover_url(self: &Self) -> Option<String> {
+        self.albums
+            .first()
+            .and_then(|album| album.image.as_deref())
+            .as_cdn_url(ALBUM_COVER_BASE)
+    }
+
+    fn artist_image_url(self: &Self) -> Option<String> {
+        self.artists
+            .first()
+            .and_then(|artist| artist.image.as_deref())
+            .as_cdn_url(ARTIST_IMAGE_BASE)
+    }
+
+    fn duration_secs(self: &Self) -> u32 {
+        self.duration.unwrap_or(0)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct Artist {
     name: Option<String>,
@@ -68,10 +107,28 @@ struct GatewayEnvelope {
     d: Value,
 }
 
+trait CdnImageExt {
+    fn as_cdn_url(self, base: &str) -> Option<String>;
+}
+
+impl CdnImageExt for Option<&str> {
+    fn as_cdn_url(self, base: &str) -> Option<String> {
+        self.map(|name| format!("{base}{name}"))
+    }
+}
+
 const OP_HELLO: u8 = 0;
 const OP_DISPATCH: u8 = 1;
 const OP_HEARTBEAT_ACK: u8 = 10;
 const EVENT_TRACK_UPDATE: &str = "TRACK_UPDATE";
+const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
+
+macro_rules! debug_gateway {
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        println!("[{}] {}", now_string(), format_args!($($arg)*));
+    };
+}
 
 enum OuterLoopAction {
     Continue,
@@ -164,13 +221,12 @@ fn run_once(
     let url = station.ws_url();
     let (mut ws, _response) = connect(url)?;
     set_maybe_tls_read_timeout(ws.get_mut(), Duration::from_millis(200))?;
-    #[cfg(debug_assertions)]
-    println!("[{}] Gateway connected to LISTEN.moe", now_string());
+    debug_gateway!("Gateway connected to LISTEN.moe");
 
     // Read hello and get heartbeat interval (if any).
     let heartbeat_ms = read_hello_heartbeat(&mut ws)?;
     // Send an immediate heartbeat once after HELLO, then continue on the interval.
-    let _ = ws.send(Message::Text(r#"{"op":9}"#.into()));
+    let _ = ws.send(Message::Text(HEARTBEAT_PAYLOAD.into()));
 
     let heartbeat_dur = heartbeat_ms.map(Duration::from_millis);
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
@@ -190,22 +246,19 @@ fn run_once(
                 break;
             }
             Ok(Control::Pause) => {
-                #[cfg(debug_assertions)]
-                println!("[{}] Pausing meta data", now_string());
+                debug_gateway!("Pausing meta data");
                 *paused = true;
                 invalidate_ui_schedule(&ui_sched_id); // invalidate any pending scheduled sends
             }
             Ok(Control::Resume) => {
-                #[cfg(debug_assertions)]
-                println!("[{}] Resuming meta data", now_string());
+                debug_gateway!("Resuming meta data");
                 *paused = false;
                 invalidate_ui_schedule(&ui_sched_id); // invalidate timers from before pause
 
                 // Snap UI to the track that matches buffered playback time.
                 let lag = lag_ms.load(Ordering::Relaxed);
-                #[cfg(debug_assertions)]
                 if let Some(t) = pick_track_for_playback(&history, lag) {
-                    println!("[{}] ui snap: {} - {}", now_string(), t.artist, t.title);
+                    debug_gateway!("ui snap: {} - {}", t.artist, t.title);
                 }
                 // Immediately snap UI to what playback should be on resume
                 if let Some(correct) = pick_track_for_playback(&history, lag) {
@@ -220,7 +273,7 @@ fn run_once(
         // Heartbeat: if an interval is known, send a heartbeat when it elapses.
         if let (Some(interval), Some(last)) = (heartbeat_dur, last_heartbeat.as_mut()) {
             if last.elapsed() >= interval {
-                if let Err(err) = ws.send(Message::Text(r#"{"op":9}"#.into())) {
+                if let Err(err) = ws.send(Message::Text(HEARTBEAT_PAYLOAD.into())) {
                     eprintln!("Gateway heartbeat send error: {err}");
                     break;
                 }
@@ -284,41 +337,41 @@ fn run_once(
         match (env.op, env.t.as_deref()) {
             (OP_HEARTBEAT_ACK, _) => {
                 last_heartbeat_ack = Some(Instant::now());
-                #[cfg(debug_assertions)]
-                println!("[{}] Gateway heartbeat", now_string());
+                debug_gateway!("Gateway heartbeat");
             }
             (OP_DISPATCH, Some(EVENT_TRACK_UPDATE)) => {
                 if let Some(info) = parse_track_info(&env.d) {
-                    #[cfg(debug_assertions)]
-                    println!(
-                        "[{}] live track update: {} - {} (duration={})",
-                        now_string(),
+                    debug_gateway!(
+                        "live track update: {} - {} (duration={})",
                         info.artist,
                         info.title,
                         info.duration_secs
                     );
+
                     history.push_back(info);
 
                     if !*paused {
                         let lag = lag_ms.load(Ordering::Relaxed);
                         let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
-                        #[cfg(debug_assertions)]
-                        println!(
-                            "[{}] ui {} scheduled: {} - {} (lag_ms={})",
-                            now_string(),
-                            my_id,
-                            history.back().unwrap().artist,
-                            history.back().unwrap().title,
-                            lag
-                        );
-                        // Schedule the *new* track to appear when playback reaches it
-                        schedule_ui_switch(
-                            sender.clone(),
-                            history.back().unwrap().clone(),
-                            lag,
-                            ui_sched_id.clone(),
-                            my_id,
-                        );
+
+                        if let Some(track) = history.back() {
+                            debug_gateway!(
+                                "ui {} scheduled: {} - {} (lag_ms={})",
+                                my_id,
+                                track.artist,
+                                track.title,
+                                lag
+                            );
+
+                            // Schedule the *new* track to appear when playback reaches it
+                            schedule_ui_switch(
+                                sender.clone(),
+                                track.clone(),
+                                lag,
+                                ui_sched_id.clone(),
+                                my_id,
+                            );
+                        }
                     }
                 }
             }
@@ -355,46 +408,17 @@ where
 /// Extract artist(s) + title from the gateway payload.
 fn parse_track_info(d: &Value) -> Option<TrackInfo> {
     let payload: GatewaySongPayload = serde_json::from_value(d.clone()).ok()?;
-    let Song {
-        title,
-        artists,
-        albums,
-        duration,
-    } = payload.song;
 
     let start_time_utc = parse_rfc3339_system_time(&payload.start_time)?;
-    let duration_secs = duration.unwrap_or(0);
-
-    let title = title.unwrap_or_else(|| "unknown title".to_owned());
-
-    let artist = if artists.is_empty() {
-        "Unknown artist".to_owned()
-    } else {
-        artists
-            .iter()
-            .filter_map(|a| a.name.as_deref())
-            .map(str::to_owned)
-            .collect::<Vec<_>>()
-            .join(", ")
-    };
-
-    let album_cover = albums
-        .first()
-        .and_then(|album| album.image.as_deref())
-        .map(|name| format!("{ALBUM_COVER_BASE}{name}"));
-
-    let artist_image = artists
-        .first()
-        .and_then(|a| a.image.as_deref())
-        .map(|name| format!("{ARTIST_IMAGE_BASE}{name}"));
+    let track = payload.song;
 
     Some(TrackInfo {
-        artist,
-        title,
-        album_cover,
-        artist_image,
+        artist: track.display_artist(),
+        title: track.display_title(),
+        album_cover: track.album_cover_url(),
+        artist_image: track.artist_image_url(),
         start_time_utc,
-        duration_secs,
+        duration_secs: track.duration_secs(),
     })
 }
 
