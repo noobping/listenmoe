@@ -258,7 +258,7 @@ fn run_once(
                 // No websocket message right now; loop again so the process can check controls/heartbeats.
                 continue;
             }
-            Err(err) => return Err(Box::new(err)),
+            Err(err) => return Err(err.into()),
         };
 
         if !msg.is_text() {
@@ -343,7 +343,7 @@ where
             Ok(None)
         }
         Err(tungstenite::Error::ConnectionClosed) => Ok(None),
-        Err(err) => Err(Box::new(err)),
+        Err(err) => return Err(err.into()),
     }
 }
 
