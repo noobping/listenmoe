@@ -34,24 +34,36 @@ impl Discord {
         Ok(())
     }
 
-    pub fn set(&mut self, details: &str, state: &str) -> Result<(), Box<dyn std::error::Error>> {
-        self.connect()?;
-        let payload = activity::Activity::new().details(details).state(state);
-        if self.client.set_activity(payload).is_err() {
+    fn with_reconnect_retry<F>(&mut self, mut f: F) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: FnMut(&mut Self) -> Result<(), Box<dyn std::error::Error>>,
+    {
+        if f(self).is_err() {
             self.reconnect()?;
-            let payload = activity::Activity::new().details(details).state(state);
-            self.client.set_activity(payload)?;
+            f(self)?;
         }
         Ok(())
     }
 
+    fn set_once(&mut self, details: &str, state: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let payload = activity::Activity::new().details(details).state(state);
+        self.client.set_activity(payload)?;
+        Ok(())
+    }
+
+    fn clear_once(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.client.clear_activity()?;
+        Ok(())
+    }
+
+    pub fn set(&mut self, details: &str, state: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.connect()?;
+        self.with_reconnect_retry(|s| s.set_once(details, state))
+    }
+
     pub fn clear(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.connect()?;
-        if self.client.clear_activity().is_err() {
-            self.reconnect()?;
-            self.client.clear_activity()?;
-        }
-        Ok(())
+        self.with_reconnect_retry(|s| s.clear_once())
     }
 }
 

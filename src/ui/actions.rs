@@ -32,6 +32,13 @@ where
     action
 }
 
+fn set_idle_ui(win_title: &WindowTitle, play_button: &Button, pause_button: &Button) {
+    pause_button.set_visible(false);
+    play_button.set_visible(true);
+    win_title.set_title(APP_NAME);
+    win_title.set_subtitle(&gettext("J-POP and K-POP radio"));
+}
+
 pub fn build_actions(
     window: &ApplicationWindow,
     app: &Application,
@@ -88,10 +95,7 @@ pub fn build_actions(
         make_action("pause", move || {
             meta.pause();
             radio.pause();
-            pause.set_visible(false);
-            play.set_visible(true);
-            win.set_title(APP_NAME);
-            win.set_subtitle(&gettext("J-POP and K-POP radio"));
+            set_idle_ui(&win, &play, &pause);
             set_playback(PlaybackStatus::Paused);
         })
     });
@@ -105,10 +109,7 @@ pub fn build_actions(
         make_action("stop", move || {
             meta.stop();
             radio.stop();
-            pause.set_visible(false);
-            play.set_visible(true);
-            win.set_title(APP_NAME);
-            win.set_subtitle(&gettext("J-POP and K-POP radio"));
+            set_idle_ui(&win, &play, &pause);
             set_playback(PlaybackStatus::Stopped);
         })
     });

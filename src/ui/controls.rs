@@ -12,6 +12,19 @@ pub enum MediaControlEvent {
     Previous,
 }
 
+impl MediaControlEvent {
+    pub fn action_name(self) -> &'static str {
+        match self {
+            Self::Play => "win.play",
+            Self::Pause => "win.pause",
+            Self::Stop => "win.stop",
+            Self::Toggle => "win.toggle",
+            Self::Next => "win.next_station",
+            Self::Previous => "win.prev_station",
+        }
+    }
+}
+
 pub struct MediaControls {
     player: Rc<Player>,
     track_n: Rc<RefCell<u64>>,

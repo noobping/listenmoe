@@ -28,7 +28,6 @@ use std::{
 #[cfg(feature = "discord")]
 use std::time::Instant;
 
-use super::controls::MediaControlEvent;
 use super::{actions, cover, viz};
 
 const COVER_MAX_SIZE: i32 = 250;
@@ -201,38 +200,11 @@ pub fn build_ui(app: &Application) {
         glib::timeout_add_local(Duration::from_millis(100), move || {
             if let Some(ctrl_rx) = &ctrl_rx {
                 for event in ctrl_rx.try_iter() {
-                    let _ = match event {
-                        MediaControlEvent::Play => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.play",
-                            None::<&glib::Variant>,
-                        ),
-                        MediaControlEvent::Pause => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.pause",
-                            None::<&glib::Variant>,
-                        ),
-                        MediaControlEvent::Stop => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.stop",
-                            None::<&glib::Variant>,
-                        ),
-                        MediaControlEvent::Toggle => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.toggle",
-                            None::<&glib::Variant>,
-                        ),
-                        MediaControlEvent::Next => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.next_station",
-                            None::<&glib::Variant>,
-                        ),
-                        MediaControlEvent::Previous => adw::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.prev_station",
-                            None::<&glib::Variant>,
-                        ),
-                    };
+                    let _ = adw::prelude::WidgetExt::activate_action(
+                        &window,
+                        event.action_name(),
+                        None::<&glib::Variant>,
+                    );
                 }
             }
 

@@ -73,6 +73,35 @@ const OP_DISPATCH: u8 = 1;
 const OP_HEARTBEAT_ACK: u8 = 10;
 const EVENT_TRACK_UPDATE: &str = "TRACK_UPDATE";
 
+enum OuterLoopAction {
+    Continue,
+    Stop,
+    Sleep(Duration),
+}
+
+fn handle_outer_control(
+    rx: &mpsc::Receiver<Control>,
+    paused: &mut bool,
+    ui_sched_id: &Arc<AtomicU64>,
+    empty_sleep: Duration,
+) -> OuterLoopAction {
+    match rx.try_recv() {
+        Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => OuterLoopAction::Stop,
+        Ok(Control::Pause) => {
+            *paused = true;
+            ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            OuterLoopAction::Sleep(Duration::from_secs(1))
+        }
+        Ok(Control::Resume) => {
+            *paused = false;
+            ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            OuterLoopAction::Sleep(Duration::from_secs(1))
+        }
+        Err(mpsc::TryRecvError::Empty) if empty_sleep.is_zero() => OuterLoopAction::Continue,
+        Err(mpsc::TryRecvError::Empty) => OuterLoopAction::Sleep(empty_sleep),
+    }
+}
+
 /// Outer reconnect loop using blocking tungstenite.
 pub fn run_meta_loop(
     station: Station,
@@ -82,20 +111,15 @@ pub fn run_meta_loop(
     ui_sched_id: Arc<AtomicU64>,
 ) -> MetaResult<()> {
     let mut paused = false;
+    let retry_delay = Duration::from_secs(5);
 
     loop {
-        match rx.try_recv() {
-            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-            Ok(Control::Pause) => {
-                paused = true;
-                ui_sched_id.fetch_add(1, Ordering::Relaxed);
-            }
-            Ok(Control::Resume) => {
-                paused = false;
-                ui_sched_id.fetch_add(1, Ordering::Relaxed);
-            }
-            Err(mpsc::TryRecvError::Empty) => {}
+        match handle_outer_control(&rx, &mut paused, &ui_sched_id, Duration::ZERO) {
+            OuterLoopAction::Stop => return Ok(()),
+            OuterLoopAction::Sleep(wait) => thread::sleep(wait),
+            OuterLoopAction::Continue => {}
         }
+
         match run_once(
             station,
             sender.clone(),
@@ -104,40 +128,17 @@ pub fn run_meta_loop(
             ui_sched_id.clone(),
             &mut paused,
         ) {
-            Ok(()) => {
-                // Normal end (server closed the connection). Respect stop; otherwise retry.
-                match rx.try_recv() {
-                    Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-                    Ok(Control::Pause) => {
-                        paused = true;
-                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
-                        thread::sleep(Duration::from_secs(1));
-                    }
-                    Ok(Control::Resume) => {
-                        paused = false;
-                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
-                        thread::sleep(Duration::from_secs(1));
-                    }
-                    Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
-                }
-            }
+            Ok(()) => {}
             Err(err) => {
                 eprintln!("Gateway connection error: {err}, retrying in 5s…");
-                match rx.try_recv() {
-                    Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
-                    Ok(Control::Pause) => {
-                        paused = true;
-                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
-                        thread::sleep(Duration::from_secs(1));
-                    }
-                    Ok(Control::Resume) => {
-                        paused = false;
-                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
-                        thread::sleep(Duration::from_secs(1));
-                    }
-                    Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
-                }
             }
+        }
+
+        // Session ended or failed: apply control/backoff policy once.
+        match handle_outer_control(&rx, &mut paused, &ui_sched_id, retry_delay) {
+            OuterLoopAction::Stop => return Ok(()),
+            OuterLoopAction::Sleep(wait) => thread::sleep(wait),
+            OuterLoopAction::Continue => {}
         }
     }
 }
