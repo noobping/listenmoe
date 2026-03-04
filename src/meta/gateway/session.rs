@@ -1,5 +1,3 @@
-use serde::Deserialize;
-use serde_json::Value;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::sync::mpsc;
@@ -7,8 +5,8 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc,
 };
-use std::thread;
 use std::time::{Duration, Instant};
+
 use tungstenite::client::connect;
 use tungstenite::protocol::WebSocket;
 use tungstenite::stream::MaybeTlsStream;
@@ -16,111 +14,20 @@ use tungstenite::Message;
 
 #[cfg(debug_assertions)]
 use crate::log::now_string;
-
-use super::controller::Control;
-use super::error::MetaResult;
-use super::schedule::{pick_track_for_playback, schedule_next_from_history, schedule_ui_switch};
-use super::time_parse::parse_rfc3339_system_time;
-use super::track::{TrackInfo, ALBUM_COVER_BASE, ARTIST_IMAGE_BASE};
+use crate::meta::controller::Control;
+use crate::meta::error::MetaResult;
+use crate::meta::schedule::{
+    pick_track_for_playback, schedule_next_from_history, schedule_ui_switch,
+};
+use crate::meta::track::TrackInfo;
 use crate::station::Station;
 
-/// Protocol-level types for the LISTEN.moe gateway
+use super::control::invalidate_ui_schedule;
+use super::model::{
+    GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, OP_DISPATCH, OP_HEARTBEAT_ACK, OP_HELLO,
+};
+use super::parse::parse_track_info;
 
-#[derive(Debug, Deserialize)]
-struct GatewayHello {
-    heartbeat: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct GatewaySongPayload {
-    song: Song,
-    #[serde(rename = "startTime")]
-    start_time: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Song {
-    title: Option<String>,
-    #[serde(default)]
-    artists: Vec<Artist>,
-    #[serde(default)]
-    albums: Vec<Album>,
-    duration: Option<u32>,
-}
-
-impl Song {
-    fn display_title(self: &Self) -> String {
-        self.title
-            .clone()
-            .unwrap_or_else(|| "unknown title".to_owned())
-    }
-
-    fn display_artist(self: &Self) -> String {
-        if self.artists.is_empty() {
-            return "Unknown artist".to_owned();
-        }
-
-        self.artists
-            .iter()
-            .filter_map(|a| a.name.as_deref())
-            .map(str::to_owned)
-            .collect::<Vec<_>>()
-            .join(", ")
-    }
-
-    fn album_cover_url(self: &Self) -> Option<String> {
-        self.albums
-            .first()
-            .and_then(|album| album.image.as_deref())
-            .as_cdn_url(ALBUM_COVER_BASE)
-    }
-
-    fn artist_image_url(self: &Self) -> Option<String> {
-        self.artists
-            .first()
-            .and_then(|artist| artist.image.as_deref())
-            .as_cdn_url(ARTIST_IMAGE_BASE)
-    }
-
-    fn duration_secs(self: &Self) -> u32 {
-        self.duration.unwrap_or(0)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct Artist {
-    name: Option<String>,
-    image: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Album {
-    image: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct GatewayEnvelope {
-    op: u8,
-    #[serde(default)]
-    t: Option<String>,
-    #[serde(default)]
-    d: Value,
-}
-
-trait CdnImageExt {
-    fn as_cdn_url(self, base: &str) -> Option<String>;
-}
-
-impl CdnImageExt for Option<&str> {
-    fn as_cdn_url(self, base: &str) -> Option<String> {
-        self.map(|name| format!("{base}{name}"))
-    }
-}
-
-const OP_HELLO: u8 = 0;
-const OP_DISPATCH: u8 = 1;
-const OP_HEARTBEAT_ACK: u8 = 10;
-const EVENT_TRACK_UPDATE: &str = "TRACK_UPDATE";
 const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
 
 macro_rules! debug_gateway {
@@ -130,83 +37,9 @@ macro_rules! debug_gateway {
     };
 }
 
-enum OuterLoopAction {
-    Continue,
-    Stop,
-    Sleep(Duration),
-}
-
-fn invalidate_ui_schedule(ui_sched_id: &Arc<AtomicU64>) {
-    ui_sched_id.fetch_add(1, Ordering::Relaxed);
-}
-
-fn handle_outer_control(
-    rx: &mpsc::Receiver<Control>,
-    paused: &mut bool,
-    ui_sched_id: &Arc<AtomicU64>,
-    empty_sleep: Duration,
-) -> OuterLoopAction {
-    match rx.try_recv() {
-        Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => OuterLoopAction::Stop,
-        Ok(Control::Pause) => {
-            *paused = true;
-            invalidate_ui_schedule(ui_sched_id);
-            OuterLoopAction::Sleep(Duration::from_secs(1))
-        }
-        Ok(Control::Resume) => {
-            *paused = false;
-            invalidate_ui_schedule(ui_sched_id);
-            OuterLoopAction::Sleep(Duration::from_secs(1))
-        }
-        Err(mpsc::TryRecvError::Empty) if empty_sleep.is_zero() => OuterLoopAction::Continue,
-        Err(mpsc::TryRecvError::Empty) => OuterLoopAction::Sleep(empty_sleep),
-    }
-}
-
-/// Outer reconnect loop using blocking tungstenite.
-pub fn run_meta_loop(
-    station: Station,
-    sender: mpsc::Sender<TrackInfo>,
-    rx: mpsc::Receiver<Control>,
-    lag_ms: Arc<AtomicU64>,
-    ui_sched_id: Arc<AtomicU64>,
-) -> MetaResult<()> {
-    let mut paused = false;
-    let retry_delay = Duration::from_secs(5);
-
-    loop {
-        match handle_outer_control(&rx, &mut paused, &ui_sched_id, Duration::ZERO) {
-            OuterLoopAction::Stop => return Ok(()),
-            OuterLoopAction::Sleep(wait) => thread::sleep(wait),
-            OuterLoopAction::Continue => {}
-        }
-
-        match run_once(
-            station,
-            sender.clone(),
-            &rx,
-            lag_ms.clone(),
-            ui_sched_id.clone(),
-            &mut paused,
-        ) {
-            Ok(()) => {}
-            Err(err) => {
-                eprintln!("Gateway connection error: {err}, retrying in 5s…");
-            }
-        }
-
-        // Session ended or failed: apply control/backoff policy once.
-        match handle_outer_control(&rx, &mut paused, &ui_sched_id, retry_delay) {
-            OuterLoopAction::Stop => return Ok(()),
-            OuterLoopAction::Sleep(wait) => thread::sleep(wait),
-            OuterLoopAction::Continue => {}
-        }
-    }
-}
-
 /// Single websocket session, with a simple heartbeat loop.
 /// Keeps history and does "snap-to-buffered-track" on Resume.
-fn run_once(
+pub(super) fn run_once(
     station: Station,
     sender: mpsc::Sender<TrackInfo>,
     rx: &mpsc::Receiver<Control>,
@@ -401,30 +234,13 @@ where
             Ok(None)
         }
         Err(tungstenite::Error::ConnectionClosed) => Ok(None),
-        Err(err) => return Err(err.into()),
+        Err(err) => Err(err.into()),
     }
-}
-
-/// Extract artist(s) + title from the gateway payload.
-fn parse_track_info(d: &Value) -> Option<TrackInfo> {
-    let payload: GatewaySongPayload = serde_json::from_value(d.clone()).ok()?;
-
-    let start_time_utc = parse_rfc3339_system_time(&payload.start_time)?;
-    let track = payload.song;
-
-    Some(TrackInfo {
-        artist: track.display_artist(),
-        title: track.display_title(),
-        album_cover: track.album_cover_url(),
-        artist_image: track.artist_image_url(),
-        start_time_utc,
-        duration_secs: track.duration_secs(),
-    })
 }
 
 fn set_maybe_tls_read_timeout(
     stream: &mut MaybeTlsStream<std::net::TcpStream>,
-    dur: std::time::Duration,
+    dur: Duration,
 ) -> std::io::Result<()> {
     match stream {
         MaybeTlsStream::Plain(tcp) => tcp.set_read_timeout(Some(dur)),
