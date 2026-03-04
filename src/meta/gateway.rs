@@ -145,7 +145,7 @@ fn run_once(
     let mut last_heartbeat_ack: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
 
     let mut paused = false;
-    let mut history: VecDeque<TrackInfo> = VecDeque::with_capacity(32);
+    let mut history: VecDeque<TrackInfo> = VecDeque::new();
 
     loop {
         // Check for control messages first.
@@ -262,9 +262,6 @@ fn run_once(
                         info.title,
                         info.duration_secs
                     );
-                    if history.len() == 32 {
-                        history.pop_front();
-                    }
                     history.push_back(info);
 
                     if !paused {
