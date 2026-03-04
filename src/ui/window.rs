@@ -160,6 +160,7 @@ pub fn build_ui(app: &Application) {
     // Poll the channels on the GTK main thread and update the UI.
     {
         let win = win_title.clone();
+        let pause = pause_button.clone();
         let art_popover = art_popover.clone();
         let art_picture = art_picture.clone();
         let cover_rx = cover_rx;
@@ -187,6 +188,7 @@ pub fn build_ui(app: &Application) {
                 None
             }
         };
+        let mut was_playing = pause.is_visible();
 
         glib::timeout_add_local(Duration::from_millis(100), move || {
             if let Some(ctrl_rx) = &ctrl_rx {
@@ -225,6 +227,13 @@ pub fn build_ui(app: &Application) {
                     };
                 }
             }
+            let is_playing = pause.is_visible();
+            if was_playing && !is_playing {
+                if let Some(d) = discord.as_mut() {
+                    let _ = d.clear();
+                }
+            }
+            was_playing = is_playing;
 
             for info in rx.try_iter() {
                 win.set_title(&info.artist);
