@@ -11,11 +11,13 @@ use adw::{
         gdk::{gdk_pixbuf::Pixbuf, Texture},
         gio::{Cancellable, MemoryInputStream},
         prelude::WidgetExt,
-        ApplicationWindow, Button, Picture, Popover,
+        ApplicationWindow, Picture, Popover,
     },
     prelude::PopoverExt,
     StyleManager, WindowTitle,
 };
+#[cfg(feature = "discord")]
+use adw::gtk::Button;
 #[cfg(feature = "discord")]
 use std::time::Instant;
 use std::{
@@ -32,6 +34,7 @@ const COVER_MAX_SIZE: i32 = 250;
 pub(super) struct UiUpdateLoopCtx {
     pub(super) window: ApplicationWindow,
     pub(super) win_title: WindowTitle,
+    #[cfg(feature = "discord")]
     pub(super) pause_button: Button,
     pub(super) art_picture: Picture,
     pub(super) art_popover: Popover,
@@ -51,6 +54,7 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
     let UiUpdateLoopCtx {
         window,
         win_title,
+        #[cfg(feature = "discord")]
         pause_button,
         art_picture,
         art_popover,

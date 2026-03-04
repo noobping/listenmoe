@@ -90,12 +90,10 @@ pub(super) fn run_once(
 
                 // Snap UI to the track that matches buffered playback time.
                 let lag = lag_ms.load(Ordering::Relaxed);
-                if let Some(t) = pick_track_for_playback(&history, lag) {
-                    debug_gateway!("ui snap: {} - {}", t.artist, t.title);
-                }
-                // Immediately snap UI to what playback should be on resume
-                if let Some(correct) = pick_track_for_playback(&history, lag) {
-                    let _ = sender.send(correct);
+                // Immediately snap UI to what playback should be on resume.
+                if let Some(track) = pick_track_for_playback(&history, lag) {
+                    debug_gateway!("ui snap: {} - {}", track.artist, track.title);
+                    let _ = sender.send(track);
                 }
                 // Also schedule the next switch that should happen after resume
                 schedule_next_from_history(sender.clone(), &history, lag, ui_sched_id.clone());

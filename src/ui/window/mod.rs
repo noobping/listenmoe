@@ -86,6 +86,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     loops::spawn_ui_update_loop(UiUpdateLoopCtx {
         window: window.clone(),
         win_title: win_title.clone(),
+        #[cfg(feature = "discord")]
         pause_button: pause_button.clone(),
         art_picture,
         art_popover,
