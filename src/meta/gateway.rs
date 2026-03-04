@@ -81,9 +81,20 @@ pub fn run_meta_loop(
     lag_ms: Arc<AtomicU64>,
     ui_sched_id: Arc<AtomicU64>,
 ) -> MetaResult<()> {
+    let mut paused = false;
+
     loop {
-        if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
-            return Ok(());
+        match rx.try_recv() {
+            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
+            Ok(Control::Pause) => {
+                paused = true;
+                ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            }
+            Ok(Control::Resume) => {
+                paused = false;
+                ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            }
+            Err(mpsc::TryRecvError::Empty) => {}
         }
         match run_once(
             station,
@@ -91,21 +102,40 @@ pub fn run_meta_loop(
             &rx,
             lag_ms.clone(),
             ui_sched_id.clone(),
+            &mut paused,
         ) {
             Ok(()) => {
                 // Normal end (server closed the connection). Respect stop; otherwise retry.
                 match rx.try_recv() {
                     Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
+                    Ok(Control::Pause) => {
+                        paused = true;
+                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                        thread::sleep(Duration::from_secs(1));
+                    }
+                    Ok(Control::Resume) => {
+                        paused = false;
+                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                        thread::sleep(Duration::from_secs(1));
+                    }
                     Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
-                    Ok(_) => thread::sleep(Duration::from_secs(1)),
                 }
             }
             Err(err) => {
                 eprintln!("Gateway connection error: {err}, retrying in 5s…");
                 match rx.try_recv() {
                     Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(()),
+                    Ok(Control::Pause) => {
+                        paused = true;
+                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                        thread::sleep(Duration::from_secs(1));
+                    }
+                    Ok(Control::Resume) => {
+                        paused = false;
+                        ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                        thread::sleep(Duration::from_secs(1));
+                    }
                     Err(mpsc::TryRecvError::Empty) => thread::sleep(Duration::from_secs(5)),
-                    Ok(_) => thread::sleep(Duration::from_secs(1)),
                 }
             }
         }
@@ -120,6 +150,7 @@ fn run_once(
     rx: &mpsc::Receiver<Control>,
     lag_ms: Arc<AtomicU64>,
     ui_sched_id: Arc<AtomicU64>,
+    paused: &mut bool,
 ) -> MetaResult<()> {
     if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
         return Ok(());
@@ -144,7 +175,6 @@ fn run_once(
     let mut last_any_msg = Instant::now();
     let mut last_heartbeat_ack: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
 
-    let mut paused = false;
     let mut history: VecDeque<TrackInfo> = VecDeque::new();
 
     loop {
@@ -157,13 +187,13 @@ fn run_once(
             Ok(Control::Pause) => {
                 #[cfg(debug_assertions)]
                 println!("[{}] Pausing meta data", now_string());
-                paused = true;
+                *paused = true;
                 ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate any pending scheduled sends
             }
             Ok(Control::Resume) => {
                 #[cfg(debug_assertions)]
                 println!("[{}] Resuming meta data", now_string());
-                paused = false;
+                *paused = false;
                 ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate timers from before pause
 
                 // Snap UI to the track that matches buffered playback time.
@@ -264,7 +294,7 @@ fn run_once(
                     );
                     history.push_back(info);
 
-                    if !paused {
+                    if !*paused {
                         let lag = lag_ms.load(Ordering::Relaxed);
                         let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
                         #[cfg(debug_assertions)]
