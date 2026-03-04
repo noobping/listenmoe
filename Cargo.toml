@@ -15,7 +15,7 @@ ProductName = "LISTEN.moe"
 FileDescription = "J-POP and K-POP radio"
 
 [dependencies]
-rodio = { version = "0.21.1", default-features = false, features = ["playback"] }
+rodio = { version = "0.22.1", default-features = false, features = ["playback"] }
 symphonia = { version = "0.5.5", features = ["ogg", "vorbis", "mp3"] }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 adw = { version = "0.8.1", package = "libadwaita", features = ["v1_5"] }
@@ -26,10 +26,9 @@ gettext-rs = "0.7.7"
 dirs-next = "2.0.0"
 time = { version = "0.3.44", features = ["parsing"] }
 rustfft = "6.4.1"
-cairo-rs = "0.21.5"
 mpris-server =  "0.9.0"
 discord-rich-presence = "1.1.0"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
-glib-build-tools = "0.21.0"
+glib-build-tools = "0.22.0"
 winresource = "0.1.28"

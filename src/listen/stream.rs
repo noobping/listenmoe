@@ -1,5 +1,6 @@
 use reqwest::blocking::Client;
-use rodio::{buffer::SamplesBuffer, OutputStreamBuilder, Sink};
+use rodio::{buffer::SamplesBuffer, DeviceSinkBuilder, Player};
+use std::num::{NonZeroU16, NonZeroU32};
 use std::sync::{atomic::AtomicU32, mpsc, Arc};
 use std::time::Duration;
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
@@ -96,7 +97,7 @@ fn open_stream(
 
 fn handle_control(
     rx: &mpsc::Receiver<Control>,
-    sink: &mut Sink,
+    sink: &Player,
     paused: &mut bool,
     bars_enabled: &mut bool,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
@@ -141,7 +142,7 @@ fn run_one_connection(
     track_id: &mut u32,
     decoder: &mut Box<dyn symphonia::core::codecs::Decoder>,
     decoder_opts: &DecoderOptions,
-    sink: &mut Sink,
+    sink: &Player,
     paused: &mut bool,
     bars_enabled: &mut bool,
     fft_state: &mut FftVizState,
@@ -246,8 +247,9 @@ pub(super) fn run_listenmoe_stream(
     let metadata_opts: MetadataOptions = Default::default();
     let decoder_opts: DecoderOptions = Default::default();
 
-    let stream = OutputStreamBuilder::open_default_stream()?;
-    let mut sink = Sink::connect_new(&stream.mixer());
+    let mut stream = DeviceSinkBuilder::open_default_sink()?;
+    stream.log_on_drop(false);
+    let mut sink = Player::connect_new(stream.mixer());
 
     let mut paused = false;
     let mut bars_enabled = true;
@@ -284,7 +286,7 @@ pub(super) fn run_listenmoe_stream(
 
         // On reconnect: clear sink queue + reset viz
         sink.stop();
-        sink = Sink::connect_new(&stream.mixer());
+        sink = Player::connect_new(stream.mixer());
         reset_fft_state(
             &mut fft_state.mono_ring,
             &mut fft_state.bars_smooth,
@@ -302,7 +304,7 @@ pub(super) fn run_listenmoe_stream(
             &mut track_id,
             &mut decoder,
             &decoder_opts,
-            &mut sink,
+            &sink,
             &mut paused,
             &mut bars_enabled,
             &mut fft_state,
@@ -321,7 +323,7 @@ pub(super) fn run_listenmoe_stream(
     }
 }
 
-fn append_samples_in_chunks(sink: &Sink, channels: u16, sample_rate: u32, samples: &[f32]) {
+fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samples: &[f32]) {
     // 10ms chunks (tweak to 5..20ms)
     const CHUNK_MS: u32 = 10;
 
@@ -330,8 +332,15 @@ fn append_samples_in_chunks(sink: &Sink, channels: u16, sample_rate: u32, sample
         return;
     }
 
+    let Some(channels) = NonZeroU16::new(channels) else {
+        return;
+    };
+    let Some(sample_rate) = NonZeroU32::new(sample_rate) else {
+        return;
+    };
+
     // frames per chunk = sr * ms / 1000
-    let frames_per_chunk = (sample_rate * CHUNK_MS / 1000).max(1) as usize;
+    let frames_per_chunk = (sample_rate.get() * CHUNK_MS / 1000).max(1) as usize;
     let samples_per_chunk = frames_per_chunk * ch;
 
     for chunk in samples.chunks(samples_per_chunk) {

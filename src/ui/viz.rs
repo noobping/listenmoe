@@ -38,7 +38,7 @@ pub fn make_bars_visualizer(n_bars: usize, height: i32) -> (gtk::DrawingArea, Vi
         let (r, g, b) = widget_css_color(&area_clone.clone().upcast::<gtk::Widget>());
 
         // Vertical gradient: stronger at top/bottom, weaker in the center where text sits.
-        let grad = cairo::LinearGradient::new(0.0, 0.0, 0.0, h);
+        let grad = gtk::cairo::LinearGradient::new(0.0, 0.0, 0.0, h);
         let edge_a = 0.18;
         let center_a = 0.04;
 
