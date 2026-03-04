@@ -1,8 +1,9 @@
 use dirs_next as dirs;
-use gettextrs::{
-    bind_textdomain_codeset, bindtextdomain, setlocale, textdomain, LocaleCategory,
+use gettextrs::{bind_textdomain_codeset, bindtextdomain, setlocale, textdomain, LocaleCategory};
+use std::{
+    env,
+    path::{Path, PathBuf},
 };
-use std::{env, path::{Path, PathBuf}};
 
 const APP_ID: &str = "io.github.noobping.listenmoe";
 
@@ -62,9 +63,7 @@ pub fn init_i18n() {
     #[cfg(debug_assertions)]
     println!("Using locale dir: {}", dir.display());
 
-    let dir_str = dir
-        .to_str()
-        .expect("Locale path must be UTF-8 for gettext");
+    let dir_str = dir.to_str().expect("Locale path must be UTF-8 for gettext");
 
     bindtextdomain(APP_ID, dir_str).expect("bindtextdomain failed");
     bind_textdomain_codeset(APP_ID, "UTF-8").expect("bind codeset failed");

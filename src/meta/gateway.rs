@@ -79,6 +79,10 @@ enum OuterLoopAction {
     Sleep(Duration),
 }
 
+fn invalidate_ui_schedule(ui_sched_id: &Arc<AtomicU64>) {
+    ui_sched_id.fetch_add(1, Ordering::Relaxed);
+}
+
 fn handle_outer_control(
     rx: &mpsc::Receiver<Control>,
     paused: &mut bool,
@@ -89,12 +93,12 @@ fn handle_outer_control(
         Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => OuterLoopAction::Stop,
         Ok(Control::Pause) => {
             *paused = true;
-            ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            invalidate_ui_schedule(ui_sched_id);
             OuterLoopAction::Sleep(Duration::from_secs(1))
         }
         Ok(Control::Resume) => {
             *paused = false;
-            ui_sched_id.fetch_add(1, Ordering::Relaxed);
+            invalidate_ui_schedule(ui_sched_id);
             OuterLoopAction::Sleep(Duration::from_secs(1))
         }
         Err(mpsc::TryRecvError::Empty) if empty_sleep.is_zero() => OuterLoopAction::Continue,
@@ -182,20 +186,20 @@ fn run_once(
         // Check for control messages first.
         match rx.try_recv() {
             Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => {
-                ui_sched_id.fetch_add(1, Ordering::Relaxed);
+                invalidate_ui_schedule(&ui_sched_id);
                 break;
             }
             Ok(Control::Pause) => {
                 #[cfg(debug_assertions)]
                 println!("[{}] Pausing meta data", now_string());
                 *paused = true;
-                ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate any pending scheduled sends
+                invalidate_ui_schedule(&ui_sched_id); // invalidate any pending scheduled sends
             }
             Ok(Control::Resume) => {
                 #[cfg(debug_assertions)]
                 println!("[{}] Resuming meta data", now_string());
                 *paused = false;
-                ui_sched_id.fetch_add(1, Ordering::Relaxed); // invalidate timers from before pause
+                invalidate_ui_schedule(&ui_sched_id); // invalidate timers from before pause
 
                 // Snap UI to the track that matches buffered playback time.
                 let lag = lag_ms.load(Ordering::Relaxed);

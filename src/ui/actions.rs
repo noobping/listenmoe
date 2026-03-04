@@ -39,6 +39,10 @@ fn set_idle_ui(win_title: &WindowTitle, play_button: &Button, pause_button: &But
     win_title.set_subtitle(&gettext("J-POP and K-POP radio"));
 }
 
+fn activate_window_action(window: &ApplicationWindow, action: &str) {
+    let _ = adw::prelude::WidgetExt::activate_action(window, action, None::<&glib::Variant>);
+}
+
 pub fn build_actions(
     window: &ApplicationWindow,
     app: &Application,
@@ -164,17 +168,9 @@ fn add_actions(
         let win_clone = window.clone();
         make_action("toggle", move || {
             if play.is_visible() {
-                let _ = adw::prelude::WidgetExt::activate_action(
-                    &win_clone,
-                    "win.play",
-                    None::<&glib::Variant>,
-                );
+                activate_window_action(&win_clone, "win.play");
             } else if pause.is_visible() {
-                let _ = adw::prelude::WidgetExt::activate_action(
-                    &win_clone,
-                    "win.pause",
-                    None::<&glib::Variant>,
-                );
+                activate_window_action(&win_clone, "win.pause");
             }
         })
     });
@@ -206,11 +202,7 @@ fn add_actions(
         let play = play_button.clone();
         make_action("next_station", move || {
             if play.is_visible() {
-                let _ = adw::prelude::WidgetExt::activate_action(
-                    &win_clone,
-                    "win.play",
-                    None::<&glib::Variant>,
-                );
+                activate_window_action(&win_clone, "win.play");
                 return;
             }
             let current = radio.get_station();
@@ -295,11 +287,7 @@ fn create_station_action(
         radio.set_station(station);
         meta.set_station(station);
         if play.is_visible() {
-            let _ = adw::prelude::WidgetExt::activate_action(
-                &win_clone,
-                "win.play",
-                None::<&glib::Variant>,
-            );
+            activate_window_action(&win_clone, "win.play");
         }
     })
 }

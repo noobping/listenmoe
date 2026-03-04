@@ -77,7 +77,11 @@ pub fn apply_color(provider: &gtk::CssProvider, tint: (u8, u8, u8), tint_is_ligh
     let (r, g, b) = tint;
 
     // Foreground for buttons/text
-    let (fr, fg, fb) = if tint_is_light { (0, 0, 0) } else { (255, 255, 255) };
+    let (fr, fg, fb) = if tint_is_light {
+        (0, 0, 0)
+    } else {
+        (255, 255, 255)
+    };
 
     // slightly dim for backdrop
     let (br, bg, bb) = (
@@ -88,7 +92,11 @@ pub fn apply_color(provider: &gtk::CssProvider, tint: (u8, u8, u8), tint_is_ligh
 
     // viz bar color derived from the tint, but with contrast
     let (vr, vg, vb) = if tint_is_light {
-        ((r as f32 * 0.25) as u8, (g as f32 * 0.25) as u8, (b as f32 * 0.25) as u8)
+        (
+            (r as f32 * 0.25) as u8,
+            (g as f32 * 0.25) as u8,
+            (b as f32 * 0.25) as u8,
+        )
     } else {
         (
             (255.0 - (255.0 - r as f32) * 0.25) as u8,
@@ -157,7 +165,7 @@ pub fn apply_cover_tint_css_clear(provider: &gtk::CssProvider) {
         .header-viz:backdrop { color: @accent_color; }
         headerbar.viz-transparent { background: transparent; box-shadow: none; }
         headerbar.viz-transparent:backdrop { background: transparent; box-shadow: none; }
-        "#
+        "#,
     );
 }
 

@@ -20,13 +20,13 @@ use adw::{
     Application, StyleManager, WindowTitle,
 };
 use gettextrs::gettext;
+#[cfg(feature = "discord")]
+use std::time::Instant;
 use std::{
     sync::{atomic::Ordering, mpsc},
     thread,
     time::Duration,
 };
-#[cfg(feature = "discord")]
-use std::time::Instant;
 
 use super::{actions, cover, viz};
 
@@ -234,7 +234,12 @@ pub fn build_ui(app: &Application) {
                 win.set_subtitle(&info.title);
 
                 #[cfg(all(debug_assertions, feature = "discord"))]
-                println!("[{}] Update discord: {} {}", now_string(), &info.artist, &info.title);
+                println!(
+                    "[{}] Update discord: {} {}",
+                    now_string(),
+                    &info.artist,
+                    &info.title
+                );
                 #[cfg(feature = "discord")]
                 {
                     last_track = Some((info.artist.clone(), info.title.clone()));

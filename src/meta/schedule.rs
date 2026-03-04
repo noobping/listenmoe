@@ -9,10 +9,7 @@ use std::time::{Duration, SystemTime};
 
 use super::track::TrackInfo;
 
-pub fn pick_track_for_playback(
-    history: &VecDeque<TrackInfo>,
-    lag_ms: u64,
-) -> Option<TrackInfo> {
+pub fn pick_track_for_playback(history: &VecDeque<TrackInfo>, lag_ms: u64) -> Option<TrackInfo> {
     let playback_now = SystemTime::now().checked_sub(Duration::from_millis(lag_ms))?;
 
     // Prefer a proper [start, end) window when duration is known and > 0.
