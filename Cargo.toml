@@ -8,6 +8,10 @@ authors = ["noobping <hello@noobping.dev>"]
 version = "1.0.12"
 edition = "2021"
 
+[features]
+default = []
+discord = ["dep:discord-rich-presence"]
+
 [package.metadata.winresource]
 OriginalFilename = "listenmoe.exe"
 LegalCopyright = "Copyright (c) 2025 noobping; Stream and metadata provided by LISTEN.moe."
@@ -27,7 +31,7 @@ dirs-next = "2.0.0"
 time = { version = "0.3.44", features = ["parsing"] }
 rustfft = "6.4.1"
 mpris-server =  "0.9.0"
-discord-rich-presence = "1.1.0"
+discord-rich-presence = { version = "1.1.0", optional = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 glib-build-tools = "0.22.0"

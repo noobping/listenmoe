@@ -1,6 +1,7 @@
 mod actions;
 mod controls;
 mod cover;
+#[cfg(feature = "discord")]
 mod discord;
 mod viz;
 mod window;

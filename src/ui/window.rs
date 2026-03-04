@@ -1,8 +1,9 @@
 use crate::listen::Listen;
-#[cfg(debug_assertions)]
+#[cfg(all(debug_assertions, feature = "discord"))]
 use crate::log::now_string;
 use crate::meta::{Meta, TrackInfo};
 use crate::station::Station;
+#[cfg(feature = "discord")]
 use crate::ui::discord::Discord;
 
 use adw::{
@@ -160,6 +161,7 @@ pub fn build_ui(app: &Application) {
     // Poll the channels on the GTK main thread and update the UI.
     {
         let win = win_title.clone();
+        #[cfg(feature = "discord")]
         let pause = pause_button.clone();
         let art_popover = art_popover.clone();
         let art_picture = art_picture.clone();
@@ -181,13 +183,9 @@ pub fn build_ui(app: &Application) {
             cover::apply_cover_tint_css_clear(css_provider);
         };
 
-        let mut discord = match Discord::new() {
-            Ok(d) => Some(d),
-            Err(e) => {
-                eprintln!("Discord disabled: {e}");
-                None
-            }
-        };
+        #[cfg(feature = "discord")]
+        let mut discord = Discord::new();
+        #[cfg(feature = "discord")]
         let mut was_playing = pause.is_visible();
 
         glib::timeout_add_local(Duration::from_millis(100), move || {
@@ -227,23 +225,24 @@ pub fn build_ui(app: &Application) {
                     };
                 }
             }
-            let is_playing = pause.is_visible();
-            if was_playing && !is_playing {
-                if let Some(d) = discord.as_mut() {
-                    let _ = d.clear();
+
+            #[cfg(feature = "discord")]
+            {
+                let is_playing = pause.is_visible();
+                if was_playing && !is_playing {
+                    let _ = discord.clear();
                 }
+                was_playing = is_playing;
             }
-            was_playing = is_playing;
 
             for info in rx.try_iter() {
                 win.set_title(&info.artist);
                 win.set_subtitle(&info.title);
 
-                if let Some(d) = discord.as_mut() {
-                    #[cfg(debug_assertions)]
-                    println!("[{}] Update discord: {} {}", now_string(), &info.artist, &info.title);
-                    let _ = d.set(&info.artist, &info.title);
-                }
+                #[cfg(all(debug_assertions, feature = "discord"))]
+                println!("[{}] Update discord: {} {}", now_string(), &info.artist, &info.title);
+                #[cfg(feature = "discord")]
+                let _ = discord.set(&info.artist, &info.title);
 
                 let cover_url = info
                     .album_cover

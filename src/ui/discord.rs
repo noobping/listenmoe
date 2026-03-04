@@ -4,30 +4,63 @@ const DISCORD_CLIENT_ID: &str = "1469290259853349040";
 
 pub struct Discord {
     client: DiscordIpcClient,
+    connected: bool,
 }
 
 impl Discord {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut client = DiscordIpcClient::new(DISCORD_CLIENT_ID);
-        client.connect()?;
-        Ok(Self { client })
+    pub fn new() -> Self {
+        let mut discord = Self {
+            client: DiscordIpcClient::new(DISCORD_CLIENT_ID),
+            connected: false,
+        };
+        let _ = discord.connect();
+        discord
+    }
+
+    fn connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.connected {
+            return Ok(());
+        }
+        self.client.connect()?;
+        self.connected = true;
+        Ok(())
+    }
+
+    fn reconnect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let _ = self.client.close();
+        self.connected = false;
+        self.client.connect()?;
+        self.connected = true;
+        Ok(())
     }
 
     pub fn set(&mut self, details: &str, state: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.connect()?;
         let payload = activity::Activity::new().details(details).state(state);
-        self.client.set_activity(payload)?;
+        if self.client.set_activity(payload).is_err() {
+            self.reconnect()?;
+            let payload = activity::Activity::new().details(details).state(state);
+            self.client.set_activity(payload)?;
+        }
         Ok(())
     }
 
     pub fn clear(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.client.clear_activity()?;
+        self.connect()?;
+        if self.client.clear_activity().is_err() {
+            self.reconnect()?;
+            self.client.clear_activity()?;
+        }
         Ok(())
     }
 }
 
 impl Drop for Discord {
     fn drop(&mut self) {
-        let _ = self.clear();
-        let _ = self.client.close();
+        if self.connected {
+            let _ = self.client.clear_activity();
+            let _ = self.client.close();
+            self.connected = false;
+        }
     }
 }
