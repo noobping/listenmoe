@@ -7,6 +7,7 @@ project(
 
 cargo = find_program('cargo', required: true)
 sh = find_program('sh', required: true)
+gnome = import('gnome')
 
 dependency('gtk4', version: '>= 4.0', required: true)
 dependency('libadwaita-1', version: '>= 1.5', required: true)
@@ -83,6 +84,11 @@ install_data(
 )
 
 install_data(
+  'data/io.github.noobping.listenmoe.gschema.xml',
+  install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas'),
+)
+
+install_data(
   'data/scalable/apps/io.github.noobping.listenmoe.svg',
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'),
 )
@@ -101,4 +107,8 @@ install_data(
 install_subdir(
   'data/symbolic/apps',
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'symbolic'),
+)
+
+gnome.post_install(
+  glib_compile_schemas: true,
 )

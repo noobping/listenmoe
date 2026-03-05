@@ -8,6 +8,7 @@ mod listen;
 mod locale;
 mod log;
 mod meta;
+mod preferences;
 mod station;
 mod ui;
 
@@ -32,6 +33,7 @@ enum CliAction {
         ui_options: ui::UiOptions,
         app_args: Vec<String>,
         verbose: bool,
+        save_preferences: bool,
     },
     Help,
     Version,
@@ -51,6 +53,7 @@ Options:
   -a, --autoplay    Start playing automatically on launch
   -j, --jpop        Use J-POP as default station
   -k, --kpop        Use K-POP as default station
+  -p, --preferences Save current startup flags as defaults
   -s, --stop        Use stop behavior instead of pause
       --no-discord  Disable Discord Rich Presence at runtime
   -v, --verbose     Print extra startup diagnostics
@@ -62,10 +65,11 @@ Options:
     )
 }
 
-fn parse_cli() -> Result<CliAction, String> {
-    let mut options = ui::UiOptions::default();
+fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
+    let mut options = default_options;
     let mut passthrough_args = Vec::new();
     let mut verbose = false;
+    let mut save_preferences = false;
 
     let mut args = std::env::args_os();
     if let Some(program) = args.next() {
@@ -87,8 +91,9 @@ fn parse_cli() -> Result<CliAction, String> {
             }
             _ if arg.starts_with('-') && !arg.starts_with("--") && arg.len() > 2 => {
                 let cluster = &arg[1..];
-                let recognized_cluster =
-                    cluster.chars().all(|short_flag| matches!(short_flag, 'a' | 'j' | 'k' | 's' | 'v' | 'h'));
+                let recognized_cluster = cluster.chars().all(|short_flag| {
+                    matches!(short_flag, 'a' | 'j' | 'k' | 'p' | 's' | 'v' | 'h')
+                });
 
                 if !recognized_cluster {
                     passthrough_args.push(arg);
@@ -108,6 +113,9 @@ fn parse_cli() -> Result<CliAction, String> {
                         }
                         's' => {
                             options.stop_instead_pause = true;
+                        }
+                        'p' => {
+                            save_preferences = true;
                         }
                         'v' => {
                             verbose = true;
@@ -131,6 +139,9 @@ fn parse_cli() -> Result<CliAction, String> {
             "-s" | "--stop" => {
                 options.stop_instead_pause = true;
             }
+            "-p" | "--preferences" => {
+                save_preferences = true;
+            }
             "--no-discord" => {
                 options.discord_enabled = false;
             }
@@ -153,11 +164,15 @@ fn parse_cli() -> Result<CliAction, String> {
         ui_options: options,
         app_args: passthrough_args,
         verbose,
+        save_preferences,
     })
 }
 
 fn run() -> Result<(), String> {
-    let (ui_options, app_args, verbose) = match parse_cli()? {
+    let app_id = std::env::var("LISTENMOE_APP_ID").unwrap_or_else(|_| APP_ID.to_string());
+    let default_ui_options = preferences::load_ui_options(app_id.as_str()).unwrap_or_default();
+
+    let (ui_options, app_args, verbose, save_preferences) = match parse_cli(default_ui_options)? {
         CliAction::Help => {
             println!("{}", help_text());
             return Ok(());
@@ -170,10 +185,15 @@ fn run() -> Result<(), String> {
             ui_options,
             app_args,
             verbose,
-        } => (ui_options, app_args, verbose),
+            save_preferences,
+        } => (ui_options, app_args, verbose, save_preferences),
     };
 
     log::set_verbose(verbose);
+
+    if save_preferences {
+        preferences::save_ui_options(app_id.as_str(), ui_options)?;
+    }
 
     if log::is_verbose() {
         println!(
@@ -186,7 +206,6 @@ fn run() -> Result<(), String> {
     }
 
     locale::init_i18n();
-    let app_id = std::env::var("LISTENMOE_APP_ID").unwrap_or_else(|_| APP_ID.to_string());
     let app_flags = match std::env::var("LISTENMOE_APP_NON_UNIQUE") {
         Ok(v) if v == "1" || v.eq_ignore_ascii_case("true") => ApplicationFlags::NON_UNIQUE,
         _ => ApplicationFlags::empty(),

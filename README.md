@@ -34,7 +34,7 @@ You can install ListenMoe using one of the following options:
 The application can be started with optional flags. For example:
 
 ```sh
-flatpak run io.github.noobping.listenmoe --autoplay --kpop --stop --no-discord
+flatpak run io.github.noobping.listenmoe --autoplay --kpop --stop --no-discord --preferences
 ```
 
 Available flags:
@@ -42,6 +42,7 @@ Available flags:
 - `-a`, `--autoplay`: start playing automatically on launch
 - `-j`, `--jpop`: use J-POP as default station
 - `-k`, `--kpop`: use K-POP as default station
+- `-p`, `--preferences`: save current startup flags as defaults
 - `--no-discord`: disable Discord Rich Presence at runtime
 - `-s`, `--stop`: use stop behavior instead of pause
 - `-v`, `--verbose`: print extra startup diagnostics
@@ -71,7 +72,8 @@ appimage-builder --recipe .appimage-builder.yml
 Run (debug):
 
 ```sh
-cargo run
+glib-compile-schemas data
+GSETTINGS_SCHEMA_DIR=data cargo run -p
 ```
 
 Use `cargo-edit` to update the dependencies.

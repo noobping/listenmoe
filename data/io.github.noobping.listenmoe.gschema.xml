@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="io.github.noobping.listenmoe" path="/io/github/noobping/listenmoe/">
+    <key name="default-station" type="s">
+      <default>'jpop'</default>
+      <summary>Default station</summary>
+      <description>Station used on startup when no CLI override is provided.</description>
+    </key>
+    <key name="autoplay" type="b">
+      <default>false</default>
+      <summary>Autoplay on launch</summary>
+      <description>Start playback automatically when the app opens.</description>
+    </key>
+    <key name="stop-instead-pause" type="b">
+      <default>false</default>
+      <summary>Use stop behavior</summary>
+      <description>Show stop behavior instead of pause in the main playback control.</description>
+    </key>
+    <key name="discord-enabled" type="b">
+      <default>true</default>
+      <summary>Discord Rich Presence enabled</summary>
+      <description>Enable Discord Rich Presence integration at runtime.</description>
+    </key>
+  </schema>
+
+  <schema id="io.github.noobping.listenmoe.Devel" path="/io/github/noobping/listenmoe/devel/">
+    <key name="default-station" type="s">
+      <default>'jpop'</default>
+      <summary>Default station</summary>
+      <description>Station used on startup when no CLI override is provided.</description>
+    </key>
+    <key name="autoplay" type="b">
+      <default>false</default>
+      <summary>Autoplay on launch</summary>
+      <description>Start playback automatically when the app opens.</description>
+    </key>
+    <key name="stop-instead-pause" type="b">
+      <default>false</default>
+      <summary>Use stop behavior</summary>
+      <description>Show stop behavior instead of pause in the main playback control.</description>
+    </key>
+    <key name="discord-enabled" type="b">
+      <default>true</default>
+      <summary>Discord Rich Presence enabled</summary>
+      <description>Enable Discord Rich Presence integration at runtime.</description>
+    </key>
+  </schema>
+
+  <schema id="io.github.noobping.listenmoe_beta" path="/io/github/noobping/listenmoe/beta/">
+    <key name="default-station" type="s">
+      <default>'jpop'</default>
+      <summary>Default station</summary>
+      <description>Station used on startup when no CLI override is provided.</description>
+    </key>
+    <key name="autoplay" type="b">
+      <default>false</default>
+      <summary>Autoplay on launch</summary>
+      <description>Start playback automatically when the app opens.</description>
+    </key>
+    <key name="stop-instead-pause" type="b">
+      <default>false</default>
+      <summary>Use stop behavior</summary>
+      <description>Show stop behavior instead of pause in the main playback control.</description>
+    </key>
+    <key name="discord-enabled" type="b">
+      <default>true</default>
+      <summary>Discord Rich Presence enabled</summary>
+      <description>Enable Discord Rich Presence integration at runtime.</description>
+    </key>
+  </schema>
+</schemalist>
