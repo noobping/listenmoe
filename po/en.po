@@ -6,9 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Copy title & artist"
-msgstr "Copy title & artist"
-
 msgid "Play %s"
 msgstr "Play %s"
 
@@ -119,9 +116,6 @@ msgstr "Dynamic colors based on the current album or artist cover"
 
 msgid "No ads"
 msgstr "No ads"
-
-msgid "Made with Rust"
-msgstr "Made with Rust"
 
 msgid "Initial release."
 msgstr "Initial release."

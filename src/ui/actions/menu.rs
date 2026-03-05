@@ -15,7 +15,7 @@ pub fn populate_menu(
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
 ) {
-    menu.append(Some(&gettext("Copy title & artist")), Some("win.copy"));
+    menu.append(Some(&gettext("Copy current track")), Some("win.copy"));
 
     for station in [Station::Jpop, Station::Kpop] {
         register_station_action(station, play_button, window, radio, meta);

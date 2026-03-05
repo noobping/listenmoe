@@ -6,9 +6,6 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Copy title & artist"
-msgstr ""
-
 msgid "Play %s"
 msgstr ""
 
@@ -118,9 +115,6 @@ msgid "Dynamic colors based on the current album or artist cover"
 msgstr ""
 
 msgid "No ads"
-msgstr ""
-
-msgid "Made with Rust"
 msgstr ""
 
 msgid "Initial release."

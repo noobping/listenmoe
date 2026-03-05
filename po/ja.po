@@ -6,9 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Copy title & artist"
-msgstr "タイトルとアーティストをコピー"
-
 msgid "Play %s"
 msgstr "%s を再生"
 
@@ -119,9 +116,6 @@ msgstr "現在のアルバムまたはアーティストのカバーに基づく
 
 msgid "No ads"
 msgstr "広告なし"
-
-msgid "Made with Rust"
-msgstr "Rustで作られています"
 
 msgid "Initial release."
 msgstr "初回リリース。"
