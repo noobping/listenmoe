@@ -24,6 +24,48 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Playback"
+msgstr ""
+
+msgid "Play or pause"
+msgstr ""
+
+msgid "Stop playback"
+msgstr ""
+
+msgid "Copy current track"
+msgstr ""
+
+msgid "Stations"
+msgstr ""
+
+msgid "Play J-POP"
+msgstr ""
+
+msgid "Play K-POP"
+msgstr ""
+
+msgid "Previous station"
+msgstr ""
+
+msgid "Next station"
+msgstr ""
+
+msgid "Window"
+msgstr ""
+
+msgid "Open preferences"
+msgstr ""
+
+msgid "Show shortcuts"
+msgstr ""
+
 msgid "Preferences"
 msgstr ""
 

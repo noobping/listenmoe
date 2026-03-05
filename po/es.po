@@ -24,6 +24,48 @@ msgstr "Menú principal"
 msgid "Quit"
 msgstr "Salir"
 
+msgid "Keyboard Shortcuts"
+msgstr "Atajos de teclado"
+
+msgid "General"
+msgstr "General"
+
+msgid "Playback"
+msgstr "Reproducción"
+
+msgid "Play or pause"
+msgstr "Reproducir o pausar"
+
+msgid "Stop playback"
+msgstr "Detener reproducción"
+
+msgid "Copy current track"
+msgstr "Copiar pista actual"
+
+msgid "Stations"
+msgstr "Emisoras"
+
+msgid "Play J-POP"
+msgstr "Reproducir J-POP"
+
+msgid "Play K-POP"
+msgstr "Reproducir K-POP"
+
+msgid "Previous station"
+msgstr "Emisora anterior"
+
+msgid "Next station"
+msgstr "Siguiente emisora"
+
+msgid "Window"
+msgstr "Ventana"
+
+msgid "Open preferences"
+msgstr "Abrir preferencias"
+
+msgid "Show shortcuts"
+msgstr "Mostrar atajos"
+
 msgid "Preferences"
 msgstr "Preferencias"
 

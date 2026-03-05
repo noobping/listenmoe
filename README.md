@@ -49,6 +49,11 @@ Available flags:
 - `-h`, `--help`: show help and exit
 - `--version`: show version and exit
 
+Keyboard shortcuts:
+
+- `Ctrl+,`: open Preferences
+- `Ctrl+?` or `F1`: open Keyboard Shortcuts
+
 ## Translations
 
 The `po` folder contains translation files in `.po` (Portable Object) format. If you spot a typo, unclear wording, or have a better translation, contributions are welcome.

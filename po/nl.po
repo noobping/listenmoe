@@ -24,6 +24,48 @@ msgstr "Hoofdmenu"
 msgid "Quit"
 msgstr "Afsluiten"
 
+msgid "Keyboard Shortcuts"
+msgstr "Sneltoetsen"
+
+msgid "General"
+msgstr "Algemeen"
+
+msgid "Playback"
+msgstr "Afspelen"
+
+msgid "Play or pause"
+msgstr "Afspelen of pauzeren"
+
+msgid "Stop playback"
+msgstr "Afspelen stoppen"
+
+msgid "Copy current track"
+msgstr "Huidig nummer kopiëren"
+
+msgid "Stations"
+msgstr "Zenders"
+
+msgid "Play J-POP"
+msgstr "J-POP afspelen"
+
+msgid "Play K-POP"
+msgstr "K-POP afspelen"
+
+msgid "Previous station"
+msgstr "Vorige zender"
+
+msgid "Next station"
+msgstr "Volgende zender"
+
+msgid "Window"
+msgstr "Venster"
+
+msgid "Open preferences"
+msgstr "Voorkeuren openen"
+
+msgid "Show shortcuts"
+msgstr "Sneltoetsen tonen"
+
 msgid "Preferences"
 msgstr "Voorkeuren"
 

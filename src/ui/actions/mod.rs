@@ -18,11 +18,13 @@ use crate::meta::Meta;
 mod context;
 mod menu;
 mod preferences;
+mod shortcuts;
 use adw::prelude::AdwDialogExt;
 use context::ActionCtx;
 use gettextrs::gettext;
 pub use menu::populate_menu;
 use preferences::show_preferences_window;
+use shortcuts::install_shortcuts_overlay;
 
 const APP_NAME: &str = "Listen Moe";
 #[cfg(debug_assertions)]
@@ -97,6 +99,7 @@ pub fn build_actions(
     );
     add_transport_actions(window, &ctx, &set_playback);
     add_window_actions(window, &ctx);
+    install_shortcuts_overlay(window);
     add_accels(app);
 
     (controls, ctrl_rx)
@@ -174,12 +177,13 @@ fn show_about_dialog(window: &ApplicationWindow) {
 
 fn add_accels(app: &Application) {
     const ACCELS: &[(&str, &[&str])] = &[
-        ("win.about", &["F1"]),
+        ("win.about", &[]),
+        ("win.show-help-overlay", &["F1", "<primary>question"]),
         ("win.preferences", &["<primary>comma"]),
         ("win.copy", &["<primary>c"]),
         ("win.jpop", &["<primary>j"]),
         ("win.kpop", &["<primary>k"]),
-        ("win.quit", &["<primary>q", "Escape"]),
+        ("win.quit", &["<primary>q"]),
         ("win.prev_station", &["<primary>z", "XF86AudioPrev"]),
         (
             "win.next_station",

@@ -24,6 +24,48 @@ msgstr "メインメニュー"
 msgid "Quit"
 msgstr "終了"
 
+msgid "Keyboard Shortcuts"
+msgstr "キーボードショートカット"
+
+msgid "General"
+msgstr "一般"
+
+msgid "Playback"
+msgstr "再生"
+
+msgid "Play or pause"
+msgstr "再生/一時停止"
+
+msgid "Stop playback"
+msgstr "再生を停止"
+
+msgid "Copy current track"
+msgstr "現在の曲をコピー"
+
+msgid "Stations"
+msgstr "ステーション"
+
+msgid "Play J-POP"
+msgstr "J-POP を再生"
+
+msgid "Play K-POP"
+msgstr "K-POP を再生"
+
+msgid "Previous station"
+msgstr "前のステーション"
+
+msgid "Next station"
+msgstr "次のステーション"
+
+msgid "Window"
+msgstr "ウィンドウ"
+
+msgid "Open preferences"
+msgstr "設定を開く"
+
+msgid "Show shortcuts"
+msgstr "ショートカットを表示"
+
 msgid "Preferences"
 msgstr "設定"
 
