@@ -24,6 +24,39 @@ msgstr "メインメニュー"
 msgid "Quit"
 msgstr "終了"
 
+msgid "Preferences"
+msgstr "設定"
+
+msgid "Startup Defaults"
+msgstr "起動時のデフォルト"
+
+msgid "Default station"
+msgstr "既定のステーション"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "自動再生"
+
+msgid "Start playing automatically on launch"
+msgstr "起動時に自動で再生を開始"
+
+msgid "Use stop instead of pause"
+msgstr "一時停止の代わりに停止を使う"
+
+msgid "Use stop behavior for the main playback button"
+msgstr "メイン再生ボタンに停止動作を使用"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "実行時に Discord Rich Presence を有効にする"
+
 msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
 msgstr "もう他のラジオは不要です。配信およびメタデータは LISTEN.moe によって提供されています。"
 

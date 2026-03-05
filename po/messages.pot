@@ -24,6 +24,39 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+msgid "Preferences"
+msgstr ""
+
+msgid "Startup Defaults"
+msgstr ""
+
+msgid "Default station"
+msgstr ""
+
+msgid "J-POP"
+msgstr ""
+
+msgid "K-POP"
+msgstr ""
+
+msgid "Autoplay"
+msgstr ""
+
+msgid "Start playing automatically on launch"
+msgstr ""
+
+msgid "Use stop instead of pause"
+msgstr ""
+
+msgid "Use stop behavior for the main playback button"
+msgstr ""
+
+msgid "Discord Rich Presence"
+msgstr ""
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr ""
+
 msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
 msgstr ""
 

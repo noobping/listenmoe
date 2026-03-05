@@ -24,6 +24,39 @@ msgstr "Hoofdmenu"
 msgid "Quit"
 msgstr "Afsluiten"
 
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+msgid "Startup Defaults"
+msgstr "Opstartstandaarden"
+
+msgid "Default station"
+msgstr "Standaardstation"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Automatisch afspelen"
+
+msgid "Start playing automatically on launch"
+msgstr "Start automatisch met afspelen bij opstarten"
+
+msgid "Use stop instead of pause"
+msgstr "Stop gebruiken in plaats van pauze"
+
+msgid "Use stop behavior for the main playback button"
+msgstr "Gebruik stopgedrag voor de hoofd-afspeelknop"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Discord Rich Presence inschakelen tijdens runtime"
+
 msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
 msgstr "Het is tijd om andere radio’s achter je te laten. Streaming en metadata worden geleverd door LISTEN.moe."
 

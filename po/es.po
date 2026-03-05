@@ -24,6 +24,39 @@ msgstr "Menú principal"
 msgid "Quit"
 msgstr "Salir"
 
+msgid "Preferences"
+msgstr "Preferencias"
+
+msgid "Startup Defaults"
+msgstr "Valores predeterminados de inicio"
+
+msgid "Default station"
+msgstr "Emisora predeterminada"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Reproducción automática"
+
+msgid "Start playing automatically on launch"
+msgstr "Iniciar la reproducción automáticamente al abrir la aplicación"
+
+msgid "Use stop instead of pause"
+msgstr "Usar detener en lugar de pausar"
+
+msgid "Use stop behavior for the main playback button"
+msgstr "Usar el comportamiento de detener para el botón principal de reproducción"
+
+msgid "Discord Rich Presence"
+msgstr "Rich Presence de Discord"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Activar Rich Presence de Discord en tiempo de ejecución"
+
 msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
 msgstr "Es hora de dejar atrás otras radios. El stream y los metadatos son proporcionados por LISTEN.moe."
 
