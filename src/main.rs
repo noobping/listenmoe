@@ -87,8 +87,9 @@ fn parse_cli() -> Result<CliAction, String> {
             }
             _ if arg.starts_with('-') && !arg.starts_with("--") && arg.len() > 2 => {
                 let cluster = &arg[1..];
-                let recognized_cluster =
-                    cluster.chars().all(|short_flag| matches!(short_flag, 'a' | 'j' | 'k' | 's' | 'v' | 'h'));
+                let recognized_cluster = cluster
+                    .chars()
+                    .all(|short_flag| matches!(short_flag, 'a' | 'j' | 'k' | 's' | 'v' | 'h'));
 
                 if !recognized_cluster {
                     passthrough_args.push(arg);

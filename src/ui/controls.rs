@@ -180,9 +180,12 @@ mod imp {
         let surface = window
             .surface()
             .ok_or_else(|| "Window surface unavailable for media controls".to_string())?;
+        let raw_surface = <adw::gtk::gdk::Surface as ToGlibPtr<
+            *mut adw::gtk::gdk::ffi::GdkSurface,
+        >>::to_glib_none(&surface)
+        .0;
         let hwnd = unsafe {
-            gdk_win32_surface_get_handle(surface.to_glib_none().0 as *mut GdkWin32Surface)
-                as *mut c_void
+            gdk_win32_surface_get_handle(raw_surface as *mut GdkWin32Surface) as *mut c_void
         };
         if hwnd.is_null() {
             return Err("Could not get Win32 window handle for media controls".to_string());
