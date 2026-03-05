@@ -15,6 +15,12 @@ msgstr "Reproducir %s"
 msgid "About"
 msgstr "Acerca de"
 
+msgid "Connecting..."
+msgstr "Conectando..."
+
+msgid "Main Menu"
+msgstr "Menú principal"
+
 msgid "Quit"
 msgstr "Salir"
 

@@ -15,6 +15,12 @@ msgstr "%s abspielen"
 msgid "About"
 msgstr "Über"
 
+msgid "Connecting..."
+msgstr "Verbindung wird hergestellt..."
+
+msgid "Main Menu"
+msgstr "Hauptmenü"
+
 msgid "Quit"
 msgstr "Beenden"
 
