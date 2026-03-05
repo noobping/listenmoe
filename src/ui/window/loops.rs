@@ -1,10 +1,7 @@
-#[cfg(feature = "discord")]
 use crate::log::{is_verbose, now_string};
 use crate::meta::TrackInfo;
-#[cfg(feature = "discord")]
 use crate::ui::discord::Discord;
 
-#[cfg(feature = "discord")]
 use adw::gtk::Button;
 use adw::{
     glib,
@@ -18,7 +15,6 @@ use adw::{
     prelude::PopoverExt,
     StyleManager, WindowTitle,
 };
-#[cfg(feature = "discord")]
 use std::time::Instant;
 use std::{
     sync::{atomic::AtomicU32, atomic::Ordering, mpsc, Arc},
@@ -34,7 +30,6 @@ const COVER_MAX_SIZE: i32 = 250;
 pub(super) struct UiUpdateLoopCtx {
     pub(super) window: ApplicationWindow,
     pub(super) win_title: WindowTitle,
-    #[cfg(feature = "discord")]
     pub(super) pause_button: Button,
     pub(super) art_picture: Picture,
     pub(super) art_popover: Popover,
@@ -46,7 +41,6 @@ pub(super) struct UiUpdateLoopCtx {
     pub(super) ctrl_rx: Option<mpsc::Receiver<MediaControlEvent>>,
     pub(super) current_track: SharedTrack,
     pub(super) metadata_setter: MetadataSetter,
-    #[cfg(feature = "discord")]
     pub(super) discord_enabled: bool,
 }
 
@@ -54,7 +48,6 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
     let UiUpdateLoopCtx {
         window,
         win_title,
-        #[cfg(feature = "discord")]
         pause_button,
         art_picture,
         art_popover,
@@ -66,27 +59,16 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
         ctrl_rx,
         current_track,
         metadata_setter,
-        #[cfg(feature = "discord")]
         discord_enabled,
     } = ctx;
 
     let mut runtime = RuntimeState::new(current_track);
 
-    #[cfg(feature = "discord")]
-    let mut discord = if discord_enabled {
-        Some(Discord::new())
-    } else {
-        None
-    };
-    #[cfg(feature = "discord")]
+    let mut discord = Discord::new(discord_enabled);
     let mut was_playing = pause_button.is_visible();
-    #[cfg(feature = "discord")]
     let mut last_track: Option<(String, String)> = None;
-    #[cfg(feature = "discord")]
     let mut next_discord_refresh = Instant::now();
-    #[cfg(feature = "discord")]
     const DISCORD_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
-    #[cfg(feature = "discord")]
     const DISCORD_RETRY_INTERVAL: Duration = Duration::from_millis(500);
 
     glib::timeout_add_local(Duration::from_millis(100), move || {
@@ -100,28 +82,21 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
             }
         }
 
-        #[cfg(feature = "discord")]
-        {
-            let is_playing = pause_button.is_visible();
-            if was_playing && !is_playing {
-                if let Some(discord) = discord.as_mut() {
-                    let _ = discord.clear();
-                }
-                last_track = None;
-            }
-            was_playing = is_playing;
+        let is_playing = pause_button.is_visible();
+        if was_playing && !is_playing {
+            let _ = discord.clear();
+            last_track = None;
+        }
+        was_playing = is_playing;
 
-            if is_playing && Instant::now() >= next_discord_refresh {
-                if let (Some((artist, title)), Some(discord)) =
-                    (last_track.as_ref(), discord.as_mut())
-                {
-                    let retry_after = if discord.set(artist, title).is_ok() {
-                        DISCORD_REFRESH_INTERVAL
-                    } else {
-                        DISCORD_RETRY_INTERVAL
-                    };
-                    next_discord_refresh = Instant::now() + retry_after;
-                }
+        if is_playing && Instant::now() >= next_discord_refresh {
+            if let Some((artist, title)) = last_track.as_ref() {
+                let retry_after = if discord.set(artist, title).is_ok() {
+                    DISCORD_REFRESH_INTERVAL
+                } else {
+                    DISCORD_RETRY_INTERVAL
+                };
+                next_discord_refresh = Instant::now() + retry_after;
             }
         }
 
@@ -138,22 +113,16 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
             win_title.set_subtitle(&title);
             runtime.set_track(&artist, &title);
 
-            #[cfg(feature = "discord")]
-            if discord.is_some() {
-                if is_verbose() {
-                    println!("[{}] Update discord: {} {}", now_string(), &artist, &title);
-                }
+            if discord.is_enabled() && is_verbose() {
+                println!("[{}] Update discord: {} {}", now_string(), &artist, &title);
             }
-            #[cfg(feature = "discord")]
-            if let Some(discord) = discord.as_mut() {
-                last_track = Some((artist.clone(), title.clone()));
-                let retry_after = if discord.set(&artist, &title).is_ok() {
-                    DISCORD_REFRESH_INTERVAL
-                } else {
-                    DISCORD_RETRY_INTERVAL
-                };
-                next_discord_refresh = Instant::now() + retry_after;
-            }
+            last_track = Some((artist.clone(), title.clone()));
+            let retry_after = if discord.set(&artist, &title).is_ok() {
+                DISCORD_REFRESH_INTERVAL
+            } else {
+                DISCORD_RETRY_INTERVAL
+            };
+            next_discord_refresh = Instant::now() + retry_after;
 
             let cover_url = album_cover.as_deref().or(artist_image.as_deref());
             (metadata_setter)(&title, &artist, cover_url);

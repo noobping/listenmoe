@@ -79,7 +79,7 @@ jobs:
         run: rustup target add x86_64-pc-windows-gnu
 
       - name: Build
-        run: cargo build --release --features discord --target x86_64-pc-windows-gnu
+        run: cargo build --release --target x86_64-pc-windows-gnu
 
       - name: Bundle
         shell: pwsh
