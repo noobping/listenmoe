@@ -89,3 +89,12 @@ msgstr "オプションのDiscordアクティビティ共有"
 
 msgid "Added Discord activity sharing."
 msgstr "Discordのアクティビティ共有を追加しました。"
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "この機能を無効にする代わりに、Discord への再接続を行うようにしました。"
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "一時停止の挙動、オートプレイの設定、または Discord 連携の無効化を制御するフラグを追加しました。"
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "ネットワークが中断された際、一時停止中でも再生が再開されてしまう問題を修正しました。"

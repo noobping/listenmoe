@@ -89,3 +89,12 @@ msgstr "Optional Discord activity sharing"
 
 msgid "Added Discord activity sharing."
 msgstr "Added Discord activity sharing."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Reconnect to Discord instead of disabling this feature."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Added flags to control pause behavior, autoplay, or disable Discord integration."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Fixed an issue where paused playback resumed during a network disruption."

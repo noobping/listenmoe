@@ -89,3 +89,12 @@ msgstr "Uso compartido opcional de actividad en Discord"
 
 msgid "Added Discord activity sharing."
 msgstr "Se añadió el uso compartido de actividad en Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Se vuelve a conectar a Discord en lugar de desactivar esta función."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Se añadieron flags para controlar el comportamiento de pausa, el autoplay o desactivar la integración con Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Se corrigió un problema en el que la reproducción en pausa se reanudaba durante una interrupción de red."

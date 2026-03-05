@@ -89,3 +89,12 @@ msgstr "Optioneel delen van Discord-activiteit"
 
 msgid "Added Discord activity sharing."
 msgstr "Delen van Discord-activiteit toegevoegd."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Maakt opnieuw verbinding met Discord in plaats van deze functie uit te schakelen."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Flags toegevoegd om pauzegedrag, autoplay of de Discord-integratie te configureren of uit te schakelen."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Een probleem opgelost waarbij gepauzeerde weergave werd hervat tijdens een netwerkonderbreking."

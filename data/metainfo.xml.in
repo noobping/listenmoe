@@ -80,6 +80,15 @@
   </provides>
 
   <releases>
+    <release version="1.0.13" date="2026-03-06">
+      <description>
+        <ul>
+          <li>Reconnect to Discord instead of disabling this feature.</li>
+          <li>Added flags to control pause behavior, autoplay, or disable Discord integration.</li>
+          <li>Fixed an issue where paused playback resumed during a network disruption.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.12" date="2026-02-06">
       <description>
         <p>

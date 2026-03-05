@@ -89,3 +89,12 @@ msgstr "Optionale Discord-Aktivitätsfreigabe"
 
 msgid "Added Discord activity sharing."
 msgstr "Discord-Aktivitätsfreigabe hinzugefügt."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Stellt die Verbindung zu Discord wieder her, anstatt diese Funktion zu deaktivieren."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Flags hinzugefügt, um das Pausenverhalten, Autoplay oder die Discord-Integration zu steuern bzw. zu deaktivieren."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Ein Problem behoben, bei dem die Wiedergabe während einer Netzwerkunterbrechung trotz Pause fortgesetzt wurde."
