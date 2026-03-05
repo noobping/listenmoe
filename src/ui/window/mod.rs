@@ -62,6 +62,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         viz_handle,
     } = layout::build_window_layout(app, options.stop_instead_pause);
 
+    window.present();
     #[cfg(target_os = "windows")]
     window.realize();
 
@@ -107,7 +108,6 @@ pub fn build_ui(app: &Application, options: UiOptions) {
 
     loops::spawn_viz_loop(viz, viz_handle, spectrum_bits);
 
-    window.present();
     if options.autoplay {
         actions::activate_window_action(&window, "win.play");
     }

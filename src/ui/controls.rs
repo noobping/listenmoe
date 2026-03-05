@@ -187,14 +187,12 @@ mod imp {
         let hwnd = unsafe {
             gdk_win32_surface_get_handle(raw_surface as *mut GdkWin32Surface) as *mut c_void
         };
-        if hwnd.is_null() {
-            return Err("Could not get Win32 window handle for media controls".to_string());
-        }
+        let hwnd = if hwnd.is_null() { None } else { Some(hwnd) };
 
         let mut controls = OsMediaControls::new(PlatformConfig {
             dbus_name: bus_suffix,
             display_name: identity,
-            hwnd: Some(hwnd),
+            hwnd,
         })
         .map_err(|e| e.to_string())?;
 
