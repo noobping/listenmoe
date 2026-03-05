@@ -1,18 +1,14 @@
 use crate::preferences;
-use adw::gtk::{self, gio, prelude::*};
+use crate::station::Station;
+use adw::gtk::{self, prelude::*};
 use adw::prelude::*;
 use gettextrs::gettext;
-
-const KEY_STATION: &str = "default-station";
-const KEY_AUTOPLAY: &str = "autoplay";
-const KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
-const KEY_DISCORD_ENABLED: &str = "discord-enabled";
+use std::{cell::RefCell, rc::Rc};
 
 pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
-    let Some(settings) = preferences::settings() else {
-        eprintln!("Could not open preferences: missing GSettings schema");
-        return;
-    };
+    let options = Rc::new(RefCell::new(
+        preferences::load_ui_options().unwrap_or_default(),
+    ));
 
     let window = adw::PreferencesWindow::new();
     window.set_title(Some(&gettext("Preferences")));
@@ -33,20 +29,21 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     let station_choices = [gettext("J-POP"), gettext("K-POP")];
     let station_dropdown =
         gtk::DropDown::from_strings(&[station_choices[0].as_str(), station_choices[1].as_str()]);
-    station_dropdown.set_selected(match settings.string(KEY_STATION).as_str() {
-        "kpop" => 1,
-        _ => 0,
+    station_dropdown.set_selected(match options.borrow().station {
+        Station::Kpop => 1,
+        Station::Jpop => 0,
     });
     {
-        let settings = settings.clone();
+        let options = options.clone();
         station_dropdown.connect_selected_notify(move |dropdown| {
-            let station = if dropdown.selected() == 1 {
-                "kpop"
+            let mut opts = options.borrow_mut();
+            opts.station = if dropdown.selected() == 1 {
+                Station::Kpop
             } else {
-                "jpop"
+                Station::Jpop
             };
-            if settings.set_string(KEY_STATION, station).is_ok() {
-                gio::Settings::sync();
+            if let Err(err) = preferences::save_ui_options(*opts) {
+                eprintln!("{err}");
             }
         });
     }
@@ -57,13 +54,15 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     let autoplay_row = adw::SwitchRow::builder()
         .title(gettext("Autoplay"))
         .subtitle(gettext("Start playing automatically on launch"))
-        .active(settings.boolean(KEY_AUTOPLAY))
+        .active(options.borrow().autoplay)
         .build();
     {
-        let settings = settings.clone();
+        let options = options.clone();
         autoplay_row.connect_active_notify(move |row| {
-            if settings.set_boolean(KEY_AUTOPLAY, row.is_active()).is_ok() {
-                gio::Settings::sync();
+            let mut opts = options.borrow_mut();
+            opts.autoplay = row.is_active();
+            if let Err(err) = preferences::save_ui_options(*opts) {
+                eprintln!("{err}");
             }
         });
     }
@@ -72,16 +71,15 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     let stop_row = adw::SwitchRow::builder()
         .title(gettext("Use stop instead of pause"))
         .subtitle(gettext("Use stop behavior for the main playback button"))
-        .active(settings.boolean(KEY_STOP_INSTEAD_PAUSE))
+        .active(options.borrow().stop_instead_pause)
         .build();
     {
-        let settings = settings.clone();
+        let options = options.clone();
         stop_row.connect_active_notify(move |row| {
-            if settings
-                .set_boolean(KEY_STOP_INSTEAD_PAUSE, row.is_active())
-                .is_ok()
-            {
-                gio::Settings::sync();
+            let mut opts = options.borrow_mut();
+            opts.stop_instead_pause = row.is_active();
+            if let Err(err) = preferences::save_ui_options(*opts) {
+                eprintln!("{err}");
             }
         });
     }
@@ -90,14 +88,14 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     let discord_row = adw::SwitchRow::builder()
         .title(gettext("Discord Rich Presence"))
         .subtitle(gettext("Enable Discord Rich Presence at runtime"))
-        .active(settings.boolean(KEY_DISCORD_ENABLED))
+        .active(options.borrow().discord_enabled)
         .build();
+    let options = options.clone();
     discord_row.connect_active_notify(move |row| {
-        if settings
-            .set_boolean(KEY_DISCORD_ENABLED, row.is_active())
-            .is_ok()
-        {
-            gio::Settings::sync();
+        let mut opts = options.borrow_mut();
+        opts.discord_enabled = row.is_active();
+        if let Err(err) = preferences::save_ui_options(*opts) {
+            eprintln!("{err}");
         }
     });
     group.add(&discord_row);
