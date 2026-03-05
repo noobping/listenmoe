@@ -15,6 +15,12 @@ msgstr "Play %s"
 msgid "About"
 msgstr "About"
 
+msgid "Connecting..."
+msgstr "Connecting..."
+
+msgid "Main Menu"
+msgstr "Main Menu"
+
 msgid "Quit"
 msgstr "Quit"
 

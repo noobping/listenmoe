@@ -15,6 +15,12 @@ msgstr "%s を再生"
 msgid "About"
 msgstr "情報"
 
+msgid "Connecting..."
+msgstr "接続中..."
+
+msgid "Main Menu"
+msgstr "メインメニュー"
+
 msgid "Quit"
 msgstr "終了"
 

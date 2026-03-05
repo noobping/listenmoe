@@ -32,3 +32,7 @@ discord-rich-presence = "1.1.0"
 [target.'cfg(target_os = "windows")'.build-dependencies]
 glib-build-tools = "0.22.0"
 winresource = "0.1.28"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+gdk4-win32-sys = "0.10.3"
+souvlaki = { version = "0.8.3", default-features = false }

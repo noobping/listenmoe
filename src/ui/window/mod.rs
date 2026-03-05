@@ -6,6 +6,8 @@ use crate::listen::Listen;
 use crate::meta::{Meta, TrackInfo};
 use crate::station::Station;
 
+#[cfg(target_os = "windows")]
+use adw::gtk::prelude::NativeExt;
 use adw::prelude::GtkWindowExt;
 use adw::Application;
 use std::{cell::RefCell, rc::Rc, sync::mpsc};
@@ -59,6 +61,9 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         viz,
         viz_handle,
     } = layout::build_window_layout(app, options.stop_instead_pause);
+
+    #[cfg(target_os = "windows")]
+    window.realize();
 
     let (controls, ctrl_rx) = actions::build_actions(
         &window,

@@ -15,6 +15,12 @@ msgstr "Speel %s"
 msgid "About"
 msgstr "Over"
 
+msgid "Connecting..."
+msgstr "Verbinden..."
+
+msgid "Main Menu"
+msgstr "Hoofdmenu"
+
 msgid "Quit"
 msgstr "Afsluiten"
 

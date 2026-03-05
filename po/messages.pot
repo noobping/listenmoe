@@ -15,6 +15,12 @@ msgstr ""
 msgid "About"
 msgstr ""
 
+msgid "Connecting..."
+msgstr ""
+
+msgid "Main Menu"
+msgstr ""
+
 msgid "Quit"
 msgstr ""
 

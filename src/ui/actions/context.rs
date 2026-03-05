@@ -2,7 +2,6 @@ use adw::gtk::{gdk::Display, prelude::WidgetExt, ApplicationWindow, Button};
 use adw::prelude::DisplayExt;
 use adw::WindowTitle;
 use gettextrs::gettext;
-use mpris_server::PlaybackStatus;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -10,7 +9,7 @@ use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
 
-use super::activate_window_action;
+use super::{activate_window_action, PlaybackStatus};
 
 const APP_NAME: &str = "Listen Moe";
 
@@ -60,7 +59,7 @@ impl ActionCtx {
 
     pub(super) fn play(&self, set_playback: &dyn Fn(PlaybackStatus)) {
         self.win_title.set_title(APP_NAME);
-        self.win_title.set_subtitle("Connecting...");
+        self.win_title.set_subtitle(&gettext("Connecting..."));
         *self.current_track.borrow_mut() = None;
         self.meta.start();
         self.radio.start();
