@@ -17,10 +17,12 @@ use crate::meta::Meta;
 
 mod context;
 mod menu;
+mod preferences;
 use adw::prelude::AdwDialogExt;
 use context::ActionCtx;
 use gettextrs::gettext;
 pub use menu::populate_menu;
+use preferences::show_preferences_window;
 
 const APP_NAME: &str = "Listen Moe";
 #[cfg(debug_assertions)]
@@ -127,6 +129,13 @@ fn add_window_actions(window: &ApplicationWindow, ctx: &ActionCtx) {
         register_window_action(window, "about", move || show_about_dialog(&ctx.window));
     }
 
+    {
+        let ctx = ctx.clone();
+        register_window_action(window, "preferences", move || {
+            show_preferences_window(&ctx.window)
+        });
+    }
+
     for (name, handler) in [
         ("toggle", ActionCtx::toggle as CtxAction),
         ("copy", ActionCtx::copy_current_track as CtxAction),
@@ -166,6 +175,7 @@ fn show_about_dialog(window: &ApplicationWindow) {
 fn add_accels(app: &Application) {
     const ACCELS: &[(&str, &[&str])] = &[
         ("win.about", &["F1"]),
+        ("win.preferences", &["<primary>comma"]),
         ("win.copy", &["<primary>c"]),
         ("win.jpop", &["<primary>j"]),
         ("win.kpop", &["<primary>k"]),

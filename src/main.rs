@@ -170,7 +170,7 @@ fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
 
 fn run() -> Result<(), String> {
     let app_id = std::env::var("LISTENMOE_APP_ID").unwrap_or_else(|_| APP_ID.to_string());
-    let default_ui_options = preferences::load_ui_options(app_id.as_str()).unwrap_or_default();
+    let default_ui_options = preferences::load_ui_options().unwrap_or_default();
 
     let (ui_options, app_args, verbose, save_preferences) = match parse_cli(default_ui_options)? {
         CliAction::Help => {
@@ -192,7 +192,7 @@ fn run() -> Result<(), String> {
     log::set_verbose(verbose);
 
     if save_preferences {
-        preferences::save_ui_options(app_id.as_str(), ui_options)?;
+        preferences::save_ui_options(ui_options)?;
     }
 
     if log::is_verbose() {

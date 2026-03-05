@@ -29,6 +29,7 @@ pub fn populate_menu(
         );
     }
 
+    menu.append(Some(&gettext("Preferences")), Some("win.preferences"));
     menu.append(Some(&gettext("About")), Some("win.about"));
     menu.append(Some(&gettext("Quit")), Some("win.quit"));
 }

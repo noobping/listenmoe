@@ -8,7 +8,7 @@ const KEY_AUTOPLAY: &str = "autoplay";
 const KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
 const KEY_DISCORD_ENABLED: &str = "discord-enabled";
 
-fn settings_for_app_id(_app_id: &str) -> Option<gio::Settings> {
+pub fn settings() -> Option<gio::Settings> {
     let source = gio::SettingsSchemaSource::default()?;
     if let Some(schema) = source.lookup(SHARED_SCHEMA_ID, true) {
         return Some(gio::Settings::new_full(
@@ -20,8 +20,8 @@ fn settings_for_app_id(_app_id: &str) -> Option<gio::Settings> {
     None
 }
 
-pub fn load_ui_options(app_id: &str) -> Option<UiOptions> {
-    let settings = settings_for_app_id(app_id)?;
+pub fn load_ui_options() -> Option<UiOptions> {
+    let settings = settings()?;
 
     let station = match settings.string(KEY_STATION).as_str() {
         "kpop" => Station::Kpop,
@@ -36,8 +36,8 @@ pub fn load_ui_options(app_id: &str) -> Option<UiOptions> {
     })
 }
 
-pub fn save_ui_options(app_id: &str, options: UiOptions) -> Result<(), String> {
-    let settings = settings_for_app_id(app_id).ok_or_else(|| {
+pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
+    let settings = settings().ok_or_else(|| {
         format!(
             "Could not find installed GSettings schema '{SHARED_SCHEMA_ID}'. Preferences were not saved."
         )
