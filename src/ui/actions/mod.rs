@@ -6,12 +6,11 @@ use adw::gtk::{
     ApplicationWindow, Button,
 };
 use adw::{Application, WindowTitle};
-use mpris_server::PlaybackStatus;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc;
 
-use super::controls::{build_controls, MediaControlEvent, MediaControls};
+use super::controls::{build_controls, MediaControlEvent, MediaControls, PlaybackStatus};
 use crate::listen::Listen;
 use crate::meta::Meta;
 
@@ -66,7 +65,7 @@ pub fn build_actions(
     Option<Rc<MediaControls>>,
     Option<mpsc::Receiver<MediaControlEvent>>,
 ) {
-    let (controls, ctrl_rx) = match build_controls(APP_ID, APP_NAME, APP_ID) {
+    let (controls, ctrl_rx) = match build_controls(window, APP_ID, APP_NAME, APP_ID) {
         Ok((controls, ctrl_rx)) => (Some(controls), Some(ctrl_rx)),
         Err(e) => {
             eprintln!("Media control unavailable: {e}");

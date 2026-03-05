@@ -170,6 +170,19 @@ jobs:
           Write-Host "Extracted files:"
           Get-ChildItem bundle | Sort-Object Name | Format-Table Name, Length
 
+      - name: Copy locales into bundle
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:GITHUB_WORKSPACE 'locale'
+          if (-not (Test-Path $source)) { throw "Locale directory not found: $source" }
+
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'bundle\locale'
+          if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+          Copy-Item -Path $source -Destination $dest -Recurse -Force
+
+          Write-Host "Bundled locales:"
+          Get-ChildItem -Recurse -Depth 4 $dest | Select-Object FullName
+
       - name: Install filter tool
         uses: msys2/setup-msys2@v2
         with:

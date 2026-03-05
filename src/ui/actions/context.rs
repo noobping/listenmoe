@@ -2,7 +2,6 @@ use adw::gtk::{gdk::Display, prelude::WidgetExt, ApplicationWindow, Button};
 use adw::prelude::DisplayExt;
 use adw::WindowTitle;
 use gettextrs::gettext;
-use mpris_server::PlaybackStatus;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -10,7 +9,7 @@ use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
 
-use super::activate_window_action;
+use super::{activate_window_action, PlaybackStatus};
 
 const APP_NAME: &str = "Listen Moe";
 
