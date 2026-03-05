@@ -2800,13 +2800,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/toml_edit/toml_edit-0.25.3+spec-1.1.0.crate
-  sha256: a0a07913e63758bc95142d9863a5a45173b71515e68b690cad70cf99c3255ce1
-  dest: cargo/vendor/toml_edit-0.25.3+spec-1.1.0
+  url: https://static.crates.io/crates/toml_edit/toml_edit-0.25.4+spec-1.1.0.crate
+  sha256: 7193cbd0ce53dc966037f54351dbbcf0d5a642c7f0038c382ef9e677ce8c13f2
+  dest: cargo/vendor/toml_edit-0.25.4+spec-1.1.0
 - type: inline
-  contents: '{"package": "a0a07913e63758bc95142d9863a5a45173b71515e68b690cad70cf99c3255ce1",
+  contents: '{"package": "7193cbd0ce53dc966037f54351dbbcf0d5a642c7f0038c382ef9e677ce8c13f2",
     "files": {}}'
-  dest: cargo/vendor/toml_edit-0.25.3+spec-1.1.0
+  dest: cargo/vendor/toml_edit-0.25.4+spec-1.1.0
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
