@@ -24,6 +24,7 @@ if cargo_features.length() > 0
 endif
 
 cargo_build_script = files('build-aux/meson/cargo-build.sh')
+compile_schemas_script = files('build-aux/meson/compile-schemas.sh')
 
 listenmoe_bin = custom_target(
   'listenmoe-bin',
@@ -111,4 +112,10 @@ install_subdir(
 
 gnome.post_install(
   glib_compile_schemas: true,
+)
+
+meson.add_install_script(
+  sh,
+  compile_schemas_script,
+  join_paths(get_option('datadir'), 'glib-2.0', 'schemas'),
 )
