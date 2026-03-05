@@ -60,8 +60,9 @@ pub fn init_i18n() {
     setlocale(LocaleCategory::LcAll, "");
 
     let dir = find_locale_dir();
-    #[cfg(debug_assertions)]
-    println!("Using locale dir: {}", dir.display());
+    if crate::log::is_verbose() {
+        println!("Using locale dir: {}", dir.display());
+    }
 
     let dir_str = dir.to_str().expect("Locale path must be UTF-8 for gettext");
 

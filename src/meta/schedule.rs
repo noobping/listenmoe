@@ -77,15 +77,16 @@ pub fn schedule_next_from_history(
 
     let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
 
-    #[cfg(debug_assertions)]
-    println!(
-        "[{}] ui {} resched-next: {} - {} (lag_ms={})",
-        crate::log::now_string(),
-        my_id,
-        next.artist,
-        next.title,
-        lag_ms
-    );
+    if crate::log::is_verbose() {
+        println!(
+            "[{}] ui {} resched-next: {} - {} (lag_ms={})",
+            crate::log::now_string(),
+            my_id,
+            next.artist,
+            next.title,
+            lag_ms
+        );
+    }
 
     schedule_ui_switch(sender, next, lag_ms, ui_sched_id, my_id);
 }

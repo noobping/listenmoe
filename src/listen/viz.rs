@@ -7,8 +7,7 @@ use symphonia::core::audio::{AudioBufferRef, SampleBuffer};
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::errors::Error as SymphoniaError;
 
-#[cfg(debug_assertions)]
-use crate::log::now_string;
+use crate::log::{is_verbose, now_string};
 
 use super::Result;
 
@@ -87,11 +86,12 @@ pub(super) fn decode_and_process_packet(
         Ok(buf) => buf,
         Err(SymphoniaError::DecodeError(_)) => return Ok((PacketOutcome::Continue, None)),
         Err(SymphoniaError::ResetRequired) => {
-            #[cfg(debug_assertions)]
-            println!(
-                "[{}] Decoder reset required, rebuilding decoder…",
-                now_string()
-            );
+            if is_verbose() {
+                println!(
+                    "[{}] Decoder reset required, rebuilding decoder…",
+                    now_string()
+                );
+            }
 
             let new_track = format
                 .tracks()

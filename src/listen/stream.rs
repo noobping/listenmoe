@@ -11,8 +11,7 @@ use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 
 use crate::http_source::HttpSource;
-#[cfg(debug_assertions)]
-use crate::log::now_string;
+use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
 use super::viz::{
@@ -63,12 +62,14 @@ fn open_stream(
     u32,
     Box<dyn symphonia::core::codecs::Decoder>,
 )> {
-    #[cfg(debug_assertions)]
-    println!("[{}] Connecting to {url}…", now_string());
+    if is_verbose() {
+        println!("[{}] Connecting to {url}…", now_string());
+    }
 
     let response = client.get(url).header("User-Agent", useragent).send()?;
-    #[cfg(debug_assertions)]
-    println!("[{}] HTTP status: {}", now_string(), response.status());
+    if is_verbose() {
+        println!("[{}] HTTP status: {}", now_string(), response.status());
+    }
 
     if !response.status().is_success() {
         return Err(format!("HTTP status {}", response.status()).into());
@@ -106,15 +107,17 @@ fn handle_control(
     while let Ok(cmd) = rx.try_recv() {
         match cmd {
             Control::Stop => {
-                #[cfg(debug_assertions)]
-                println!("[{}] Stop requested, shutting down stream.", now_string());
+                if is_verbose() {
+                    println!("[{}] Stop requested, shutting down stream.", now_string());
+                }
                 sink.stop();
                 return Ok(true);
             }
             Control::Pause => {
                 if !*paused {
-                    #[cfg(debug_assertions)]
-                    println!("[{}] Pausing playback.", now_string());
+                    if is_verbose() {
+                        println!("[{}] Pausing playback.", now_string());
+                    }
                     *paused = true;
                     sink.pause();
                 }
@@ -123,8 +126,9 @@ fn handle_control(
             }
             Control::Resume => {
                 if *paused {
-                    #[cfg(debug_assertions)]
-                    println!("[{}] Resuming playback.", now_string());
+                    if is_verbose() {
+                        println!("[{}] Resuming playback.", now_string());
+                    }
                     *paused = false;
                     sink.play();
                     *bars_enabled = true;
@@ -162,8 +166,9 @@ fn run_one_connection(
         let packet = match format.next_packet() {
             Ok(p) => p,
             Err(SymphoniaError::ResetRequired) => {
-                #[cfg(debug_assertions)]
-                println!("[{}] Stream reset, reconfiguring decoder…", now_string());
+                if is_verbose() {
+                    println!("[{}] Stream reset, reconfiguring decoder…", now_string());
+                }
 
                 let new_track = format
                     .tracks()
@@ -297,8 +302,9 @@ pub(super) fn run_listenmoe_stream(
             &spectrum_bits,
         );
 
-        #[cfg(debug_assertions)]
-        println!("[{}] Started decoding.", now_string());
+        if is_verbose() {
+            println!("[{}] Started decoding.", now_string());
+        }
 
         let outcome = run_one_connection(
             &rx,

@@ -44,6 +44,9 @@ Available flags:
 - `-k`, `--kpop`: use K-POP as default station
 - `--no-discord`: disable Discord Rich Presence at runtime
 - `-s`, `--stop`: use stop behavior instead of pause
+- `-v`, `--verbose`: print extra startup diagnostics
+- `-h`, `--help`: show help and exit
+- `--version`: show version and exit
 
 ## Translations
 

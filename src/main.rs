@@ -6,7 +6,6 @@
 mod http_source;
 mod listen;
 mod locale;
-#[cfg(debug_assertions)]
 mod log;
 mod meta;
 mod station;
@@ -18,15 +17,53 @@ const APP_ID: &str = "io.github.noobping.listenmoe_beta";
 const APP_ID: &str = "io.github.noobping.listenmoe";
 #[cfg(target_os = "windows")]
 const RESOURCE_ID: &str = "/io/github/noobping/listenmoe";
+use adw::gtk::gio::ApplicationFlags;
 #[cfg(target_os = "windows")]
 use adw::gtk::{gdk::Display, IconTheme};
 use adw::prelude::*;
 use adw::Application;
-use adw::gtk::gio::ApplicationFlags;
+use std::process::ExitCode;
 
-fn parse_ui_options() -> (ui::UiOptions, Vec<String>) {
+const APP_NAME: &str = env!("CARGO_PKG_NAME");
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+enum CliAction {
+    Run {
+        ui_options: ui::UiOptions,
+        app_args: Vec<String>,
+        verbose: bool,
+    },
+    Help,
+    Version,
+}
+
+fn help_text() -> String {
+    format!(
+        "{name} {version}
+{description}
+
+Usage:
+  {name} [OPTIONS] [-- GTK_ARGS...]
+
+Options:
+  -a, --autoplay    Start playing automatically on launch
+  -j, --jpop        Use J-POP as default station
+  -k, --kpop        Use K-POP as default station
+  -s, --stop        Use stop behavior instead of pause
+      --no-discord  Disable Discord Rich Presence at runtime
+  -v, --verbose     Print extra startup diagnostics
+  -h, --help        Show this help and exit
+      --version     Show version and exit",
+        name = APP_NAME,
+        version = APP_VERSION,
+        description = env!("CARGO_PKG_DESCRIPTION"),
+    )
+}
+
+fn parse_cli() -> Result<CliAction, String> {
     let mut options = ui::UiOptions::default();
     let mut passthrough_args = Vec::new();
+    let mut verbose = false;
 
     let mut args = std::env::args_os();
     if let Some(program) = args.next() {
@@ -61,17 +98,57 @@ fn parse_ui_options() -> (ui::UiOptions, Vec<String>) {
             "--no-discord" => {
                 options.discord_enabled = false;
             }
+            "-v" | "--verbose" => {
+                verbose = true;
+            }
+            "-h" | "--help" => {
+                return Ok(CliAction::Help);
+            }
+            "--version" => {
+                return Ok(CliAction::Version);
+            }
             _ => {
                 passthrough_args.push(arg);
             }
         }
     }
 
-    (options, passthrough_args)
+    Ok(CliAction::Run {
+        ui_options: options,
+        app_args: passthrough_args,
+        verbose,
+    })
 }
 
-fn main() {
-    let (ui_options, app_args) = parse_ui_options();
+fn run() -> Result<(), String> {
+    let (ui_options, app_args, verbose) = match parse_cli()? {
+        CliAction::Help => {
+            println!("{}", help_text());
+            return Ok(());
+        }
+        CliAction::Version => {
+            println!("{APP_NAME} {APP_VERSION}");
+            return Ok(());
+        }
+        CliAction::Run {
+            ui_options,
+            app_args,
+            verbose,
+        } => (ui_options, app_args, verbose),
+    };
+
+    log::set_verbose(verbose);
+
+    if log::is_verbose() {
+        println!(
+            "Starting {APP_NAME} {APP_VERSION} with station={:?}, autoplay={}, stop_instead_pause={}, discord_enabled={}",
+            ui_options.station,
+            ui_options.autoplay,
+            ui_options.stop_instead_pause,
+            ui_options.discord_enabled
+        );
+    }
+
     locale::init_i18n();
     let app_id = std::env::var("LISTENMOE_APP_ID").unwrap_or_else(|_| APP_ID.to_string());
     let app_flags = match std::env::var("LISTENMOE_APP_NON_UNIQUE") {
@@ -101,4 +178,16 @@ fn main() {
         .build();
     app.connect_activate(move |app| ui::build_ui(app, ui_options)); // Build the UI when the application is activated.
     app.run_with_args(&app_args); // Run the application. This function does not return until the last window is closed.
+
+    Ok(())
+}
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("{err}");
+            ExitCode::FAILURE
+        }
+    }
 }

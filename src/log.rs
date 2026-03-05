@@ -1,4 +1,15 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+static VERBOSE: AtomicBool = AtomicBool::new(false);
+
+pub fn set_verbose(enabled: bool) {
+    VERBOSE.store(enabled, Ordering::Relaxed);
+}
+
+pub fn is_verbose() -> bool {
+    cfg!(debug_assertions) || VERBOSE.load(Ordering::Relaxed)
+}
 
 pub fn now_string() -> String {
     let d = SystemTime::now()

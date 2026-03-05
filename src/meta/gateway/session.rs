@@ -12,8 +12,7 @@ use tungstenite::protocol::WebSocket;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message;
 
-#[cfg(debug_assertions)]
-use crate::log::now_string;
+use crate::log::{is_verbose, now_string};
 use crate::meta::controller::Control;
 use crate::meta::error::MetaResult;
 use crate::meta::schedule::{
@@ -32,8 +31,9 @@ const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
 
 macro_rules! debug_gateway {
     ($($arg:tt)*) => {
-        #[cfg(debug_assertions)]
-        println!("[{}] {}", now_string(), format_args!($($arg)*));
+        if is_verbose() {
+            println!("[{}] {}", now_string(), format_args!($($arg)*));
+        }
     };
 }
 

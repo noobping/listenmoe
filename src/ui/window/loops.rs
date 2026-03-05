@@ -1,9 +1,11 @@
-#[cfg(all(debug_assertions, feature = "discord"))]
-use crate::log::now_string;
+#[cfg(feature = "discord")]
+use crate::log::{is_verbose, now_string};
 use crate::meta::TrackInfo;
 #[cfg(feature = "discord")]
 use crate::ui::discord::Discord;
 
+#[cfg(feature = "discord")]
+use adw::gtk::Button;
 use adw::{
     glib,
     gtk::{
@@ -16,8 +18,6 @@ use adw::{
     prelude::PopoverExt,
     StyleManager, WindowTitle,
 };
-#[cfg(feature = "discord")]
-use adw::gtk::Button;
 #[cfg(feature = "discord")]
 use std::time::Instant;
 use std::{
@@ -138,9 +138,11 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
             win_title.set_subtitle(&title);
             runtime.set_track(&artist, &title);
 
-            #[cfg(all(debug_assertions, feature = "discord"))]
+            #[cfg(feature = "discord")]
             if discord.is_some() {
-                println!("[{}] Update discord: {} {}", now_string(), &artist, &title);
+                if is_verbose() {
+                    println!("[{}] Update discord: {} {}", now_string(), &artist, &title);
+                }
             }
             #[cfg(feature = "discord")]
             if let Some(discord) = discord.as_mut() {
