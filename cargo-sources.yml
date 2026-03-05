@@ -2140,13 +2140,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/rodio/rodio-0.22.1.crate
-  sha256: e0e2319f90472c9934314a93df9f7cf81d48cebb6e8b8536a1da7f4dc4a15125
-  dest: cargo/vendor/rodio-0.22.1
+  url: https://static.crates.io/crates/rodio/rodio-0.22.2.crate
+  sha256: d0a536bb79db59098ef71a4dd4246c02eb87b316deceb1b68e0cde7167ec01eb
+  dest: cargo/vendor/rodio-0.22.2
 - type: inline
-  contents: '{"package": "e0e2319f90472c9934314a93df9f7cf81d48cebb6e8b8536a1da7f4dc4a15125",
+  contents: '{"package": "d0a536bb79db59098ef71a4dd4246c02eb87b316deceb1b68e0cde7167ec01eb",
     "files": {}}'
-  dest: cargo/vendor/rodio-0.22.1
+  dest: cargo/vendor/rodio-0.22.2
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
