@@ -62,7 +62,7 @@ pub(super) fn build_window_layout(app: &Application, stop_instead_pause: bool) -
     let menu = Menu::new();
     let more_button = MenuButton::builder()
         .icon_name("view-more-symbolic")
-        .tooltip_text("Main Menu")
+        .tooltip_text(gettext("Main Menu"))
         .menu_model(&menu)
         .build();
 

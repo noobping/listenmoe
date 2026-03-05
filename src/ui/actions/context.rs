@@ -60,7 +60,7 @@ impl ActionCtx {
 
     pub(super) fn play(&self, set_playback: &dyn Fn(PlaybackStatus)) {
         self.win_title.set_title(APP_NAME);
-        self.win_title.set_subtitle("Connecting...");
+        self.win_title.set_subtitle(&gettext("Connecting..."));
         *self.current_track.borrow_mut() = None;
         self.meta.start();
         self.radio.start();
