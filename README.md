@@ -31,8 +31,6 @@ You can install ListenMoe using one of the following options:
 
 ## Options
 
-![preferences](data/preferences.png)
-
 The application can be started with optional flags. For example:
 
 ```sh
