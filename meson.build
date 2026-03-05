@@ -1,7 +1,7 @@
 project(
   'listenmoe',
   'c',
-  version: '1.0.13',
+  version: '1.1.0',
   meson_version: '>= 0.62.0',
 )
 

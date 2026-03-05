@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.0.13\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -173,3 +173,6 @@ msgstr "Added flags to control pause behavior, autoplay, or disable Discord inte
 
 msgid "Fixed an issue where paused playback resumed during a network disruption."
 msgstr "Fixed an issue where paused playback resumed during a network disruption."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Added preferences and keyboard shortcuts."

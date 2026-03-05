@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.0.13\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -173,3 +173,6 @@ msgstr "Flags toegevoegd om pauzegedrag, autoplay of de Discord-integratie te co
 
 msgid "Fixed an issue where paused playback resumed during a network disruption."
 msgstr "Een probleem opgelost waarbij gepauzeerde weergave werd hervat tijdens een netwerkonderbreking."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Voorkeuren en sneltoetsen toegevoegd."

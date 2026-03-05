@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.0.13\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -173,3 +173,6 @@ msgstr "一時停止の挙動、オートプレイの設定、または Discord 
 
 msgid "Fixed an issue where paused playback resumed during a network disruption."
 msgstr "ネットワークが中断された際、一時停止中でも再生が再開されてしまう問題を修正しました。"
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "設定とキーボードショートカットを追加しました。"

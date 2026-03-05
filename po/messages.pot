@@ -174,3 +174,6 @@ msgstr ""
 
 msgid "Fixed an issue where paused playback resumed during a network disruption."
 msgstr ""
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr ""
