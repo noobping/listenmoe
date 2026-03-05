@@ -13,7 +13,7 @@ mod station;
 mod ui;
 
 #[cfg(debug_assertions)]
-const APP_ID: &str = "io.github.noobping.listenmoe_beta";
+const APP_ID: &str = "io.github.noobping.listenmoe.Devel";
 #[cfg(not(debug_assertions))]
 const APP_ID: &str = "io.github.noobping.listenmoe";
 #[cfg(target_os = "windows")]

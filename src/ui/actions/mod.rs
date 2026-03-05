@@ -26,7 +26,7 @@ use preferences::show_preferences_window;
 
 const APP_NAME: &str = "Listen Moe";
 #[cfg(debug_assertions)]
-const APP_ID: &str = "io.github.noobping.listenmoe_beta";
+const APP_ID: &str = "io.github.noobping.listenmoe.Devel";
 #[cfg(not(debug_assertions))]
 const APP_ID: &str = "io.github.noobping.listenmoe";
 
