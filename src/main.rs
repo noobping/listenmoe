@@ -45,6 +45,8 @@ fn help_text() -> String {
 Usage:
   {name} [OPTIONS] [-- GTK_ARGS...]
 
+Short flags can be combined (for example: -ja or -avk)
+
 Options:
   -a, --autoplay    Start playing automatically on launch
   -j, --jpop        Use J-POP as default station
@@ -82,6 +84,40 @@ fn parse_cli() -> Result<CliAction, String> {
             "--" => {
                 parse_flags = false;
                 passthrough_args.push(arg);
+            }
+            _ if arg.starts_with('-') && !arg.starts_with("--") && arg.len() > 2 => {
+                let cluster = &arg[1..];
+                let recognized_cluster =
+                    cluster.chars().all(|short_flag| matches!(short_flag, 'a' | 'j' | 'k' | 's' | 'v' | 'h'));
+
+                if !recognized_cluster {
+                    passthrough_args.push(arg);
+                    continue;
+                }
+
+                for short_flag in cluster.chars() {
+                    match short_flag {
+                        'a' => {
+                            options.autoplay = true;
+                        }
+                        'j' => {
+                            options.station = station::Station::Jpop;
+                        }
+                        'k' => {
+                            options.station = station::Station::Kpop;
+                        }
+                        's' => {
+                            options.stop_instead_pause = true;
+                        }
+                        'v' => {
+                            verbose = true;
+                        }
+                        'h' => {
+                            return Ok(CliAction::Help);
+                        }
+                        _ => unreachable!("cluster was pre-validated"),
+                    }
+                }
             }
             "-a" | "--autoplay" => {
                 options.autoplay = true;
