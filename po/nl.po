@@ -127,7 +127,7 @@ msgid "Colored window when connected"
 msgstr "Gekleurd venster wanneer verbonden"
 
 msgid "AI translation (GPT-5.2); reviewed by nobody"
-msgstr "AI-vertaling (GPT-5.2); Gecontroleerd door Nick"
+msgstr "AI-vertaling (GPT-5.2); gecontroleerd door Nick"
 
 msgid "This release focuses on visuals and localization."
 msgstr "Deze versie richt zich op visuele verbeteringen en lokalisatie."
@@ -151,7 +151,7 @@ msgid "Translated image captions"
 msgstr "Afbeeldingsbijschriften vertaald"
 
 msgid "Updated screenshots to use a more reasonable window size"
-msgstr "Screenshots bijgewerkt"
+msgstr "Screenshots bijgewerkt om een redelijkere venstergrootte te gebruiken"
 
 msgid "Updated application icon"
 msgstr "Applicatie-icoon bijgewerkt"

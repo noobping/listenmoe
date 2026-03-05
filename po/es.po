@@ -127,7 +127,7 @@ msgid "Colored window when connected"
 msgstr "Ventana con color cuando está conectado"
 
 msgid "AI translation (GPT-5.2); reviewed by nobody"
-msgstr "Traducción por IA (GPT-5.2); revisada Kana"
+msgstr "Traducción por IA (GPT-5.2); revisada por Kana"
 
 msgid "This release focuses on visuals and localization."
 msgstr "Esta versión se centra en mejoras visuales y localización."

@@ -139,7 +139,7 @@ msgid "Polished translations and improved how they are applied."
 msgstr "Übersetzungen wurden verbessert und konsistenter angewendet."
 
 msgid "Removed gaps between sound bars."
-msgstr "Abstände zwischen den Audiobalken entfernt"
+msgstr "Abstände zwischen den Audiobalken entfernt."
 
 msgid "Streaming logic now better handles connection issues and stream changes."
 msgstr "Die Streaming-Logik geht nun besser mit Verbindungsproblemen und Stream-Änderungen um."
