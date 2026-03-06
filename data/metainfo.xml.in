@@ -66,12 +66,12 @@
     <screenshot type="default">
       <image>
         https://raw.githubusercontent.com/noobping/listenmoe/v1.0.9/data/screenshot2.png</image>
-      <caption>When connected and there is no album or artist image</caption>
+      <caption>Colored window when connected</caption>
     </screenshot>
     <screenshot>
       <image>
         https://raw.githubusercontent.com/noobping/listenmoe/v1.0.9/data/screenshot1.png</image>
-      <caption>Colored window when connected</caption>
+      <caption>When connected and there is no album or artist image</caption>
     </screenshot>
   </screenshots>
 
