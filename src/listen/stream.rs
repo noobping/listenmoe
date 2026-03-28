@@ -90,14 +90,19 @@ fn open_stream(
     let probed = symphonia::default::get_probe().format(&hint, mss, format_opts, metadata_opts)?;
     let format = probed.format;
 
-    let track = format
-        .tracks()
-        .iter()
-        .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
-        .ok_or_else(|| "no supported audio tracks".to_string())?;
+    let (track_id, decoder) = {
+        let track = format
+            .tracks()
+            .iter()
+            .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
+            .ok_or_else(|| "no supported audio tracks".to_string())?;
 
-    let decoder = symphonia::default::get_codecs().make(&track.codec_params, decoder_opts)?;
-    Ok((format, track.id, decoder))
+        let track_id = track.id;
+        let decoder = symphonia::default::get_codecs().make(&track.codec_params, decoder_opts)?;
+        (track_id, decoder)
+    };
+
+    Ok((format, track_id, decoder))
 }
 
 fn handle_output_control(

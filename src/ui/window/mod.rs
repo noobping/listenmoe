@@ -17,6 +17,8 @@ use loops::UiUpdateLoopCtx;
 use state::{CoverFetchResult, MetadataSetter, SharedTrack};
 pub use state::{UiEvent, UiResetReason};
 
+const APP_NAME: &str = "Listen Moe";
+
 #[derive(Debug, Clone, Copy)]
 pub struct UiOptions {
     pub station: Station,
