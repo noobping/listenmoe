@@ -20,6 +20,13 @@ pub struct StoredPcmChunk {
 }
 
 #[derive(Debug, Clone)]
+pub struct PlaybackReadCursor {
+    segment_file_name: String,
+    frame_offset: u64,
+    position_ms: u64,
+}
+
+#[derive(Debug, Clone)]
 struct StoredSegment {
     file_name: String,
     start_ms: u64,
@@ -125,28 +132,61 @@ impl TimeshiftStore {
         cursor_ms: u64,
         max_duration_ms: u64,
     ) -> Result<Option<StoredPcmChunk>> {
-        let segment = match self
+        let Some(mut read_cursor) = self.cursor_for_ms(cursor_ms) else {
+            return Ok(None);
+        };
+        self.read_chunk_from(&mut read_cursor, max_duration_ms)
+    }
+
+    pub fn cursor_for_ms(&self, cursor_ms: u64) -> Option<PlaybackReadCursor> {
+        let segment = self
             .segments
             .iter()
             .find(|segment| cursor_ms < segment.end_ms && cursor_ms >= segment.start_ms)
-        {
-            Some(segment) => segment,
-            None => return Ok(None),
-        };
+            .or_else(|| {
+                self.segments
+                    .iter()
+                    .find(|segment| segment.end_ms > cursor_ms)
+            })?;
 
         let sample_rate = u64::from(segment.sample_rate);
-        let channels = u64::from(segment.channels);
         let frame_offset = if cursor_ms <= segment.start_ms {
             0
         } else {
             ((cursor_ms - segment.start_ms).saturating_mul(sample_rate)) / 1000
         }
         .min(segment.frames);
+
+        Some(PlaybackReadCursor {
+            segment_file_name: segment.file_name.clone(),
+            frame_offset,
+            position_ms: cursor_ms.max(segment.start_ms),
+        })
+    }
+
+    pub fn read_chunk_from(
+        &self,
+        cursor: &mut PlaybackReadCursor,
+        max_duration_ms: u64,
+    ) -> Result<Option<StoredPcmChunk>> {
+        let (segment_index, segment, frame_offset) = match self.resolve_cursor(cursor) {
+            Some(values) => values,
+            None => return Ok(None),
+        };
+
         let frames_remaining = segment.frames.saturating_sub(frame_offset);
         if frames_remaining == 0 {
+            if let Some(next_segment) = self.segments.get(segment_index + 1) {
+                cursor.segment_file_name = next_segment.file_name.clone();
+                cursor.frame_offset = 0;
+                cursor.position_ms = next_segment.start_ms;
+                return self.read_chunk_from(cursor, max_duration_ms);
+            }
             return Ok(None);
         }
 
+        let sample_rate = u64::from(segment.sample_rate);
+        let channels = u64::from(segment.channels);
         let max_frames = ((max_duration_ms.max(1) * sample_rate) / 1000).max(1);
         let frames_to_read = frames_remaining.min(max_frames);
         let bytes_to_read = frames_to_read
@@ -170,9 +210,21 @@ impl TimeshiftStore {
         let chunk_start_ms = segment
             .start_ms
             .saturating_add((frame_offset.saturating_mul(1000)) / sample_rate);
-        let chunk_end_ms = chunk_start_ms
-            .saturating_add((frames_to_read.saturating_mul(1000)) / sample_rate)
+        let next_frame_offset = frame_offset.saturating_add(frames_to_read);
+        let chunk_end_ms = segment
+            .start_ms
+            .saturating_add((next_frame_offset.saturating_mul(1000)) / sample_rate)
             .min(segment.end_ms);
+
+        cursor.frame_offset = next_frame_offset;
+        cursor.position_ms = chunk_end_ms;
+        if cursor.frame_offset >= segment.frames {
+            if let Some(next_segment) = self.segments.get(segment_index + 1) {
+                cursor.segment_file_name = next_segment.file_name.clone();
+                cursor.frame_offset = 0;
+                cursor.position_ms = next_segment.start_ms;
+            }
+        }
 
         Ok(Some(StoredPcmChunk {
             channels: segment.channels,
@@ -203,6 +255,39 @@ impl TimeshiftStore {
 
     pub fn live_head_ms(&self) -> u64 {
         self.live_head_ms
+    }
+
+    fn resolve_cursor<'a>(
+        &'a self,
+        cursor: &mut PlaybackReadCursor,
+    ) -> Option<(usize, &'a StoredSegment, u64)> {
+        if let Some((idx, segment)) = self
+            .segments
+            .iter()
+            .enumerate()
+            .find(|(_, segment)| segment.file_name == cursor.segment_file_name)
+        {
+            return Some((idx, segment, cursor.frame_offset.min(segment.frames)));
+        }
+
+        let (idx, segment) = self
+            .segments
+            .iter()
+            .enumerate()
+            .find(|(_, segment)| segment.end_ms > cursor.position_ms)?;
+        let sample_rate = u64::from(segment.sample_rate);
+        let frame_offset = if cursor.position_ms <= segment.start_ms {
+            0
+        } else {
+            ((cursor.position_ms - segment.start_ms).saturating_mul(sample_rate)) / 1000
+        }
+        .min(segment.frames);
+
+        cursor.segment_file_name = segment.file_name.clone();
+        cursor.frame_offset = frame_offset;
+        cursor.position_ms = cursor.position_ms.max(segment.start_ms);
+
+        Some((idx, segment, frame_offset))
     }
 
     fn ensure_active_segment(
@@ -354,5 +439,31 @@ mod tests {
         assert_eq!(chunk.sample_rate, 1_000);
         assert_eq!(chunk.samples.len(), 500);
         assert!(chunk.end_ms > chunk.start_ms);
+    }
+
+    #[test]
+    fn sequential_cursor_reads_do_not_drop_or_duplicate_samples() {
+        let root = temp_root("store-sequential");
+        let mut store = TimeshiftStore::new_session(root, RETENTION_MS).expect("store");
+        let original = samples(44_100, 1);
+        store
+            .append_pcm(44_100, 1, &original, 1_000)
+            .expect("append");
+
+        let mut cursor = store.cursor_for_ms(0).expect("cursor");
+        let mut recovered = Vec::new();
+
+        while let Some(chunk) = store
+            .read_chunk_from(&mut cursor, 137)
+            .expect("read sequential chunk")
+        {
+            recovered.extend_from_slice(&chunk.samples);
+            if recovered.len() >= original.len() {
+                break;
+            }
+        }
+
+        assert_eq!(recovered.len(), original.len());
+        assert_eq!(recovered, original);
     }
 }

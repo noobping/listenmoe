@@ -104,12 +104,18 @@ pub(super) fn decode_and_process_packet(
                 symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
 
             decode_state.sample_buf = None;
-            reset_fft_state(
-                &mut fft_state.mono_ring,
-                &mut fft_state.bars_smooth,
-                &mut fft_state.bar_peak,
-                spectrum_bits,
-            );
+            if bars_enabled {
+                reset_fft_state(
+                    &mut fft_state.mono_ring,
+                    &mut fft_state.bars_smooth,
+                    &mut fft_state.bar_peak,
+                    spectrum_bits,
+                );
+            } else {
+                fft_state.mono_ring.clear();
+                fft_state.bars_smooth.fill(0.0);
+                fft_state.bar_peak.fill(0.0);
+            }
             return Ok((PacketOutcome::Continue, None));
         }
         Err(err) => {
@@ -146,15 +152,17 @@ pub(super) fn decode_and_process_packet(
     buf.copy_interleaved_ref(decoded);
     let samples = buf.samples().to_owned();
 
-    process_samples_for_viz(
-        &samples,
-        decode_state.channels,
-        decode_state.sample_rate,
-        bars_enabled,
-        spectrum_bits,
-        fft_state,
-        viz,
-    );
+    if bars_enabled {
+        process_samples_for_viz(
+            &samples,
+            decode_state.channels,
+            decode_state.sample_rate,
+            true,
+            spectrum_bits,
+            fft_state,
+            viz,
+        );
+    }
 
     Ok((
         PacketOutcome::Continue,
@@ -168,6 +176,55 @@ pub(super) fn process_samples_for_viz(
     sample_rate: u32,
     bars_enabled: bool,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
+    fft_state: &mut FftVizState,
+    viz: VizParams,
+) {
+    process_samples_for_viz_inner(samples, channels, sample_rate, fft_state, viz);
+
+    if bars_enabled {
+        apply_spectrum_snapshot(spectrum_bits, &build_spectrum_snapshot_bits(fft_state));
+    } else {
+        clear_spectrum(spectrum_bits);
+    }
+}
+
+pub(super) fn build_spectrum_snapshot(
+    samples: &[f32],
+    channels: u16,
+    sample_rate: u32,
+    fft_state: &mut FftVizState,
+    viz: VizParams,
+) -> Vec<u32> {
+    process_samples_for_viz_inner(samples, channels, sample_rate, fft_state, viz);
+    fft_state
+        .bars_smooth
+        .iter()
+        .map(|value| value.to_bits())
+        .collect()
+}
+
+fn build_spectrum_snapshot_bits(fft_state: &FftVizState) -> Vec<u32> {
+    fft_state
+        .bars_smooth
+        .iter()
+        .map(|value| value.to_bits())
+        .collect()
+}
+
+pub(super) fn apply_spectrum_snapshot(spectrum_bits: &Arc<Vec<AtomicU32>>, snapshot: &[u32]) {
+    for (target, value) in spectrum_bits.iter().zip(snapshot.iter().copied()) {
+        target.store(value, Ordering::Relaxed);
+    }
+
+    for target in spectrum_bits.iter().skip(snapshot.len()) {
+        target.store(0.0f32.to_bits(), Ordering::Relaxed);
+    }
+}
+
+fn process_samples_for_viz_inner(
+    samples: &[f32],
+    channels: u16,
+    sample_rate: u32,
     fft_state: &mut FftVizState,
     viz: VizParams,
 ) {
@@ -226,14 +283,6 @@ pub(super) fn process_samples_for_viz(
 
         for i in 0..fft_state.bars.len() {
             fft_state.bars_smooth[i] = fft_state.bars_smooth[i] * 0.98 + fft_state.bars[i] * 0.02;
-        }
-
-        if bars_enabled {
-            for (i, v) in fft_state.bars_smooth.iter().enumerate() {
-                spectrum_bits[i].store(v.to_bits(), Ordering::Relaxed);
-            }
-        } else {
-            clear_spectrum(spectrum_bits);
         }
 
         let hop = HOP.min(fft_state.mono_ring.len());
