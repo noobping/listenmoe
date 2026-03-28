@@ -225,7 +225,7 @@ pub(super) fn process_samples_for_viz(
         }
 
         for i in 0..fft_state.bars.len() {
-            fft_state.bars_smooth[i] = fft_state.bars_smooth[i] * 0.80 + fft_state.bars[i] * 0.20;
+            fft_state.bars_smooth[i] = fft_state.bars_smooth[i] * 0.96 + fft_state.bars[i] * 0.04;
         }
 
         if bars_enabled {

@@ -23,15 +23,53 @@ if cargo_features.length() > 0
   features_csv = ','.join(cargo_features)
 endif
 
-cargo_build_script = files('build-aux/meson/cargo-build.sh')
-compile_schemas_script = files('build-aux/meson/compile-schemas.sh')
+cargo_build_script = '''
+src_root="$1"
+build_root="$2"
+cargo_bin="$3"
+profile="$4"
+default_features="$5"
+features_csv="$6"
+output_bin="$7"
+
+manifest="$src_root/Cargo.toml"
+target_dir="$build_root/target"
+bin_name="listenmoe"
+
+set -- "$cargo_bin" build --manifest-path "$manifest" --target-dir "$target_dir"
+
+if [ "$profile" = "release" ]; then
+  set -- "$@" --release
+fi
+
+if [ "$default_features" != "true" ]; then
+  set -- "$@" --no-default-features
+fi
+
+if [ -n "$features_csv" ]; then
+  set -- "$@" --features "$features_csv"
+fi
+
+"$@"
+
+if [ "$profile" = "release" ]; then
+  built_bin="$target_dir/release/$bin_name"
+else
+  built_bin="$target_dir/debug/$bin_name"
+fi
+
+cp "$built_bin" "$output_bin"
+'''
 
 listenmoe_bin = custom_target(
   'listenmoe-bin',
   output: 'listenmoe',
   command: [
     sh,
+    '-eu',
+    '-c',
     cargo_build_script,
+    'cargo-build.sh',
     meson.project_source_root(),
     meson.project_build_root(),
     cargo,
@@ -126,6 +164,16 @@ gnome.post_install(
 
 meson.add_install_script(
   sh,
-  compile_schemas_script,
+  '-eu',
+  '-c',
+  '''
+schemas_rel_dir="$1"
+schemas_dir="${MESON_INSTALL_DESTDIR_PREFIX}/${schemas_rel_dir}"
+
+if [ -d "$schemas_dir" ]; then
+  glib-compile-schemas "$schemas_dir"
+fi
+''',
+  'compile-schemas.sh',
   join_paths(get_option('datadir'), 'glib-2.0', 'schemas'),
 )

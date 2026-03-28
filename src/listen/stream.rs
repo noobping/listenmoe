@@ -31,8 +31,8 @@ enum RunOutcome {
     Reconnect,
 }
 
-const OUTPUT_CHUNK_MS: u64 = 50;
-const OUTPUT_IDLE_SLEEP_MS: u64 = 20;
+const OUTPUT_CHUNK_MS: u64 = 10;
+const OUTPUT_IDLE_SLEEP_MS: u64 = 10;
 
 fn build_client() -> Result<Client> {
     Ok(Client::builder()
@@ -212,7 +212,7 @@ fn run_one_connection(
             &mut decode_state,
             fft_state,
             VizParams {
-                peak_attack: 0.35,
+                peak_attack: 0.12,
                 peak_release: 0.995,
                 sensitivity: 1.25,
                 curve: 0.75,
@@ -341,7 +341,7 @@ pub(super) fn run_listenmoe_stream(
     let mut paused = false;
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let viz = VizParams {
-        peak_attack: 0.35,
+        peak_attack: 0.12,
         peak_release: 0.995,
         sensitivity: 1.25,
         curve: 0.75,

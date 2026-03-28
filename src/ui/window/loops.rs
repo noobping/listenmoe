@@ -33,6 +33,7 @@ use super::state::{
 
 const COVER_MAX_SIZE: i32 = 250;
 const APP_NAME: &str = "Listen Moe";
+const VIZ_FRAME_INTERVAL: Duration = Duration::from_millis(16);
 
 pub(super) struct UiUpdateLoopCtx {
     pub(super) window: ApplicationWindow,
@@ -212,14 +213,14 @@ pub(super) fn spawn_viz_loop(
 ) {
     let mut smooth = vec![0.0f32; spectrum_bits.len()];
 
-    glib::timeout_add_local(Duration::from_millis(33), move || {
+    glib::timeout_add_local(VIZ_FRAME_INTERVAL, move || {
         let mut bars = vec![0.0f32; spectrum_bits.len()];
         for i in 0..bars.len() {
             bars[i] = f32::from_bits(spectrum_bits[i].load(Ordering::Relaxed)).clamp(0.0, 1.0);
         }
 
         for i in 0..bars.len() {
-            smooth[i] = smooth[i] * 0.70 + bars[i] * 0.30;
+            smooth[i] = smooth[i] * 0.96 + bars[i] * 0.04;
         }
 
         viz_handle.set_values(&smooth);
