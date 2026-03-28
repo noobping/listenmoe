@@ -3,13 +3,11 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
-
 use super::Result;
 
 pub const RETENTION_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const GAP_THRESHOLD_MS: u64 = 1_500;
-const MAX_SEGMENT_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_SEGMENT_BYTES: u64 = 512 * 1024 * 1024;
 const BYTES_PER_SAMPLE: u64 = 4;
 
 #[derive(Debug, Clone)]
@@ -21,13 +19,7 @@ pub struct StoredPcmChunk {
     pub end_ms: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Manifest {
-    next_segment_id: u64,
-    segments: Vec<StoredSegment>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 struct StoredSegment {
     file_name: String,
     start_ms: u64,
@@ -41,7 +33,6 @@ struct StoredSegment {
 #[derive(Debug)]
 pub struct TimeshiftStore {
     root: PathBuf,
-    manifest_path: PathBuf,
     segments: VecDeque<StoredSegment>,
     active_file: Option<File>,
     next_segment_id: u64,
@@ -55,7 +46,6 @@ impl TimeshiftStore {
         fs::create_dir_all(&root)?;
 
         Ok(Self {
-            manifest_path: root.join("manifest.json"),
             root,
             segments: VecDeque::new(),
             active_file: None,
@@ -116,7 +106,6 @@ impl TimeshiftStore {
 
         if let Some(file) = self.active_file.as_mut() {
             file.write_all(&bytes)?;
-            file.flush()?;
         }
 
         if let Some(segment) = self.segments.back_mut() {
@@ -127,7 +116,6 @@ impl TimeshiftStore {
 
         self.live_head_ms = end_ms;
         self.prune_old_segments()?;
-        self.persist_manifest()?;
 
         Ok((start_ms, end_ms))
     }
@@ -278,18 +266,6 @@ impl TimeshiftStore {
 
         Ok(())
     }
-
-    fn persist_manifest(&self) -> Result<()> {
-        let manifest = Manifest {
-            next_segment_id: self.next_segment_id,
-            segments: self.segments.iter().cloned().collect(),
-        };
-        fs::write(
-            &self.manifest_path,
-            serde_json::to_string_pretty(&manifest)?,
-        )?;
-        Ok(())
-    }
 }
 
 pub fn clear_root(root: &Path) -> Result<()> {
@@ -334,8 +310,18 @@ mod tests {
             .append_pcm(48_000, 1, &[0.5; 64], 2_000)
             .expect("second append");
 
-        let manifest = std::fs::read_to_string(root.join("manifest.json")).expect("manifest");
-        assert!(manifest.matches("segment-").count() >= 2);
+        let segment_count = std::fs::read_dir(&root)
+            .expect("read_dir")
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .is_some_and(|ext| ext == "pcm")
+            })
+            .count();
+        assert!(segment_count >= 2);
     }
 
     #[test]

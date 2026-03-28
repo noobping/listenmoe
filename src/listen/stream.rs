@@ -32,8 +32,9 @@ enum RunOutcome {
     Reconnect,
 }
 
-const OUTPUT_CHUNK_MS: u64 = 50;
-const OUTPUT_QUEUE_TARGET_CHUNKS: usize = 4;
+const OUTPUT_CHUNK_MS: u64 = 1_000;
+const OUTPUT_QUEUE_TARGET_CHUNKS: usize = 6;
+const OUTPUT_MIN_HEADROOM_MS: u64 = 4_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 10;
 
 struct NotifyingSamplesBuffer {
@@ -92,6 +93,14 @@ impl Source for NotifyingSamplesBuffer {
 
     fn total_duration(&self) -> Option<Duration> {
         self.inner.total_duration()
+    }
+}
+
+fn buffered_playback_start_ms(live_head_ms: u64, floor_ms: Option<u64>) -> u64 {
+    let buffered = live_head_ms.saturating_sub(OUTPUT_MIN_HEADROOM_MS);
+    match floor_ms {
+        Some(floor_ms) => buffered.max(floor_ms).min(live_head_ms),
+        None => buffered,
     }
 }
 
@@ -311,7 +320,7 @@ fn run_one_connection(
             drop(store);
 
             if clock.playback_cursor_ms() == 0 {
-                clock.set_playback_cursor_ms(live_head);
+                clock.set_playback_cursor_ms(buffered_playback_start_ms(live_head, floor));
             } else if let Some(floor) = floor {
                 clock.clamp_playback_floor(floor);
             }
@@ -469,10 +478,15 @@ pub(super) fn run_listenmoe_stream(
                 }
 
                 let live_head = store.live_head_ms();
+                let floor_ms = store.earliest_timestamp_ms();
                 if live_head == 0 {
                     None
                 } else if cursor_ms == 0 {
-                    queued_cursor_ms = live_head;
+                    queued_cursor_ms = buffered_playback_start_ms(live_head, floor_ms);
+                    None
+                } else if sink.empty()
+                    && live_head.saturating_sub(cursor_ms) < OUTPUT_MIN_HEADROOM_MS
+                {
                     None
                 } else {
                     match store.read_chunk(cursor_ms, OUTPUT_CHUNK_MS)? {
@@ -591,4 +605,19 @@ fn now_timestamp_ms() -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as u64
+}
+
+#[cfg(test)]
+mod tests {
+    use super::buffered_playback_start_ms;
+
+    #[test]
+    fn startup_cursor_keeps_configured_headroom() {
+        assert_eq!(buffered_playback_start_ms(10_000, None), 6_000);
+    }
+
+    #[test]
+    fn startup_cursor_respects_retention_floor() {
+        assert_eq!(buffered_playback_start_ms(10_000, Some(9_500)), 9_500);
+    }
 }
