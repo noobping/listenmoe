@@ -93,16 +93,26 @@ install_data(
   'data/scalable/apps/io.github.noobping.listenmoe.svg',
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'),
 )
+devel_svg_icon = configure_file(
+  input: 'data/scalable/apps/io.github.noobping.listenmoe_beta.svg',
+  output: 'io.github.noobping.listenmoe.Devel.svg',
+  copy: true,
+)
 install_data(
-  'data/scalable/apps/io.github.noobping.listenmoe.Devel.svg',
+  devel_svg_icon,
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'),
 )
 install_data(
   'data/128x128/apps/io.github.noobping.listenmoe.png',
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', '128x128', 'apps'),
 )
+devel_png_icon = configure_file(
+  input: 'data/128x128/apps/io.github.noobping.listenmoe_beta.png',
+  output: 'io.github.noobping.listenmoe.Devel.png',
+  copy: true,
+)
 install_data(
-  'data/128x128/apps/io.github.noobping.listenmoe.Devel.png',
+  devel_png_icon,
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', '128x128', 'apps'),
 )
 install_subdir(
