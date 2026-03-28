@@ -1,13 +1,17 @@
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::mpsc;
 use std::sync::{atomic::AtomicU64, Arc};
 use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::listen::PlaybackClock;
 use crate::station::Station;
+use crate::ui::UiEvent;
 
 use super::gateway::run_meta_loop;
-use super::track::TrackInfo;
+use super::timeline::TimelineStore;
 
 #[derive(Debug)]
 pub enum Control {
@@ -26,8 +30,8 @@ enum State {
 struct Inner {
     station: Station,
     state: State,
-    sender: mpsc::Sender<TrackInfo>,
-    lag_ms: Arc<AtomicU64>,
+    sender: mpsc::Sender<UiEvent>,
+    clock: Arc<PlaybackClock>,
     ui_sched_id: Arc<AtomicU64>,
 }
 
@@ -39,15 +43,15 @@ pub struct Meta {
 impl Meta {
     pub fn new(
         station: Station,
-        sender: mpsc::Sender<TrackInfo>,
-        lag_ms: Arc<AtomicU64>,
+        sender: mpsc::Sender<UiEvent>,
+        clock: Arc<PlaybackClock>,
     ) -> Rc<Self> {
         Rc::new(Self {
             inner: RefCell::new(Inner {
                 station,
                 state: State::Stopped,
                 sender,
-                lag_ms,
+                clock,
                 ui_sched_id: Arc::new(AtomicU64::new(0)),
             }),
         })
@@ -101,14 +105,23 @@ impl Meta {
                 let (tx, rx) = mpsc::channel::<Control>();
                 let station = inner.station;
                 let sender = inner.sender.clone();
-                let lag_ms = inner.lag_ms.clone();
+                let clock = inner.clock.clone();
                 let ui_sched_id = inner.ui_sched_id.clone();
+                let timeline = Arc::new(TimelineStore::new(timeline_path(station)));
+                if let Err(err) = timeline.clear() {
+                    eprintln!("Failed to clear metadata timeline: {err}");
+                }
 
                 inner.state = State::Running { tx: tx.clone() };
 
                 thread::spawn(move || {
-                    if let Err(err) = run_meta_loop(station, sender, rx, lag_ms, ui_sched_id) {
+                    if let Err(err) =
+                        run_meta_loop(station, sender, rx, clock, ui_sched_id, timeline.clone())
+                    {
                         eprintln!("Gateway error in metadata loop: {err}");
+                    }
+                    if let Err(err) = timeline.clear() {
+                        eprintln!("Failed to clear metadata timeline: {err}");
                     }
                 });
             }
@@ -128,4 +141,27 @@ impl Drop for Meta {
         let mut inner = self.inner.borrow_mut();
         Self::stop_inner(&mut inner);
     }
+}
+
+fn timeline_path(station: Station) -> PathBuf {
+    let mut root = dirs_next::cache_dir().unwrap_or_else(std::env::temp_dir);
+    root.push(std::env::var("LISTENMOE_APP_ID").unwrap_or_else(|_| {
+        if cfg!(debug_assertions) {
+            "io.github.noobping.listenmoe.Devel".to_string()
+        } else {
+            "io.github.noobping.listenmoe".to_string()
+        }
+    }));
+    root.push("timeshift");
+    root.push(station.name());
+    root.push(format!("session-{}", unique_session_id()));
+    root.push("timeline.json");
+    root
+}
+
+fn unique_session_id() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos()
 }

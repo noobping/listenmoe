@@ -3,7 +3,7 @@ mod loops;
 mod state;
 
 use crate::listen::Listen;
-use crate::meta::{Meta, TrackInfo};
+use crate::meta::Meta;
 use crate::station::Station;
 
 use adw::prelude::GtkWindowExt;
@@ -11,11 +11,11 @@ use adw::Application;
 use std::{cell::RefCell, rc::Rc, sync::mpsc};
 
 use super::actions;
+use super::controls::NowPlaying;
 use layout::WindowLayout;
 use loops::UiUpdateLoopCtx;
 use state::{CoverFetchResult, MetadataSetter, SharedTrack};
-
-const APP_NAME: &str = "Listen Moe";
+pub use state::{UiEvent, UiResetReason};
 
 #[derive(Debug, Clone, Copy)]
 pub struct UiOptions {
@@ -41,8 +41,8 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     let radio = Listen::new(station);
     let spectrum_bits = radio.spectrum_bars();
 
-    let (track_tx, track_rx) = mpsc::channel::<TrackInfo>();
-    let meta = Meta::new(station, track_tx, radio.lag_ms());
+    let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
+    let meta = Meta::new(station, ui_tx.clone(), radio.playback_clock());
     let (cover_tx, cover_rx) = mpsc::channel::<CoverFetchResult>();
     let current_track: SharedTrack = Rc::new(RefCell::new(None));
 
@@ -68,6 +68,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &pause_button,
         &radio,
         &meta,
+        &ui_tx,
         &current_track,
         options.stop_instead_pause,
     );
@@ -76,9 +77,9 @@ pub fn build_ui(app: &Application, options: UiOptions) {
 
     let metadata_setter: MetadataSetter = {
         let controls = controls.clone();
-        Rc::new(move |title: &str, artist: &str, art_url: Option<&str>| {
+        Rc::new(move |now_playing: Option<NowPlaying>| {
             if let Some(c) = controls.as_ref() {
-                c.set_metadata(title, artist, APP_NAME, art_url);
+                c.set_metadata(now_playing);
             }
         })
     };
@@ -91,7 +92,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         art_popover,
         style_manager,
         css_provider,
-        track_rx,
+        ui_rx,
         cover_tx,
         cover_rx,
         ctrl_rx,

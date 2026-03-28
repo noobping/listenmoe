@@ -146,8 +146,32 @@ pub(super) fn decode_and_process_packet(
     buf.copy_interleaved_ref(decoded);
     let samples = buf.samples().to_owned();
 
-    // Downmix to mono ring buffer for FFT
-    let ch = decode_state.channels as usize;
+    process_samples_for_viz(
+        &samples,
+        decode_state.channels,
+        decode_state.sample_rate,
+        bars_enabled,
+        spectrum_bits,
+        fft_state,
+        viz,
+    );
+
+    Ok((
+        PacketOutcome::Continue,
+        Some((decode_state.channels, decode_state.sample_rate, samples)),
+    ))
+}
+
+pub(super) fn process_samples_for_viz(
+    samples: &[f32],
+    channels: u16,
+    sample_rate: u32,
+    bars_enabled: bool,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
+    fft_state: &mut FftVizState,
+    viz: VizParams,
+) {
+    let ch = channels as usize;
     if ch > 0 {
         let frames = samples.len() / ch;
         fft_state.mono_ring.reserve(frames);
@@ -161,7 +185,6 @@ pub(super) fn decode_and_process_packet(
         }
     }
 
-    // FFT + bars
     while fft_state.mono_ring.len() >= FFT_SIZE {
         for i in 0..FFT_SIZE {
             let x = fft_state.mono_ring[i] * fft_state.window[i];
@@ -175,11 +198,7 @@ pub(super) fn decode_and_process_packet(
             fft_state.mags[i] = (c.re * c.re + c.im * c.im).sqrt();
         }
 
-        bins_to_bars(
-            &fft_state.mags,
-            decode_state.sample_rate,
-            &mut fft_state.bars,
-        );
+        bins_to_bars(&fft_state.mags, sample_rate, &mut fft_state.bars);
 
         for i in 0..fft_state.bars.len() {
             let v = fft_state.bars[i].max(1e-12);
@@ -220,11 +239,6 @@ pub(super) fn decode_and_process_packet(
         let hop = HOP.min(fft_state.mono_ring.len());
         fft_state.mono_ring.drain(0..hop);
     }
-
-    Ok((
-        PacketOutcome::Continue,
-        Some((decode_state.channels, decode_state.sample_rate, samples)),
-    ))
 }
 
 pub(super) fn reset_fft_state(

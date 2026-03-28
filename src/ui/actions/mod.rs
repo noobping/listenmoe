@@ -14,6 +14,7 @@ use std::sync::mpsc;
 use super::controls::{build_controls, MediaControlEvent, MediaControls};
 use crate::listen::Listen;
 use crate::meta::Meta;
+use crate::ui::UiEvent;
 
 mod context;
 mod menu;
@@ -64,6 +65,7 @@ pub fn build_actions(
     pause_button: &Button,
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
+    ui_tx: &mpsc::Sender<UiEvent>,
     current_track: &Rc<RefCell<Option<(String, String)>>>,
     stop_instead_pause: bool,
 ) -> (
@@ -94,6 +96,7 @@ pub fn build_actions(
         pause_button,
         radio,
         meta,
+        ui_tx,
         current_track,
         stop_instead_pause,
     );

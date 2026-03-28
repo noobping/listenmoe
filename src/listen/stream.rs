@@ -1,8 +1,11 @@
 use reqwest::blocking::Client;
 use rodio::{buffer::SamplesBuffer, DeviceSinkBuilder, Player};
 use std::num::{NonZeroU16, NonZeroU32};
-use std::sync::{atomic::AtomicU32, mpsc, Arc};
-use std::time::Duration;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::FormatOptions;
@@ -14,9 +17,11 @@ use crate::http_source::HttpSource;
 use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
+use super::clock::PlaybackClock;
+use super::store::{clear_root, TimeshiftStore, RETENTION_MS};
 use super::viz::{
-    clear_spectrum, decode_and_process_packet, make_fft_state, reset_fft_state, DecodeState,
-    FftVizState, PacketOutcome, VizParams,
+    clear_spectrum, decode_and_process_packet, make_fft_state, process_samples_for_viz,
+    reset_fft_state, DecodeState, FftVizState, PacketOutcome, VizParams,
 };
 use super::{Control, Result};
 
@@ -25,6 +30,9 @@ enum RunOutcome {
     Stop,
     Reconnect,
 }
+
+const OUTPUT_CHUNK_MS: u64 = 50;
+const OUTPUT_IDLE_SLEEP_MS: u64 = 20;
 
 fn build_client() -> Result<Client> {
     Ok(Client::builder()
@@ -77,40 +85,37 @@ fn open_stream(
 
     let http_source = HttpSource { inner: response };
     let mss = MediaSourceStream::new(Box::new(http_source), Default::default());
-
-    let hint = Hint::new(); // let symphonia probe
+    let hint = Hint::new();
 
     let probed = symphonia::default::get_probe().format(&hint, mss, format_opts, metadata_opts)?;
-
     let format = probed.format;
 
     let track = format
         .tracks()
         .iter()
-        .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+        .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
         .ok_or_else(|| "no supported audio tracks".to_string())?;
 
-    let track_id = track.id;
     let decoder = symphonia::default::get_codecs().make(&track.codec_params, decoder_opts)?;
-
-    Ok((format, track_id, decoder))
+    Ok((format, track.id, decoder))
 }
 
-fn handle_control(
+fn handle_output_control(
     rx: &mpsc::Receiver<Control>,
     sink: &Player,
     paused: &mut bool,
-    bars_enabled: &mut bool,
+    stop_requested: &Arc<AtomicBool>,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<bool> {
-    // returns Ok(true) if Stop requested
     while let Ok(cmd) = rx.try_recv() {
         match cmd {
             Control::Stop => {
                 if is_verbose() {
                     println!("[{}] Stop requested, shutting down stream.", now_string());
                 }
+                stop_requested.store(true, Ordering::Relaxed);
                 sink.stop();
+                clear_spectrum(spectrum_bits);
                 return Ok(true);
             }
             Control::Pause => {
@@ -121,7 +126,6 @@ fn handle_control(
                     *paused = true;
                     sink.pause();
                 }
-                *bars_enabled = false;
                 clear_spectrum(spectrum_bits);
             }
             Control::Resume => {
@@ -131,26 +135,24 @@ fn handle_control(
                     }
                     *paused = false;
                     sink.play();
-                    *bars_enabled = true;
                 }
             }
         }
     }
+
     Ok(false)
 }
 
 fn run_one_connection(
-    rx: &mpsc::Receiver<Control>,
-    spectrum_bits: &Arc<Vec<AtomicU32>>,
     format: &mut Box<dyn symphonia::core::formats::FormatReader>,
     track_id: &mut u32,
     decoder: &mut Box<dyn symphonia::core::codecs::Decoder>,
     decoder_opts: &DecoderOptions,
-    sink: &Player,
-    paused: &mut bool,
-    bars_enabled: &mut bool,
+    stop_requested: &Arc<AtomicBool>,
+    store: &Arc<Mutex<TimeshiftStore>>,
+    clock: &Arc<PlaybackClock>,
     fft_state: &mut FftVizState,
-    viz: VizParams,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<RunOutcome> {
     let mut decode_state = DecodeState {
         sample_buf: None,
@@ -159,12 +161,12 @@ fn run_one_connection(
     };
 
     loop {
-        if handle_control(rx, sink, paused, bars_enabled, spectrum_bits)? {
+        if stop_requested.load(Ordering::Relaxed) {
             return Ok(RunOutcome::Stop);
         }
 
         let packet = match format.next_packet() {
-            Ok(p) => p,
+            Ok(packet) => packet,
             Err(SymphoniaError::ResetRequired) => {
                 if is_verbose() {
                     println!("[{}] Stream reset, reconfiguring decoder…", now_string());
@@ -173,13 +175,12 @@ fn run_one_connection(
                 let new_track = format
                     .tracks()
                     .iter()
-                    .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+                    .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
                     .ok_or_else(|| "no supported audio tracks after reset".to_string())?;
 
                 *track_id = new_track.id;
                 *decoder =
                     symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
-
                 decode_state.sample_buf = None;
                 reset_fft_state(
                     &mut fft_state.mono_ring,
@@ -201,44 +202,48 @@ fn run_one_connection(
             track_id,
             decoder,
             decoder_opts,
-            *bars_enabled,
+            false,
             spectrum_bits,
             &mut decode_state,
             fft_state,
-            viz,
+            VizParams {
+                peak_attack: 0.35,
+                peak_release: 0.995,
+                sensitivity: 1.25,
+                curve: 0.75,
+            },
         )?;
 
         match outcome {
             PacketOutcome::Continue => {}
             PacketOutcome::Reconnect => return Ok(RunOutcome::Reconnect),
-            PacketOutcome::SpecChanged { .. } => {
-                // Recreate sink on spec change
-                sink.stop();
-                if *paused {
-                    sink.pause();
-                }
-
-                reset_fft_state(
-                    &mut fft_state.mono_ring,
-                    &mut fft_state.bars_smooth,
-                    &mut fft_state.bar_peak,
-                    spectrum_bits,
-                );
-
-                // Continue; next decoded buffer will create a new SampleBuffer and then deliver audio.
-                continue;
-            }
+            PacketOutcome::SpecChanged => continue,
         }
 
         if let Some((channels, sample_rate, samples)) = audio {
-            append_samples_in_chunks(sink, channels, sample_rate, &samples); // send audio to rodio
+            let now_ms = now_timestamp_ms();
+            let mut store = store.lock().expect("timeshift mutex poisoned");
+            let (_, end_ms) = store.append_pcm(sample_rate, channels, &samples, now_ms)?;
+            clock.set_live_head_ms(end_ms);
+
+            let floor = store.earliest_timestamp_ms();
+            let live_head = store.live_head_ms();
+            drop(store);
+
+            if clock.playback_cursor_ms() == 0 {
+                clock.set_playback_cursor_ms(live_head);
+            } else if let Some(floor) = floor {
+                clock.clamp_playback_floor(floor);
+            }
         }
     }
 }
 
-pub(super) fn run_listenmoe_stream(
+fn run_ingest_loop(
     station: Station,
-    rx: mpsc::Receiver<Control>,
+    stop_requested: Arc<AtomicBool>,
+    store: Arc<Mutex<TimeshiftStore>>,
+    clock: Arc<PlaybackClock>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) -> Result<()> {
     let primary = station.stream_url().to_string();
@@ -251,25 +256,10 @@ pub(super) fn run_listenmoe_stream(
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();
     let decoder_opts: DecoderOptions = Default::default();
-
-    let mut stream = DeviceSinkBuilder::open_default_sink()?;
-    stream.log_on_drop(false);
-    let mut sink = Player::connect_new(stream.mixer());
-
-    let mut paused = false;
-    let mut bars_enabled = true;
-
     let mut fft_state = make_fft_state(spectrum_bits.len());
-    let viz = VizParams {
-        peak_attack: 0.35,
-        peak_release: 0.995,
-        sensitivity: 1.25,
-        curve: 0.75,
-    };
 
-    loop {
+    while !stop_requested.load(Ordering::Relaxed) {
         let url: &str = if use_fallback { &fallback } else { &primary };
-
         let (mut format, mut track_id, mut decoder) = match open_stream(
             url,
             &client,
@@ -278,49 +268,33 @@ pub(super) fn run_listenmoe_stream(
             &metadata_opts,
             &decoder_opts,
         ) {
-            Ok(x) => x,
-            Err(e) => {
-                eprintln!("connect/probe error on {url}: {e}");
+            Ok(parts) => parts,
+            Err(err) => {
+                eprintln!("connect/probe error on {url}: {err}");
                 if !fallback.is_empty() {
                     use_fallback = !use_fallback;
                 }
                 client = build_client()?;
+                thread::sleep(Duration::from_secs(1));
                 continue;
             }
         };
 
-        // On reconnect: clear sink queue + reset viz
-        sink.stop();
-        sink = Player::connect_new(stream.mixer());
-        if paused {
-            sink.pause();
-        }
-        reset_fft_state(
-            &mut fft_state.mono_ring,
-            &mut fft_state.bars_smooth,
-            &mut fft_state.bar_peak,
-            &spectrum_bits,
-        );
-
         if is_verbose() {
-            println!("[{}] Started decoding.", now_string());
+            println!("[{}] Started buffering live stream.", now_string());
         }
 
-        let outcome = run_one_connection(
-            &rx,
-            &spectrum_bits,
+        match run_one_connection(
             &mut format,
             &mut track_id,
             &mut decoder,
             &decoder_opts,
-            &sink,
-            &mut paused,
-            &mut bars_enabled,
+            &stop_requested,
+            &store,
+            &clock,
             &mut fft_state,
-            viz,
-        )?;
-
-        match outcome {
+            &spectrum_bits,
+        )? {
             RunOutcome::Stop => return Ok(()),
             RunOutcome::Reconnect => {
                 if !fallback.is_empty() {
@@ -330,30 +304,130 @@ pub(super) fn run_listenmoe_stream(
             }
         }
     }
+
+    Ok(())
 }
 
-fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samples: &[f32]) {
-    // 10ms chunks (tweak to 5..20ms)
-    const CHUNK_MS: u32 = 10;
+pub(super) fn run_listenmoe_stream(
+    station: Station,
+    rx: mpsc::Receiver<Control>,
+    spectrum_bits: Arc<Vec<AtomicU32>>,
+    clock: Arc<PlaybackClock>,
+    root: PathBuf,
+) -> Result<()> {
+    let store = Arc::new(Mutex::new(TimeshiftStore::new_session(
+        root.clone(),
+        RETENTION_MS,
+    )?));
+    clock.reset();
 
-    let ch = channels as usize;
-    if ch == 0 || sample_rate == 0 {
-        return;
+    let stop_requested = Arc::new(AtomicBool::new(false));
+    let ingest_handle = {
+        let stop_requested = stop_requested.clone();
+        let store = store.clone();
+        let clock = clock.clone();
+        let spectrum_bits = spectrum_bits.clone();
+        thread::spawn(move || run_ingest_loop(station, stop_requested, store, clock, spectrum_bits))
+    };
+
+    let mut stream = DeviceSinkBuilder::open_default_sink()?;
+    stream.log_on_drop(false);
+    let sink = Player::connect_new(stream.mixer());
+    let mut paused = false;
+    let mut fft_state = make_fft_state(spectrum_bits.len());
+    let viz = VizParams {
+        peak_attack: 0.35,
+        peak_release: 0.995,
+        sensitivity: 1.25,
+        curve: 0.75,
+    };
+
+    loop {
+        if handle_output_control(&rx, &sink, &mut paused, &stop_requested, &spectrum_bits)? {
+            break;
+        }
+
+        if paused {
+            thread::sleep(Duration::from_millis(OUTPUT_IDLE_SLEEP_MS));
+            continue;
+        }
+
+        let chunk = {
+            let store = store.lock().expect("timeshift mutex poisoned");
+            let cursor_ms = store.clamp_cursor_ms(clock.playback_cursor_ms());
+            if cursor_ms != clock.playback_cursor_ms() {
+                clock.set_playback_cursor_ms(cursor_ms);
+            }
+
+            let live_head = store.live_head_ms();
+            if live_head == 0 {
+                None
+            } else if clock.playback_cursor_ms() == 0 {
+                clock.set_playback_cursor_ms(live_head);
+                None
+            } else {
+                match store.read_chunk(clock.playback_cursor_ms(), OUTPUT_CHUNK_MS)? {
+                    Some(chunk) => Some(chunk),
+                    None => {
+                        if let Some(next) =
+                            store.next_available_timestamp_ms(clock.playback_cursor_ms())
+                        {
+                            clock.set_playback_cursor_ms(next);
+                        }
+                        None
+                    }
+                }
+            }
+        };
+
+        let Some(chunk) = chunk else {
+            thread::sleep(Duration::from_millis(OUTPUT_IDLE_SLEEP_MS));
+            continue;
+        };
+
+        append_chunk(&sink, &chunk);
+        process_samples_for_viz(
+            &chunk.samples,
+            chunk.channels,
+            chunk.sample_rate,
+            true,
+            &spectrum_bits,
+            &mut fft_state,
+            viz,
+        );
+        clock.set_playback_cursor_ms(chunk.end_ms);
+
+        let sleep_ms = chunk.end_ms.saturating_sub(chunk.start_ms).max(1);
+        thread::sleep(Duration::from_millis(sleep_ms));
     }
 
-    let Some(channels) = NonZeroU16::new(channels) else {
+    stop_requested.store(true, Ordering::Relaxed);
+    let _ = ingest_handle.join();
+    clear_spectrum(&spectrum_bits);
+    store.lock().expect("timeshift mutex poisoned").clear()?;
+    clear_root(&root)?;
+
+    Ok(())
+}
+
+fn append_chunk(sink: &Player, chunk: &super::store::StoredPcmChunk) {
+    let Some(channels) = NonZeroU16::new(chunk.channels) else {
         return;
     };
-    let Some(sample_rate) = NonZeroU32::new(sample_rate) else {
+    let Some(sample_rate) = NonZeroU32::new(chunk.sample_rate) else {
         return;
     };
 
-    // frames per chunk = sr * ms / 1000
-    let frames_per_chunk = (sample_rate.get() * CHUNK_MS / 1000).max(1) as usize;
-    let samples_per_chunk = frames_per_chunk * ch;
+    sink.append(SamplesBuffer::new(
+        channels,
+        sample_rate,
+        chunk.samples.clone(),
+    ));
+}
 
-    for chunk in samples.chunks(samples_per_chunk) {
-        // This clones each small chunk into rodio; contents unchanged.
-        sink.append(SamplesBuffer::new(channels, sample_rate, chunk.to_vec()));
-    }
+fn now_timestamp_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
 }

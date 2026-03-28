@@ -5,10 +5,12 @@ use gettextrs::gettext;
 use mpris_server::PlaybackStatus;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::mpsc;
 
 use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
+use crate::ui::{UiEvent, UiResetReason};
 
 use super::activate_window_action;
 
@@ -22,6 +24,7 @@ pub(super) struct ActionCtx {
     pause_button: Button,
     radio: Rc<Listen>,
     meta: Rc<Meta>,
+    ui_tx: mpsc::Sender<UiEvent>,
     current_track: Rc<RefCell<Option<(String, String)>>>,
     stop_instead_pause: bool,
 }
@@ -34,6 +37,7 @@ impl ActionCtx {
         pause_button: &Button,
         radio: &Rc<Listen>,
         meta: &Rc<Meta>,
+        ui_tx: &mpsc::Sender<UiEvent>,
         current_track: &Rc<RefCell<Option<(String, String)>>>,
         stop_instead_pause: bool,
     ) -> Self {
@@ -44,6 +48,7 @@ impl ActionCtx {
             pause_button: pause_button.clone(),
             radio: radio.clone(),
             meta: meta.clone(),
+            ui_tx: ui_tx.clone(),
             current_track: current_track.clone(),
             stop_instead_pause,
         }
@@ -59,9 +64,7 @@ impl ActionCtx {
     }
 
     pub(super) fn play(&self, set_playback: &dyn Fn(PlaybackStatus)) {
-        self.win_title.set_title(APP_NAME);
-        self.win_title.set_subtitle(&gettext("Connecting..."));
-        *self.current_track.borrow_mut() = None;
+        let _ = self.ui_tx.send(UiEvent::Connecting);
         self.meta.start();
         self.radio.start();
         self.play_button.set_visible(false);
@@ -77,6 +80,7 @@ impl ActionCtx {
         self.meta.pause();
         self.radio.pause();
         self.set_idle_ui();
+        let _ = self.ui_tx.send(UiEvent::Reset(UiResetReason::Paused));
         set_playback(PlaybackStatus::Paused);
     }
 
@@ -84,6 +88,7 @@ impl ActionCtx {
         self.meta.stop();
         self.radio.stop();
         self.set_idle_ui();
+        let _ = self.ui_tx.send(UiEvent::Reset(UiResetReason::Stopped));
         set_playback(PlaybackStatus::Stopped);
     }
 
@@ -128,6 +133,7 @@ impl ActionCtx {
         let next = other_station(self.radio.get_station());
         self.radio.set_station(next);
         self.meta.set_station(next);
+        let _ = self.ui_tx.send(UiEvent::Connecting);
     }
 
     pub(super) fn prev_station(&self) {
@@ -138,6 +144,7 @@ impl ActionCtx {
         let prev = other_station(self.radio.get_station());
         self.radio.set_station(prev);
         self.meta.set_station(prev);
+        let _ = self.ui_tx.send(UiEvent::Connecting);
     }
 }
 

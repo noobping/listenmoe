@@ -1,8 +1,25 @@
+use crate::meta::TrackInfo;
+
 use std::{cell::RefCell, rc::Rc};
+
+use super::super::controls::NowPlaying;
 
 pub(super) type CoverFetchResult = (String, Result<Vec<u8>, String>);
 pub(super) type SharedTrack = Rc<RefCell<Option<(String, String)>>>;
-pub(super) type MetadataSetter = Rc<dyn Fn(&str, &str, Option<&str>)>;
+pub(super) type MetadataSetter = Rc<dyn Fn(Option<NowPlaying>)>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UiResetReason {
+    Paused,
+    Stopped,
+}
+
+#[derive(Debug, Clone)]
+pub enum UiEvent {
+    Connecting,
+    Reset(UiResetReason),
+    TrackChanged(TrackInfo),
+}
 
 pub(super) struct RuntimeState {
     current_track: SharedTrack,
@@ -17,8 +34,12 @@ impl RuntimeState {
         }
     }
 
-    pub(super) fn set_track(&self, artist: &str, title: &str) {
-        *self.current_track.borrow_mut() = Some((artist.to_string(), title.to_string()));
+    pub(super) fn set_track(&self, track: &TrackInfo) {
+        *self.current_track.borrow_mut() = Some((track.artist.clone(), track.title.clone()));
+    }
+
+    pub(super) fn clear_track(&self) {
+        *self.current_track.borrow_mut() = None;
     }
 
     pub(super) fn set_latest_cover_url(&mut self, url: Option<&str>) {

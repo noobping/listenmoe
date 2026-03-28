@@ -4,4 +4,4 @@ mod cover;
 mod discord;
 mod viz;
 mod window;
-pub use window::{build_ui, UiOptions};
+pub use window::{build_ui, UiEvent, UiOptions, UiResetReason};

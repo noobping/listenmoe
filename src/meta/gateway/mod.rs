@@ -3,10 +3,12 @@ use std::sync::{atomic::AtomicU64, Arc};
 use std::thread;
 use std::time::Duration;
 
+use crate::listen::PlaybackClock;
 use crate::meta::controller::Control;
 use crate::meta::error::MetaResult;
-use crate::meta::track::TrackInfo;
+use crate::meta::timeline::TimelineStore;
 use crate::station::Station;
+use crate::ui::UiEvent;
 
 mod control;
 mod model;
@@ -18,10 +20,11 @@ use control::{handle_outer_control, OuterLoopAction};
 /// Outer reconnect loop using blocking tungstenite.
 pub fn run_meta_loop(
     station: Station,
-    sender: mpsc::Sender<TrackInfo>,
+    sender: mpsc::Sender<UiEvent>,
     rx: mpsc::Receiver<Control>,
-    lag_ms: Arc<AtomicU64>,
+    clock: Arc<PlaybackClock>,
     ui_sched_id: Arc<AtomicU64>,
+    timeline: Arc<TimelineStore>,
 ) -> MetaResult<()> {
     let mut paused = false;
     let retry_delay = Duration::from_secs(5);
@@ -37,8 +40,9 @@ pub fn run_meta_loop(
             station,
             sender.clone(),
             &rx,
-            lag_ms.clone(),
+            clock.clone(),
             ui_sched_id.clone(),
+            timeline.clone(),
             &mut paused,
         ) {
             Ok(()) => {}
