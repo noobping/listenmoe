@@ -34,6 +34,11 @@ use super::state::{
 const COVER_MAX_SIZE: i32 = 250;
 const APP_NAME: &str = "Listen Moe";
 const VIZ_FRAME_INTERVAL: Duration = Duration::from_millis(16);
+const VIZ_DEAD_ZONE: f32 = 0.002;
+const VIZ_RISE_LERP: f32 = 0.12;
+const VIZ_FALL_LERP: f32 = 0.08;
+const VIZ_MAX_RISE_PER_FRAME: f32 = 0.012;
+const VIZ_MAX_FALL_PER_FRAME: f32 = 0.010;
 
 pub(super) struct UiUpdateLoopCtx {
     pub(super) window: ApplicationWindow,
@@ -211,16 +216,26 @@ pub(super) fn spawn_viz_loop(
     viz_handle: VizHandle,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) {
+    let mut bars = vec![0.0f32; spectrum_bits.len()];
     let mut smooth = vec![0.0f32; spectrum_bits.len()];
 
     glib::timeout_add_local(VIZ_FRAME_INTERVAL, move || {
-        let mut bars = vec![0.0f32; spectrum_bits.len()];
         for i in 0..bars.len() {
             bars[i] = f32::from_bits(spectrum_bits[i].load(Ordering::Relaxed)).clamp(0.0, 1.0);
         }
 
         for i in 0..bars.len() {
-            smooth[i] = smooth[i] * 0.96 + bars[i] * 0.04;
+            let delta = bars[i] - smooth[i];
+            if delta.abs() <= VIZ_DEAD_ZONE {
+                continue;
+            }
+
+            let step = if delta.is_sign_positive() {
+                (delta * VIZ_RISE_LERP).min(VIZ_MAX_RISE_PER_FRAME)
+            } else {
+                (delta * VIZ_FALL_LERP).max(-VIZ_MAX_FALL_PER_FRAME)
+            };
+            smooth[i] = (smooth[i] + step).clamp(0.0, 1.0);
         }
 
         viz_handle.set_values(&smooth);

@@ -1,8 +1,9 @@
 use reqwest::blocking::Client;
-use rodio::{buffer::SamplesBuffer, DeviceSinkBuilder, Player};
+use rodio::{buffer::SamplesBuffer, DeviceSinkBuilder, Player, Source};
 use std::num::{NonZeroU16, NonZeroU32};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::mpsc::RecvTimeoutError;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -31,8 +32,68 @@ enum RunOutcome {
     Reconnect,
 }
 
-const OUTPUT_CHUNK_MS: u64 = 10;
-const OUTPUT_IDLE_SLEEP_MS: u64 = 10;
+const OUTPUT_CHUNK_MS: u64 = 50;
+const OUTPUT_QUEUE_TARGET_CHUNKS: usize = 4;
+const OUTPUT_WAIT_TIMEOUT_MS: u64 = 10;
+
+struct NotifyingSamplesBuffer {
+    inner: SamplesBuffer,
+    chunk_end_ms: u64,
+    done_tx: mpsc::Sender<u64>,
+    did_notify: bool,
+}
+
+impl NotifyingSamplesBuffer {
+    fn new(inner: SamplesBuffer, chunk_end_ms: u64, done_tx: mpsc::Sender<u64>) -> Self {
+        Self {
+            inner,
+            chunk_end_ms,
+            done_tx,
+            did_notify: false,
+        }
+    }
+
+    fn notify_done(&mut self) {
+        if self.did_notify {
+            return;
+        }
+
+        self.did_notify = true;
+        let _ = self.done_tx.send(self.chunk_end_ms);
+    }
+}
+
+impl Iterator for NotifyingSamplesBuffer {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.inner.next() {
+            Some(sample) => Some(sample),
+            None => {
+                self.notify_done();
+                None
+            }
+        }
+    }
+}
+
+impl Source for NotifyingSamplesBuffer {
+    fn current_span_len(&self) -> Option<usize> {
+        self.inner.current_span_len()
+    }
+
+    fn channels(&self) -> rodio::ChannelCount {
+        self.inner.channels()
+    }
+
+    fn sample_rate(&self) -> rodio::SampleRate {
+        self.inner.sample_rate()
+    }
+
+    fn total_duration(&self) -> Option<Duration> {
+        self.inner.total_duration()
+    }
+}
 
 fn build_client() -> Result<Client> {
     Ok(Client::builder()
@@ -105,6 +166,47 @@ fn open_stream(
     Ok((format, track_id, decoder))
 }
 
+fn handle_output_command(
+    cmd: Control,
+    sink: &Player,
+    paused: &mut bool,
+    stop_requested: &Arc<AtomicBool>,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
+) -> Result<bool> {
+    match cmd {
+        Control::Stop => {
+            if is_verbose() {
+                println!("[{}] Stop requested, shutting down stream.", now_string());
+            }
+            stop_requested.store(true, Ordering::Relaxed);
+            sink.stop();
+            clear_spectrum(spectrum_bits);
+            return Ok(true);
+        }
+        Control::Pause => {
+            if !*paused {
+                if is_verbose() {
+                    println!("[{}] Pausing playback.", now_string());
+                }
+                *paused = true;
+                sink.pause();
+            }
+            clear_spectrum(spectrum_bits);
+        }
+        Control::Resume => {
+            if *paused {
+                if is_verbose() {
+                    println!("[{}] Resuming playback.", now_string());
+                }
+                *paused = false;
+                sink.play();
+            }
+        }
+    }
+
+    Ok(false)
+}
+
 fn handle_output_control(
     rx: &mpsc::Receiver<Control>,
     sink: &Player,
@@ -113,35 +215,8 @@ fn handle_output_control(
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<bool> {
     while let Ok(cmd) = rx.try_recv() {
-        match cmd {
-            Control::Stop => {
-                if is_verbose() {
-                    println!("[{}] Stop requested, shutting down stream.", now_string());
-                }
-                stop_requested.store(true, Ordering::Relaxed);
-                sink.stop();
-                clear_spectrum(spectrum_bits);
-                return Ok(true);
-            }
-            Control::Pause => {
-                if !*paused {
-                    if is_verbose() {
-                        println!("[{}] Pausing playback.", now_string());
-                    }
-                    *paused = true;
-                    sink.pause();
-                }
-                clear_spectrum(spectrum_bits);
-            }
-            Control::Resume => {
-                if *paused {
-                    if is_verbose() {
-                        println!("[{}] Resuming playback.", now_string());
-                    }
-                    *paused = false;
-                    sink.play();
-                }
-            }
+        if handle_output_command(cmd, sink, paused, stop_requested, spectrum_bits)? {
+            return Ok(true);
         }
     }
 
@@ -212,8 +287,8 @@ fn run_one_connection(
             &mut decode_state,
             fft_state,
             VizParams {
-                peak_attack: 0.12,
-                peak_release: 0.995,
+                peak_attack: 0.08,
+                peak_release: 0.998,
                 sensitivity: 1.25,
                 curve: 0.75,
             },
@@ -280,7 +355,6 @@ fn run_ingest_loop(
                     use_fallback = !use_fallback;
                 }
                 client = build_client()?;
-                thread::sleep(Duration::from_secs(1));
                 continue;
             }
         };
@@ -340,70 +414,144 @@ pub(super) fn run_listenmoe_stream(
     let sink = Player::connect_new(stream.mixer());
     let mut paused = false;
     let mut fft_state = make_fft_state(spectrum_bits.len());
+    let (chunk_done_tx, chunk_done_rx) = mpsc::channel();
+    let mut queued_cursor_ms = 0u64;
     let viz = VizParams {
-        peak_attack: 0.12,
-        peak_release: 0.995,
+        peak_attack: 0.08,
+        peak_release: 0.998,
         sensitivity: 1.25,
         curve: 0.75,
     };
 
     loop {
+        while let Ok(end_ms) = chunk_done_rx.try_recv() {
+            clock.set_playback_cursor_ms(end_ms);
+        }
+
         if handle_output_control(&rx, &sink, &mut paused, &stop_requested, &spectrum_bits)? {
             break;
         }
 
         if paused {
-            thread::sleep(Duration::from_millis(OUTPUT_IDLE_SLEEP_MS));
+            match rx.recv() {
+                Ok(cmd) => {
+                    if handle_output_command(
+                        cmd,
+                        &sink,
+                        &mut paused,
+                        &stop_requested,
+                        &spectrum_bits,
+                    )? {
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
             continue;
         }
 
-        let chunk = {
-            let store = store.lock().expect("timeshift mutex poisoned");
-            let cursor_ms = store.clamp_cursor_ms(clock.playback_cursor_ms());
-            if cursor_ms != clock.playback_cursor_ms() {
-                clock.set_playback_cursor_ms(cursor_ms);
-            }
+        let mut appended_chunk = false;
 
-            let live_head = store.live_head_ms();
-            if live_head == 0 {
-                None
-            } else if clock.playback_cursor_ms() == 0 {
-                clock.set_playback_cursor_ms(live_head);
-                None
-            } else {
-                match store.read_chunk(clock.playback_cursor_ms(), OUTPUT_CHUNK_MS)? {
-                    Some(chunk) => Some(chunk),
-                    None => {
-                        if let Some(next) =
-                            store.next_available_timestamp_ms(clock.playback_cursor_ms())
-                        {
-                            clock.set_playback_cursor_ms(next);
-                        }
-                        None
+        while !paused && sink.len() < OUTPUT_QUEUE_TARGET_CHUNKS {
+            let chunk = {
+                let store = store.lock().expect("timeshift mutex poisoned");
+                let requested_cursor_ms = if queued_cursor_ms == 0 {
+                    clock.playback_cursor_ms()
+                } else {
+                    queued_cursor_ms
+                };
+                let cursor_ms = store.clamp_cursor_ms(requested_cursor_ms);
+                if cursor_ms != requested_cursor_ms {
+                    queued_cursor_ms = cursor_ms;
+                    if sink.empty() {
+                        clock.set_playback_cursor_ms(cursor_ms);
                     }
                 }
-            }
-        };
 
-        let Some(chunk) = chunk else {
-            thread::sleep(Duration::from_millis(OUTPUT_IDLE_SLEEP_MS));
+                let live_head = store.live_head_ms();
+                if live_head == 0 {
+                    None
+                } else if cursor_ms == 0 {
+                    queued_cursor_ms = live_head;
+                    None
+                } else {
+                    match store.read_chunk(cursor_ms, OUTPUT_CHUNK_MS)? {
+                        Some(chunk) => Some(chunk),
+                        None => {
+                            if let Some(next) = store.next_available_timestamp_ms(cursor_ms) {
+                                queued_cursor_ms = next;
+                                if sink.empty() {
+                                    clock.set_playback_cursor_ms(next);
+                                }
+                            }
+                            None
+                        }
+                    }
+                }
+            };
+
+            let Some(chunk) = chunk else {
+                break;
+            };
+
+            let super::store::StoredPcmChunk {
+                channels,
+                sample_rate,
+                samples,
+                end_ms,
+                ..
+            } = chunk;
+
+            process_samples_for_viz(
+                &samples,
+                channels,
+                sample_rate,
+                true,
+                &spectrum_bits,
+                &mut fft_state,
+                viz,
+            );
+            append_chunk(
+                &sink,
+                channels,
+                sample_rate,
+                samples,
+                end_ms,
+                &chunk_done_tx,
+            );
+            queued_cursor_ms = end_ms;
+            appended_chunk = true;
+        }
+
+        if appended_chunk {
             continue;
-        };
+        }
 
-        append_chunk(&sink, &chunk);
-        process_samples_for_viz(
-            &chunk.samples,
-            chunk.channels,
-            chunk.sample_rate,
-            true,
-            &spectrum_bits,
-            &mut fft_state,
-            viz,
-        );
-        clock.set_playback_cursor_ms(chunk.end_ms);
-
-        let sleep_ms = chunk.end_ms.saturating_sub(chunk.start_ms).max(1);
-        thread::sleep(Duration::from_millis(sleep_ms));
+        if sink.empty() {
+            match rx.recv_timeout(Duration::from_millis(OUTPUT_WAIT_TIMEOUT_MS)) {
+                Ok(cmd) => {
+                    if handle_output_command(
+                        cmd,
+                        &sink,
+                        &mut paused,
+                        &stop_requested,
+                        &spectrum_bits,
+                    )? {
+                        break;
+                    }
+                }
+                Err(RecvTimeoutError::Timeout) => {}
+                Err(RecvTimeoutError::Disconnected) => break,
+            }
+        } else {
+            match chunk_done_rx.recv_timeout(Duration::from_millis(OUTPUT_WAIT_TIMEOUT_MS)) {
+                Ok(end_ms) => {
+                    clock.set_playback_cursor_ms(end_ms);
+                }
+                Err(RecvTimeoutError::Timeout) => {}
+                Err(RecvTimeoutError::Disconnected) => break,
+            }
+        }
     }
 
     stop_requested.store(true, Ordering::Relaxed);
@@ -415,19 +563,27 @@ pub(super) fn run_listenmoe_stream(
     Ok(())
 }
 
-fn append_chunk(sink: &Player, chunk: &super::store::StoredPcmChunk) {
-    let Some(channels) = NonZeroU16::new(chunk.channels) else {
+fn append_chunk(
+    sink: &Player,
+    channels: u16,
+    sample_rate: u32,
+    samples: Vec<f32>,
+    end_ms: u64,
+    chunk_done_tx: &mpsc::Sender<u64>,
+) {
+    let Some(channels) = NonZeroU16::new(channels) else {
         return;
     };
-    let Some(sample_rate) = NonZeroU32::new(chunk.sample_rate) else {
+    let Some(sample_rate) = NonZeroU32::new(sample_rate) else {
         return;
     };
 
-    sink.append(SamplesBuffer::new(
-        channels,
-        sample_rate,
-        chunk.samples.clone(),
-    ));
+    let source = NotifyingSamplesBuffer::new(
+        SamplesBuffer::new(channels, sample_rate, samples),
+        end_ms,
+        chunk_done_tx.clone(),
+    );
+    sink.append(source);
 }
 
 fn now_timestamp_ms() -> u64 {
