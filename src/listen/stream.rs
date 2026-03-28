@@ -1,8 +1,9 @@
 use reqwest::blocking::Client;
-use rodio::{cpal::BufferSize, DeviceSinkBuilder, Player, Source};
+use rodio::{buffer::SamplesBuffer, cpal::BufferSize, queue, DeviceSinkBuilder, Player, Source};
 use std::collections::VecDeque;
+use std::num::{NonZeroU16, NonZeroU32};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Condvar, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -18,7 +19,10 @@ use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
 use super::clock::PlaybackClock;
-use super::store::{clear_root, PlaybackReadCursor, StoredPcmChunk, TimeshiftStore, RETENTION_MS};
+use super::store::{
+    clear_root, compute_chunk_timing, PlaybackReadCursor, StoredPcmChunk, TimeshiftStore,
+    RETENTION_MS,
+};
 use super::viz::{
     apply_spectrum_snapshot, build_spectrum_snapshot, clear_spectrum, decode_and_process_packet,
     make_fft_state, DecodeState, FftVizState, PacketOutcome, VizParams,
@@ -38,12 +42,12 @@ enum OutputCommandResult {
 }
 
 const OUTPUT_CHUNK_MS: u64 = 1_000;
-const OUTPUT_MIN_HEADROOM_MS: u64 = 4_000;
+const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
 const LIVE_BUFFER_MS: u64 = 10 * 60 * 1_000;
-const PLAYBACK_PREFILL_CHUNKS: usize = 6;
-const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 8;
-const OUTPUT_DEVICE_BUFFER_SIZE: u32 = 8_192;
+const PLAYBACK_PREFILL_CHUNKS: usize = 8;
+const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
+const OUTPUT_DEVICE_BUFFER_SIZE: u32 = 16_384;
 
 #[derive(Default)]
 struct PlaybackNotifier {
@@ -79,12 +83,6 @@ enum PlaybackEvent {
 enum PlaybackQueueCloseReason {
     Stopped,
     RestartRequired,
-}
-
-enum QueuePoll {
-    Chunk(QueuedPlaybackChunk),
-    Pending,
-    Closed,
 }
 
 struct QueuedPlaybackChunk {
@@ -150,18 +148,22 @@ impl PlaybackQueue {
         true
     }
 
-    fn try_pop(&self) -> QueuePoll {
-        let mut state = self.state.lock().expect("playback queue poisoned");
-        if let Some(chunk) = state.chunks.pop_front() {
-            self.condvar.notify_all();
-            return QueuePoll::Chunk(chunk);
-        }
+    fn pop_blocking(&self, stop_requested: &Arc<AtomicBool>) -> Option<QueuedPlaybackChunk> {
+        let state = self.state.lock().expect("playback queue poisoned");
+        let mut state = self
+            .condvar
+            .wait_while(state, |state| {
+                state.chunks.is_empty()
+                    && state.close_reason.is_none()
+                    && !stop_requested.load(Ordering::Relaxed)
+            })
+            .expect("playback queue poisoned");
 
-        if state.close_reason.is_some() {
-            QueuePoll::Closed
-        } else {
-            QueuePoll::Pending
+        let chunk = state.chunks.pop_front();
+        if chunk.is_some() {
+            self.condvar.notify_all();
         }
+        chunk
     }
 
     fn close(&self, reason: PlaybackQueueCloseReason) {
@@ -473,147 +475,254 @@ impl LiveChunkBuffer {
     }
 }
 
-struct TimeshiftPlaybackSource {
-    queue: Arc<PlaybackQueue>,
-    clock: Arc<PlaybackClock>,
-    spectrum_bits: Arc<Vec<AtomicU32>>,
-    current_chunk: Option<QueuedPlaybackChunk>,
-    current_index: usize,
-    chunk_announced: bool,
-    silence_samples_remaining: usize,
-    channels: u16,
-    sample_rate: u32,
+struct AbortableSource<I> {
+    inner: I,
+    playback_generation: Arc<AtomicU64>,
+    expected_generation: u64,
 }
 
-impl TimeshiftPlaybackSource {
-    fn new(
-        queue: Arc<PlaybackQueue>,
-        clock: Arc<PlaybackClock>,
-        spectrum_bits: Arc<Vec<AtomicU32>>,
-        current_chunk: QueuedPlaybackChunk,
-    ) -> Self {
-        let channels = current_chunk.audio.channels;
-        let sample_rate = current_chunk.audio.sample_rate;
+impl<I> AbortableSource<I> {
+    fn new(inner: I, playback_generation: Arc<AtomicU64>, expected_generation: u64) -> Self {
         Self {
-            queue,
-            clock,
-            spectrum_bits,
-            current_chunk: Some(current_chunk),
-            current_index: 0,
-            chunk_announced: false,
-            silence_samples_remaining: 0,
-            channels,
-            sample_rate,
-        }
-    }
-
-    fn remaining_samples(&self) -> usize {
-        match &self.current_chunk {
-            Some(current_chunk) => current_chunk
-                .audio
-                .samples
-                .len()
-                .saturating_sub(self.current_index),
-            None => self.silence_samples_remaining,
-        }
-    }
-
-    fn silence_threshold(&self) -> usize {
-        let channels = usize::from(self.channels.max(1));
-        512_usize.div_ceil(channels) * channels
-    }
-
-    fn ensure_chunk_announced(&mut self) -> Option<()> {
-        let current_chunk = self.current_chunk.as_ref()?;
-        if self.chunk_announced {
-            return Some(());
-        }
-
-        apply_spectrum_snapshot(&self.spectrum_bits, &current_chunk.spectrum_snapshot);
-        self.chunk_announced = true;
-        Some(())
-    }
-
-    fn advance_chunk(&mut self) -> Option<()> {
-        if let Some(current_chunk) = &self.current_chunk {
-            self.clock
-                .set_playback_cursor_ms(current_chunk.audio.end_ms);
-        }
-
-        match self.queue.try_pop() {
-            QueuePoll::Chunk(next_chunk) => {
-                self.channels = next_chunk.audio.channels;
-                self.sample_rate = next_chunk.audio.sample_rate;
-                self.current_chunk = Some(next_chunk);
-                self.current_index = 0;
-                self.chunk_announced = false;
-                self.silence_samples_remaining = 0;
-                Some(())
-            }
-            QueuePoll::Pending => {
-                self.current_chunk = None;
-                self.current_index = 0;
-                self.chunk_announced = false;
-                self.silence_samples_remaining = self.silence_threshold();
-                clear_spectrum(&self.spectrum_bits);
-                Some(())
-            }
-            QueuePoll::Closed => {
-                clear_spectrum(&self.spectrum_bits);
-                None
-            }
+            inner,
+            playback_generation,
+            expected_generation,
         }
     }
 }
 
-impl Iterator for TimeshiftPlaybackSource {
-    type Item = f32;
+impl<I> Iterator for AbortableSource<I>
+where
+    I: Source,
+{
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(current_chunk) = self.current_chunk.as_ref() {
-                if self.current_index < current_chunk.audio.samples.len() {
-                    self.ensure_chunk_announced()?;
-                    let sample = current_chunk
-                        .audio
-                        .samples
-                        .get(self.current_index)
-                        .copied()?;
-                    self.current_index += 1;
-                    return Some(sample);
-                }
-            }
-
-            if self.silence_samples_remaining > 0 {
-                self.silence_samples_remaining -= 1;
-                return Some(0.0);
-            }
-
-            self.advance_chunk()?;
+        if self.playback_generation.load(Ordering::Relaxed) != self.expected_generation {
+            return None;
         }
+
+        self.inner.next()
     }
 }
 
-impl Source for TimeshiftPlaybackSource {
+impl<I> Source for AbortableSource<I>
+where
+    I: Source,
+{
     fn current_span_len(&self) -> Option<usize> {
-        match self.remaining_samples() {
-            0 => Some(self.silence_threshold()),
-            remaining => Some(remaining),
-        }
+        self.inner.current_span_len()
     }
 
     fn channels(&self) -> rodio::ChannelCount {
-        rodio::ChannelCount::new(self.channels)
-            .expect("timeshift chunk must have non-zero channels")
+        self.inner.channels()
     }
 
     fn sample_rate(&self) -> rodio::SampleRate {
-        rodio::SampleRate::new(self.sample_rate)
-            .expect("timeshift chunk must have non-zero sample rate")
+        self.inner.sample_rate()
     }
 
     fn total_duration(&self) -> Option<Duration> {
-        None
+        self.inner.total_duration()
+    }
+
+    fn try_seek(&mut self, pos: Duration) -> std::result::Result<(), rodio::source::SeekError> {
+        self.inner.try_seek(pos)
+    }
+}
+
+fn drain_finished_chunks(
+    in_flight: &mut VecDeque<(mpsc::Receiver<()>, u64)>,
+    clock: &Arc<PlaybackClock>,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
+) {
+    loop {
+        let finished = match in_flight.front() {
+            Some((done_rx, _)) => match done_rx.try_recv() {
+                Ok(()) | Err(mpsc::TryRecvError::Disconnected) => true,
+                Err(mpsc::TryRecvError::Empty) => false,
+            },
+            None => false,
+        };
+
+        if !finished {
+            break;
+        }
+
+        let (_, end_ms) = in_flight
+            .pop_front()
+            .expect("front element must exist when marked finished");
+        clock.set_playback_cursor_ms(end_ms);
+        if in_flight.is_empty() {
+            clear_spectrum(spectrum_bits);
+        }
+    }
+}
+
+fn wait_for_oldest_chunk(
+    in_flight: &mut VecDeque<(mpsc::Receiver<()>, u64)>,
+    clock: &Arc<PlaybackClock>,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
+    stop_requested: &Arc<AtomicBool>,
+    playback_generation: &Arc<AtomicU64>,
+    expected_generation: u64,
+) -> bool {
+    loop {
+        if stop_requested.load(Ordering::Relaxed)
+            || playback_generation.load(Ordering::Relaxed) != expected_generation
+        {
+            return false;
+        }
+
+        let result = match in_flight.front() {
+            Some((done_rx, _)) => {
+                done_rx.recv_timeout(Duration::from_millis(OUTPUT_WAIT_TIMEOUT_MS))
+            }
+            None => return true,
+        };
+
+        match result {
+            Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => {
+                let (_, end_ms) = in_flight
+                    .pop_front()
+                    .expect("front element must exist when marked finished");
+                clock.set_playback_cursor_ms(end_ms);
+                if in_flight.is_empty() {
+                    clear_spectrum(spectrum_bits);
+                }
+                return true;
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+        }
+    }
+}
+
+fn run_playback_output(
+    output: Arc<queue::SourcesQueueInput>,
+    playback_queue: Arc<PlaybackQueue>,
+    stop_requested: Arc<AtomicBool>,
+    clock: Arc<PlaybackClock>,
+    spectrum_bits: Arc<Vec<AtomicU32>>,
+    playback_generation: Arc<AtomicU64>,
+    expected_generation: u64,
+) {
+    let mut in_flight = VecDeque::new();
+
+    loop {
+        drain_finished_chunks(&mut in_flight, &clock, &spectrum_bits);
+
+        if stop_requested.load(Ordering::Relaxed)
+            || playback_generation.load(Ordering::Relaxed) != expected_generation
+        {
+            break;
+        }
+
+        if in_flight.len() >= PLAYBACK_QUEUE_MAX_CHUNKS {
+            if !wait_for_oldest_chunk(
+                &mut in_flight,
+                &clock,
+                &spectrum_bits,
+                &stop_requested,
+                &playback_generation,
+                expected_generation,
+            ) {
+                break;
+            }
+            continue;
+        }
+
+        let Some(chunk) = playback_queue.pop_blocking(&stop_requested) else {
+            break;
+        };
+
+        if playback_generation.load(Ordering::Relaxed) != expected_generation {
+            break;
+        }
+
+        let start_ms = chunk.audio.start_ms;
+        let end_ms = chunk.audio.end_ms;
+        let spectrum_snapshot = chunk.spectrum_snapshot;
+        let source_clock = clock.clone();
+        let source_spectrum_bits = spectrum_bits.clone();
+        let source_generation = playback_generation.clone();
+        let mut announced = false;
+
+        let source = SamplesBuffer::new(
+            rodio::ChannelCount::new(chunk.audio.channels)
+                .expect("timeshift chunk must have non-zero channels"),
+            rodio::SampleRate::new(chunk.audio.sample_rate)
+                .expect("timeshift chunk must have non-zero sample rate"),
+            chunk.audio.samples,
+        )
+        .track_position()
+        .periodic_access(Duration::from_millis(20), move |src| {
+            if !announced {
+                apply_spectrum_snapshot(&source_spectrum_bits, &spectrum_snapshot);
+                announced = true;
+            }
+
+            let pos_ms = src.get_pos().as_millis() as u64;
+            source_clock.set_playback_cursor_ms(start_ms.saturating_add(pos_ms).min(end_ms));
+        });
+
+        let done_rx = output.append_with_signal(AbortableSource::new(
+            source,
+            source_generation,
+            expected_generation,
+        ));
+        in_flight.push_back((done_rx, end_ms));
+    }
+
+    output.clear();
+    clear_spectrum(&spectrum_bits);
+}
+
+fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samples: &[f32]) {
+    const CHUNK_MS: u32 = 10;
+
+    let ch = usize::from(channels);
+    if ch == 0 || sample_rate == 0 {
+        return;
+    }
+
+    let Some(channels) = NonZeroU16::new(channels) else {
+        return;
+    };
+    let Some(sample_rate) = NonZeroU32::new(sample_rate) else {
+        return;
+    };
+
+    let frames_per_chunk = (sample_rate.get() * CHUNK_MS / 1000).max(1) as usize;
+    let samples_per_chunk = frames_per_chunk * ch;
+
+    for chunk in samples.chunks(samples_per_chunk) {
+        sink.append(SamplesBuffer::new(channels, sample_rate, chunk.to_vec()));
+    }
+}
+
+fn run_direct_audio_output(
+    mixer: rodio::mixer::Mixer,
+    direct_live_enabled: Arc<AtomicBool>,
+    rx: mpsc::Receiver<DirectAudioCommand>,
+) {
+    let mut sink = Player::connect_new(&mixer);
+
+    while let Ok(cmd) = rx.recv() {
+        match cmd {
+            DirectAudioCommand::Append {
+                channels,
+                sample_rate,
+                samples,
+            } => {
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    append_samples_in_chunks(&sink, channels, sample_rate, samples.as_ref());
+                }
+            }
+            DirectAudioCommand::Clear => {
+                sink.stop();
+                sink = Player::connect_new(&mixer);
+            }
+        }
     }
 }
 
@@ -698,7 +807,6 @@ fn open_stream(
 
 fn handle_output_command(
     cmd: Control,
-    sink: &Player,
     paused: &mut bool,
     stop_requested: &Arc<AtomicBool>,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
@@ -709,7 +817,6 @@ fn handle_output_command(
                 println!("[{}] Stop requested, shutting down stream.", now_string());
             }
             stop_requested.store(true, Ordering::Relaxed);
-            sink.stop();
             clear_spectrum(spectrum_bits);
             return Ok(OutputCommandResult::Stop);
         }
@@ -719,7 +826,6 @@ fn handle_output_command(
                     println!("[{}] Pausing playback.", now_string());
                 }
                 *paused = true;
-                sink.stop();
                 clear_spectrum(spectrum_bits);
                 return Ok(OutputCommandResult::RestartPlayback);
             }
@@ -731,7 +837,6 @@ fn handle_output_command(
                     println!("[{}] Resuming playback.", now_string());
                 }
                 *paused = false;
-                sink.play();
                 return Ok(OutputCommandResult::RestartPlayback);
             }
         }
@@ -742,13 +847,12 @@ fn handle_output_command(
 
 fn handle_output_control(
     rx: &mpsc::Receiver<Control>,
-    sink: &Player,
     paused: &mut bool,
     stop_requested: &Arc<AtomicBool>,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<OutputCommandResult> {
     while let Ok(cmd) = rx.try_recv() {
-        match handle_output_command(cmd, sink, paused, stop_requested, spectrum_bits)? {
+        match handle_output_command(cmd, paused, stop_requested, spectrum_bits)? {
             OutputCommandResult::Continue => {}
             result => return Ok(result),
         }
@@ -759,15 +863,24 @@ fn handle_output_control(
 
 struct PlaybackStart {
     queue: Arc<PlaybackQueue>,
-    source: TimeshiftPlaybackSource,
-    worker_handle: thread::JoinHandle<()>,
+    prefetch_handle: thread::JoinHandle<()>,
+    output_handle: thread::JoinHandle<()>,
+}
+
+enum DirectAudioCommand {
+    Append {
+        channels: u16,
+        sample_rate: u32,
+        samples: Arc<[f32]>,
+    },
+    Clear,
 }
 
 enum StoreCommand {
     Append {
         sample_rate: u32,
         channels: u16,
-        samples: Vec<f32>,
+        samples: Arc<[f32]>,
         now_ms: u64,
     },
 }
@@ -896,6 +1009,9 @@ fn try_start_live_playback(
     cursor_ms: u64,
     clock: Arc<PlaybackClock>,
     stop_requested: Arc<AtomicBool>,
+    output: Arc<queue::SourcesQueueInput>,
+    playback_generation: Arc<AtomicU64>,
+    expected_generation: u64,
     spectrum_bits: Arc<Vec<AtomicU32>>,
     event_tx: mpsc::Sender<PlaybackEvent>,
 ) -> Option<PlaybackStart> {
@@ -909,6 +1025,7 @@ fn try_start_live_playback(
         QueuedPlaybackChunk::from_audio(initial_audio, &mut fft_state, playback_viz_params());
 
     let queue = Arc::new(PlaybackQueue::default());
+    queue.push_prefilled(initial_chunk);
     for _ in 0..PLAYBACK_PREFILL_CHUNKS.saturating_sub(1) {
         let Some(audio) = live_buffer.read_chunk_from(&mut cursor, OUTPUT_CHUNK_MS) else {
             break;
@@ -920,8 +1037,8 @@ fn try_start_live_playback(
         ));
     }
 
-    let source = TimeshiftPlaybackSource::new(queue.clone(), clock, spectrum_bits, initial_chunk);
-    let worker_handle = {
+    let prefetch_stop_requested = stop_requested.clone();
+    let prefetch_handle = {
         let live_buffer = live_buffer.clone();
         let queue = queue.clone();
         let event_tx = event_tx.clone();
@@ -930,7 +1047,7 @@ fn try_start_live_playback(
                 live_buffer,
                 queue,
                 event_tx,
-                stop_requested,
+                prefetch_stop_requested,
                 cursor,
                 expected_channels,
                 expected_sample_rate,
@@ -938,11 +1055,29 @@ fn try_start_live_playback(
             )
         })
     };
+    let output_handle = {
+        let queue = queue.clone();
+        let stop_requested = stop_requested.clone();
+        let clock = clock.clone();
+        let spectrum_bits = spectrum_bits.clone();
+        let playback_generation = playback_generation.clone();
+        thread::spawn(move || {
+            run_playback_output(
+                output,
+                queue,
+                stop_requested,
+                clock,
+                spectrum_bits,
+                playback_generation,
+                expected_generation,
+            )
+        })
+    };
 
     Some(PlaybackStart {
         queue,
-        source,
-        worker_handle,
+        prefetch_handle,
+        output_handle,
     })
 }
 
@@ -952,11 +1087,14 @@ fn try_start_playback(
     notifier: Arc<PlaybackNotifier>,
     clock: Arc<PlaybackClock>,
     stop_requested: Arc<AtomicBool>,
+    output: Arc<queue::SourcesQueueInput>,
+    playback_generation: Arc<AtomicU64>,
+    expected_generation: u64,
     spectrum_bits: Arc<Vec<AtomicU32>>,
     event_tx: mpsc::Sender<PlaybackEvent>,
 ) -> Result<Option<PlaybackStart>> {
-    let mut guard = store.lock().expect("timeshift mutex poisoned");
-    let live_head = guard.live_head_ms();
+    let guard = store.lock().expect("timeshift mutex poisoned");
+    let live_head = clock.live_head_ms();
     let floor_ms = guard.earliest_timestamp_ms();
     if live_head == 0 {
         return Ok(None);
@@ -988,6 +1126,9 @@ fn try_start_playback(
             cursor_ms,
             clock.clone(),
             stop_requested.clone(),
+            output.clone(),
+            playback_generation.clone(),
+            expected_generation,
             spectrum_bits.clone(),
             event_tx.clone(),
         ) {
@@ -1011,7 +1152,8 @@ fn try_start_playback(
         QueuedPlaybackChunk::from_audio(initial_audio, &mut fft_state, playback_viz_params());
 
     let queue = Arc::new(PlaybackQueue::default());
-    for _ in 0..PLAYBACK_PREFILL_CHUNKS {
+    queue.push_prefilled(initial_chunk);
+    for _ in 0..PLAYBACK_PREFILL_CHUNKS.saturating_sub(1) {
         match read_prefetched_chunk(
             store,
             &cursor,
@@ -1031,8 +1173,8 @@ fn try_start_playback(
         }
     }
 
-    let source = TimeshiftPlaybackSource::new(queue.clone(), clock, spectrum_bits, initial_chunk);
-    let worker_handle = {
+    let prefetch_stop_requested = stop_requested.clone();
+    let prefetch_handle = {
         let store = store.clone();
         let notifier = notifier.clone();
         let queue = queue.clone();
@@ -1043,7 +1185,7 @@ fn try_start_playback(
                 notifier,
                 queue,
                 event_tx,
-                stop_requested,
+                prefetch_stop_requested,
                 cursor,
                 expected_channels,
                 expected_sample_rate,
@@ -1051,37 +1193,117 @@ fn try_start_playback(
             )
         })
     };
+    let output_handle = {
+        let queue = queue.clone();
+        let stop_requested = stop_requested.clone();
+        let clock = clock.clone();
+        let spectrum_bits = spectrum_bits.clone();
+        let playback_generation = playback_generation.clone();
+        thread::spawn(move || {
+            run_playback_output(
+                output,
+                queue,
+                stop_requested,
+                clock,
+                spectrum_bits,
+                playback_generation,
+                expected_generation,
+            )
+        })
+    };
 
     Ok(Some(PlaybackStart {
         queue,
-        source,
-        worker_handle,
+        prefetch_handle,
+        output_handle,
     }))
 }
 
 fn teardown_playback_pipeline(
-    sink: &Player,
+    output: &Arc<queue::SourcesQueueInput>,
+    playback_generation: &Arc<AtomicU64>,
     live_buffer: &Arc<LiveChunkBuffer>,
     notifier: &Arc<PlaybackNotifier>,
     playback_queue: &mut Option<Arc<PlaybackQueue>>,
-    playback_worker: &mut Option<thread::JoinHandle<()>>,
+    prefetch_worker: &mut Option<thread::JoinHandle<()>>,
+    output_worker: &mut Option<thread::JoinHandle<()>>,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) {
-    sink.stop();
+    playback_generation.fetch_add(1, Ordering::Relaxed);
+    output.clear();
     if let Some(queue) = playback_queue.take() {
         queue.close(PlaybackQueueCloseReason::Stopped);
     }
     live_buffer.wake();
     notifier.notify();
-    if let Some(handle) = playback_worker.take() {
+    if let Some(handle) = prefetch_worker.take() {
+        let _ = handle.join();
+    }
+    if let Some(handle) = output_worker.take() {
         let _ = handle.join();
     }
     clear_spectrum(spectrum_bits);
 }
 
+fn run_live_relay(
+    live_buffer: Arc<LiveChunkBuffer>,
+    clock: Arc<PlaybackClock>,
+    direct_live_enabled: Arc<AtomicBool>,
+    stop_requested: Arc<AtomicBool>,
+    rx: mpsc::Receiver<StoreCommand>,
+) -> Result<()> {
+    let mut live_head_ms = 0;
+
+    while let Ok(cmd) = rx.recv() {
+        match cmd {
+            StoreCommand::Append {
+                sample_rate,
+                channels,
+                samples,
+                now_ms,
+            } => {
+                let Some((start_ms, end_ms)) = compute_chunk_timing(
+                    live_head_ms,
+                    sample_rate,
+                    channels,
+                    samples.len(),
+                    now_ms,
+                ) else {
+                    continue;
+                };
+
+                live_head_ms = end_ms;
+                clock.set_live_head_ms(end_ms);
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    clock.set_playback_cursor_ms(end_ms);
+                }
+                live_buffer.push(StoredPcmChunk {
+                    channels,
+                    sample_rate,
+                    samples: samples.as_ref().to_vec(),
+                    start_ms,
+                    end_ms,
+                });
+
+                if !direct_live_enabled.load(Ordering::Relaxed) && clock.playback_cursor_ms() == 0 {
+                    clock.set_playback_cursor_ms(buffered_playback_start_ms(
+                        end_ms,
+                        live_buffer.earliest_ms(),
+                    ));
+                }
+            }
+        }
+
+        if stop_requested.load(Ordering::Relaxed) {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
 fn run_store_writer(
     store: Arc<Mutex<TimeshiftStore>>,
-    live_buffer: Arc<LiveChunkBuffer>,
     clock: Arc<PlaybackClock>,
     notifier: Arc<PlaybackNotifier>,
     stop_requested: Arc<AtomicBool>,
@@ -1096,26 +1318,17 @@ fn run_store_writer(
                 now_ms,
             } => {
                 let mut store = store.lock().expect("timeshift mutex poisoned");
-                let (start_ms, end_ms) =
-                    store.append_pcm(sample_rate, channels, &samples, now_ms)?;
-                clock.set_live_head_ms(end_ms);
-
+                let (_start_ms, end_ms) =
+                    store.append_pcm(sample_rate, channels, samples.as_ref(), now_ms)?;
                 let floor = store.earliest_timestamp_ms();
-                let live_head = store.live_head_ms();
                 drop(store);
 
-                live_buffer.push(StoredPcmChunk {
-                    channels,
-                    sample_rate,
-                    samples,
-                    start_ms,
-                    end_ms,
-                });
-
-                if clock.playback_cursor_ms() == 0 {
-                    clock.set_playback_cursor_ms(buffered_playback_start_ms(live_head, floor));
-                } else if let Some(floor) = floor {
-                    clock.clamp_playback_floor(floor);
+                if clock.playback_cursor_ms() != 0 {
+                    if let Some(floor) = floor {
+                        clock.clamp_playback_floor(floor);
+                    }
+                } else {
+                    clock.set_playback_cursor_ms(buffered_playback_start_ms(end_ms, floor));
                 }
 
                 notifier.notify();
@@ -1137,6 +1350,9 @@ fn run_one_connection(
     decoder_opts: &DecoderOptions,
     stop_requested: &Arc<AtomicBool>,
     store_tx: &mpsc::Sender<StoreCommand>,
+    live_tx: &mpsc::Sender<StoreCommand>,
+    direct_tx: &mpsc::Sender<DirectAudioCommand>,
+    direct_live_enabled: &Arc<AtomicBool>,
     fft_state: &mut FftVizState,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<RunOutcome> {
@@ -1168,9 +1384,15 @@ fn run_one_connection(
                 *decoder =
                     symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
                 decode_state.sample_buf = None;
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                }
                 continue;
             }
             Err(err) => {
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                }
                 eprintln!("Error reading packet: {err:?}");
                 return Ok(RunOutcome::Reconnect);
             }
@@ -1197,16 +1419,45 @@ fn run_one_connection(
         match outcome {
             PacketOutcome::Continue => {}
             PacketOutcome::Reconnect => return Ok(RunOutcome::Reconnect),
-            PacketOutcome::SpecChanged => continue,
+            PacketOutcome::SpecChanged => {
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                }
+                continue;
+            }
         }
 
         if let Some((channels, sample_rate, samples)) = audio {
+            let now_ms = now_timestamp_ms();
+            let samples: Arc<[f32]> = samples.into();
             if store_tx
                 .send(StoreCommand::Append {
                     sample_rate,
                     channels,
+                    samples: samples.clone(),
+                    now_ms,
+                })
+                .is_err()
+            {
+                return Ok(RunOutcome::Stop);
+            }
+            if direct_live_enabled.load(Ordering::Relaxed)
+                && direct_tx
+                    .send(DirectAudioCommand::Append {
+                        channels,
+                        sample_rate,
+                        samples: samples.clone(),
+                    })
+                    .is_err()
+            {
+                return Ok(RunOutcome::Stop);
+            }
+            if live_tx
+                .send(StoreCommand::Append {
+                    sample_rate,
+                    channels,
                     samples,
-                    now_ms: now_timestamp_ms(),
+                    now_ms,
                 })
                 .is_err()
             {
@@ -1220,6 +1471,9 @@ fn run_ingest_loop(
     station: Station,
     stop_requested: Arc<AtomicBool>,
     store_tx: mpsc::Sender<StoreCommand>,
+    live_tx: mpsc::Sender<StoreCommand>,
+    direct_tx: mpsc::Sender<DirectAudioCommand>,
+    direct_live_enabled: Arc<AtomicBool>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) -> Result<()> {
     let primary = station.stream_url().to_string();
@@ -1266,6 +1520,9 @@ fn run_ingest_loop(
             &decoder_opts,
             &stop_requested,
             &store_tx,
+            &live_tx,
+            &direct_tx,
+            &direct_live_enabled,
             &mut fft_state,
             &spectrum_bits,
         )? {
@@ -1298,23 +1555,39 @@ pub(super) fn run_listenmoe_stream(
     clock.reset();
 
     let stop_requested = Arc::new(AtomicBool::new(false));
+    let direct_live_enabled = Arc::new(AtomicBool::new(true));
     let (store_tx, store_rx) = mpsc::channel();
+    let (live_tx, live_rx) = mpsc::channel();
+    let (direct_tx, direct_rx) = mpsc::channel();
+    let live_handle = {
+        let live_buffer = live_buffer.clone();
+        let clock = clock.clone();
+        let direct_live_enabled = direct_live_enabled.clone();
+        let stop_requested = stop_requested.clone();
+        thread::spawn(move || {
+            let relay_stop_requested = stop_requested.clone();
+            if let Err(err) = run_live_relay(
+                live_buffer,
+                clock,
+                direct_live_enabled,
+                relay_stop_requested,
+                live_rx,
+            ) {
+                eprintln!("live relay error: {err}");
+                stop_requested.store(true, Ordering::Relaxed);
+            }
+        })
+    };
     let store_handle = {
         let store = store.clone();
-        let live_buffer = live_buffer.clone();
         let clock = clock.clone();
         let notifier = notifier.clone();
         let stop_requested = stop_requested.clone();
         thread::spawn(move || {
             let writer_stop_requested = stop_requested.clone();
-            if let Err(err) = run_store_writer(
-                store,
-                live_buffer,
-                clock,
-                notifier,
-                writer_stop_requested,
-                store_rx,
-            ) {
+            if let Err(err) =
+                run_store_writer(store, clock, notifier, writer_stop_requested, store_rx)
+            {
                 eprintln!("timeshift writer error: {err}");
                 stop_requested.store(true, Ordering::Relaxed);
             }
@@ -1323,8 +1596,21 @@ pub(super) fn run_listenmoe_stream(
     let ingest_handle = {
         let stop_requested = stop_requested.clone();
         let store_tx = store_tx.clone();
+        let live_tx = live_tx.clone();
+        let direct_tx = direct_tx.clone();
+        let direct_live_enabled = direct_live_enabled.clone();
         let spectrum_bits = spectrum_bits.clone();
-        thread::spawn(move || run_ingest_loop(station, stop_requested, store_tx, spectrum_bits))
+        thread::spawn(move || {
+            run_ingest_loop(
+                station,
+                stop_requested,
+                store_tx,
+                live_tx,
+                direct_tx,
+                direct_live_enabled,
+                spectrum_bits,
+            )
+        })
     };
 
     let mut stream = DeviceSinkBuilder::from_default_device()
@@ -1335,25 +1621,41 @@ pub(super) fn run_listenmoe_stream(
         })
         .or_else(|_| DeviceSinkBuilder::open_default_sink())?;
     stream.log_on_drop(false);
-    let sink = Player::connect_new(stream.mixer());
+    let direct_handle = {
+        let mixer = stream.mixer().clone();
+        let direct_live_enabled = direct_live_enabled.clone();
+        thread::spawn(move || run_direct_audio_output(mixer, direct_live_enabled, direct_rx))
+    };
+    let (output, output_source) = queue::queue(true);
+    stream.mixer().add(output_source);
+    let playback_generation = Arc::new(AtomicU64::new(1));
     let (playback_event_tx, playback_event_rx) = mpsc::channel();
     let mut playback_queue = None;
-    let mut playback_worker = None;
+    let mut playback_prefetch_worker = None;
+    let mut playback_output_worker = None;
     let mut paused = false;
     let mut source_started = false;
 
     loop {
-        match handle_output_control(&rx, &sink, &mut paused, &stop_requested, &spectrum_bits)? {
+        match handle_output_control(&rx, &mut paused, &stop_requested, &spectrum_bits)? {
             OutputCommandResult::Continue => {}
-            OutputCommandResult::Stop => break,
+            OutputCommandResult::Stop => {
+                direct_live_enabled.store(false, Ordering::Relaxed);
+                let _ = direct_tx.send(DirectAudioCommand::Clear);
+                break;
+            }
             OutputCommandResult::RestartPlayback => {
+                direct_live_enabled.store(false, Ordering::Relaxed);
+                let _ = direct_tx.send(DirectAudioCommand::Clear);
                 source_started = false;
                 teardown_playback_pipeline(
-                    &sink,
+                    &output,
+                    &playback_generation,
                     &live_buffer,
                     &notifier,
                     &mut playback_queue,
-                    &mut playback_worker,
+                    &mut playback_prefetch_worker,
+                    &mut playback_output_worker,
                     &spectrum_bits,
                 );
             }
@@ -1367,35 +1669,40 @@ pub(super) fn run_listenmoe_stream(
                 PlaybackEvent::RestartRequired => {
                     source_started = false;
                     teardown_playback_pipeline(
-                        &sink,
+                        &output,
+                        &playback_generation,
                         &live_buffer,
                         &notifier,
                         &mut playback_queue,
-                        &mut playback_worker,
+                        &mut playback_prefetch_worker,
+                        &mut playback_output_worker,
                         &spectrum_bits,
                     );
                 }
             }
         }
 
-        if !paused && !source_started {
+        if !paused && !source_started && !direct_live_enabled.load(Ordering::Relaxed) {
             if let Some(playback) = try_start_playback(
                 &store,
                 &live_buffer,
                 notifier.clone(),
                 clock.clone(),
                 stop_requested.clone(),
+                output.clone(),
+                playback_generation.clone(),
+                playback_generation.load(Ordering::Relaxed),
                 spectrum_bits.clone(),
                 playback_event_tx.clone(),
             )? {
                 let PlaybackStart {
                     queue,
-                    source,
-                    worker_handle,
+                    prefetch_handle,
+                    output_handle,
                 } = playback;
                 playback_queue = Some(queue);
-                sink.append(source);
-                playback_worker = Some(worker_handle);
+                playback_prefetch_worker = Some(prefetch_handle);
+                playback_output_worker = Some(output_handle);
                 source_started = true;
                 continue;
             }
@@ -1403,23 +1710,25 @@ pub(super) fn run_listenmoe_stream(
 
         match rx.recv_timeout(Duration::from_millis(OUTPUT_WAIT_TIMEOUT_MS)) {
             Ok(cmd) => {
-                match handle_output_command(
-                    cmd,
-                    &sink,
-                    &mut paused,
-                    &stop_requested,
-                    &spectrum_bits,
-                )? {
+                match handle_output_command(cmd, &mut paused, &stop_requested, &spectrum_bits)? {
                     OutputCommandResult::Continue => {}
-                    OutputCommandResult::Stop => break,
+                    OutputCommandResult::Stop => {
+                        direct_live_enabled.store(false, Ordering::Relaxed);
+                        let _ = direct_tx.send(DirectAudioCommand::Clear);
+                        break;
+                    }
                     OutputCommandResult::RestartPlayback => {
+                        direct_live_enabled.store(false, Ordering::Relaxed);
+                        let _ = direct_tx.send(DirectAudioCommand::Clear);
                         source_started = false;
                         teardown_playback_pipeline(
-                            &sink,
+                            &output,
+                            &playback_generation,
                             &live_buffer,
                             &notifier,
                             &mut playback_queue,
-                            &mut playback_worker,
+                            &mut playback_prefetch_worker,
+                            &mut playback_output_worker,
                             &spectrum_bits,
                         );
                     }
@@ -1432,16 +1741,22 @@ pub(super) fn run_listenmoe_stream(
 
     stop_requested.store(true, Ordering::Relaxed);
     drop(store_tx);
+    drop(live_tx);
+    drop(direct_tx);
     teardown_playback_pipeline(
-        &sink,
+        &output,
+        &playback_generation,
         &live_buffer,
         &notifier,
         &mut playback_queue,
-        &mut playback_worker,
+        &mut playback_prefetch_worker,
+        &mut playback_output_worker,
         &spectrum_bits,
     );
     let _ = ingest_handle.join();
+    let _ = live_handle.join();
     let _ = store_handle.join();
+    let _ = direct_handle.join();
     store.lock().expect("timeshift mutex poisoned").clear()?;
     clear_root(&root)?;
 

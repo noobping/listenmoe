@@ -10,6 +10,41 @@ const GAP_THRESHOLD_MS: u64 = 1_500;
 const MAX_SEGMENT_BYTES: u64 = 512 * 1024 * 1024;
 const BYTES_PER_SAMPLE: u64 = 4;
 
+pub fn compute_chunk_timing(
+    previous_live_head_ms: u64,
+    sample_rate: u32,
+    channels: u16,
+    sample_count: usize,
+    now_ms: u64,
+) -> Option<(u64, u64)> {
+    if sample_count == 0 || sample_rate == 0 || channels == 0 {
+        return None;
+    }
+
+    let frames = (sample_count / usize::from(channels)) as u64;
+    if frames == 0 {
+        return None;
+    }
+
+    let duration_ms = ((frames.saturating_mul(1000)) / u64::from(sample_rate)).max(1);
+    let expected_start_ms = if previous_live_head_ms == 0 {
+        now_ms.saturating_sub(duration_ms)
+    } else {
+        previous_live_head_ms
+    };
+    let wall_start_ms = now_ms.saturating_sub(duration_ms);
+    let start_ms = if previous_live_head_ms != 0
+        && wall_start_ms > expected_start_ms.saturating_add(GAP_THRESHOLD_MS)
+    {
+        wall_start_ms
+    } else {
+        expected_start_ms
+    };
+    let end_ms = start_ms.saturating_add(duration_ms);
+
+    Some((start_ms, end_ms))
+}
+
 #[derive(Debug, Clone)]
 pub struct StoredPcmChunk {
     pub channels: u16,
@@ -78,30 +113,17 @@ impl TimeshiftStore {
         samples: &[f32],
         now_ms: u64,
     ) -> Result<(u64, u64)> {
-        if samples.is_empty() || sample_rate == 0 || channels == 0 {
+        let Some((start_ms, end_ms)) = compute_chunk_timing(
+            self.live_head_ms,
+            sample_rate,
+            channels,
+            samples.len(),
+            now_ms,
+        ) else {
             return Ok((self.live_head_ms, self.live_head_ms));
-        }
+        };
 
         let frames = (samples.len() / usize::from(channels)) as u64;
-        if frames == 0 {
-            return Ok((self.live_head_ms, self.live_head_ms));
-        }
-
-        let duration_ms = ((frames.saturating_mul(1000)) / u64::from(sample_rate)).max(1);
-        let expected_start_ms = if self.live_head_ms == 0 {
-            now_ms.saturating_sub(duration_ms)
-        } else {
-            self.live_head_ms
-        };
-        let wall_start_ms = now_ms.saturating_sub(duration_ms);
-        let start_ms = if self.live_head_ms != 0
-            && wall_start_ms > expected_start_ms.saturating_add(GAP_THRESHOLD_MS)
-        {
-            wall_start_ms
-        } else {
-            expected_start_ms
-        };
-        let end_ms = start_ms.saturating_add(duration_ms);
 
         self.ensure_active_segment(sample_rate, channels, start_ms)?;
 
