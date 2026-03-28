@@ -1,5 +1,5 @@
 use reqwest::blocking::Client;
-use rodio::{DeviceSinkBuilder, Player, Source};
+use rodio::{cpal::BufferSize, DeviceSinkBuilder, Player, Source};
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -43,6 +43,7 @@ const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
 const LIVE_BUFFER_MS: u64 = 10 * 60 * 1_000;
 const PLAYBACK_PREFILL_CHUNKS: usize = 6;
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 8;
+const OUTPUT_DEVICE_BUFFER_SIZE: u32 = 8_192;
 
 #[derive(Default)]
 struct PlaybackNotifier {
@@ -78,6 +79,12 @@ enum PlaybackEvent {
 enum PlaybackQueueCloseReason {
     Stopped,
     RestartRequired,
+}
+
+enum QueuePoll {
+    Chunk(QueuedPlaybackChunk),
+    Pending,
+    Closed,
 }
 
 struct QueuedPlaybackChunk {
@@ -143,22 +150,18 @@ impl PlaybackQueue {
         true
     }
 
-    fn pop_blocking(&self, stop_requested: &Arc<AtomicBool>) -> Option<QueuedPlaybackChunk> {
-        let state = self.state.lock().expect("playback queue poisoned");
-        let mut state = self
-            .condvar
-            .wait_while(state, |state| {
-                state.chunks.is_empty()
-                    && state.close_reason.is_none()
-                    && !stop_requested.load(Ordering::Relaxed)
-            })
-            .expect("playback queue poisoned");
-
-        let chunk = state.chunks.pop_front();
-        if chunk.is_some() {
+    fn try_pop(&self) -> QueuePoll {
+        let mut state = self.state.lock().expect("playback queue poisoned");
+        if let Some(chunk) = state.chunks.pop_front() {
             self.condvar.notify_all();
+            return QueuePoll::Chunk(chunk);
         }
-        chunk
+
+        if state.close_reason.is_some() {
+            QueuePoll::Closed
+        } else {
+            QueuePoll::Pending
+        }
     }
 
     fn close(&self, reason: PlaybackQueueCloseReason) {
@@ -170,8 +173,22 @@ impl PlaybackQueue {
 
 #[derive(Default)]
 struct LiveChunkBufferState {
-    chunks: VecDeque<StoredPcmChunk>,
+    chunks: VecDeque<LiveChunkEntry>,
     generation: u64,
+    next_chunk_id: u64,
+}
+
+#[derive(Debug, Clone)]
+struct LiveChunkEntry {
+    id: u64,
+    audio: StoredPcmChunk,
+}
+
+#[derive(Debug, Clone)]
+struct LiveReadCursor {
+    chunk_id: u64,
+    sample_offset: usize,
+    position_ms: u64,
 }
 
 #[derive(Default)]
@@ -184,14 +201,19 @@ impl LiveChunkBuffer {
     fn push(&self, chunk: StoredPcmChunk) {
         let mut state = self.state.lock().expect("live chunk buffer poisoned");
         let live_head_ms = chunk.end_ms;
-        state.chunks.push_back(chunk);
+        let chunk_id = state.next_chunk_id;
+        state.next_chunk_id = state.next_chunk_id.saturating_add(1);
+        state.chunks.push_back(LiveChunkEntry {
+            id: chunk_id,
+            audio: chunk,
+        });
 
         let prune_before = live_head_ms.saturating_sub(LIVE_BUFFER_MS);
         while state.chunks.len() > 1 {
             let should_remove = state
                 .chunks
                 .front()
-                .map(|chunk| chunk.end_ms <= prune_before)
+                .map(|chunk| chunk.audio.end_ms <= prune_before)
                 .unwrap_or(false);
             if !should_remove {
                 break;
@@ -209,17 +231,176 @@ impl LiveChunkBuffer {
             .expect("live chunk buffer poisoned")
             .chunks
             .front()
-            .map(|chunk| chunk.start_ms)
+            .map(|chunk| chunk.audio.start_ms)
     }
 
-    fn snapshot_from(&self, cursor_ms: u64) -> (Vec<StoredPcmChunk>, u64) {
+    fn cursor_for_ms(&self, cursor_ms: u64) -> Option<LiveReadCursor> {
         let state = self.state.lock().expect("live chunk buffer poisoned");
-        let chunks = state
+        let entry = state
             .chunks
             .iter()
-            .filter_map(|chunk| slice_chunk_from_ms(chunk, cursor_ms))
-            .collect();
-        (chunks, state.generation)
+            .find(|entry| cursor_ms < entry.audio.end_ms && cursor_ms >= entry.audio.start_ms)
+            .or_else(|| {
+                state
+                    .chunks
+                    .iter()
+                    .find(|entry| entry.audio.end_ms > cursor_ms)
+            })?;
+
+        let channels = usize::from(entry.audio.channels);
+        if channels == 0 || entry.audio.sample_rate == 0 {
+            return None;
+        }
+
+        let total_frames = entry.audio.samples.len() / channels;
+        if total_frames == 0 {
+            return None;
+        }
+
+        let frame_offset = if cursor_ms <= entry.audio.start_ms {
+            0
+        } else {
+            (((cursor_ms - entry.audio.start_ms)
+                .saturating_mul(u64::from(entry.audio.sample_rate)))
+                / 1_000)
+                .min(total_frames as u64)
+        } as usize;
+
+        let sample_offset = frame_offset.saturating_mul(channels);
+        let position_ms = entry.audio.start_ms.saturating_add(
+            (u64::try_from(frame_offset)
+                .unwrap_or(u64::MAX)
+                .saturating_mul(1_000))
+                / u64::from(entry.audio.sample_rate),
+        );
+
+        Some(LiveReadCursor {
+            chunk_id: entry.id,
+            sample_offset,
+            position_ms,
+        })
+    }
+
+    fn read_chunk_from(
+        &self,
+        cursor: &mut LiveReadCursor,
+        max_duration_ms: u64,
+    ) -> Option<StoredPcmChunk> {
+        let state = self.state.lock().expect("live chunk buffer poisoned");
+        let (mut entry_index, entry, mut sample_offset) = Self::resolve_cursor(&state, cursor)?;
+
+        let channels = usize::from(entry.audio.channels);
+        if channels == 0 || entry.audio.sample_rate == 0 {
+            return None;
+        }
+
+        let sample_rate = u64::from(entry.audio.sample_rate);
+        let max_frames = usize::try_from(((max_duration_ms.max(1) * sample_rate) / 1_000).max(1))
+            .unwrap_or(usize::MAX);
+        let frame_offset = sample_offset / channels;
+        let chunk_start_ms = entry.audio.start_ms.saturating_add(
+            (u64::try_from(frame_offset)
+                .unwrap_or(u64::MAX)
+                .saturating_mul(1_000))
+                / sample_rate,
+        );
+        let mut merged = StoredPcmChunk {
+            channels: entry.audio.channels,
+            sample_rate: entry.audio.sample_rate,
+            samples: Vec::new(),
+            start_ms: chunk_start_ms,
+            end_ms: chunk_start_ms,
+        };
+
+        loop {
+            let current = state.chunks.get(entry_index)?;
+            if current.audio.channels != merged.channels
+                || current.audio.sample_rate != merged.sample_rate
+                || (!merged.samples.is_empty() && current.audio.start_ms != merged.end_ms)
+            {
+                cursor.chunk_id = current.id;
+                cursor.sample_offset = 0;
+                cursor.position_ms = current.audio.start_ms;
+                break;
+            }
+
+            let total_frames = current.audio.samples.len() / channels;
+            let entry_frame_offset = sample_offset / channels;
+            let frames_remaining = total_frames.saturating_sub(entry_frame_offset);
+            let merged_frames = merged.samples.len() / channels;
+            let frames_needed = max_frames.saturating_sub(merged_frames);
+
+            if frames_remaining == 0 {
+                if let Some(next) = state.chunks.get(entry_index + 1) {
+                    cursor.chunk_id = next.id;
+                    cursor.sample_offset = 0;
+                    cursor.position_ms = next.audio.start_ms;
+                    entry_index = entry_index.saturating_add(1);
+                    sample_offset = 0;
+                    continue;
+                } else {
+                    cursor.chunk_id = current.id;
+                    cursor.sample_offset = current.audio.samples.len();
+                    cursor.position_ms = current.audio.end_ms;
+                }
+                break;
+            }
+
+            if frames_needed == 0 {
+                cursor.chunk_id = current.id;
+                cursor.sample_offset = sample_offset;
+                cursor.position_ms = merged.end_ms;
+                break;
+            }
+
+            let frames_to_take = frames_remaining.min(frames_needed);
+            let start_sample = entry_frame_offset.saturating_mul(channels);
+            let end_sample = start_sample.saturating_add(frames_to_take.saturating_mul(channels));
+            merged
+                .samples
+                .extend_from_slice(&current.audio.samples[start_sample..end_sample]);
+
+            let next_frame_offset = entry_frame_offset.saturating_add(frames_to_take);
+            merged.end_ms = current.audio.start_ms.saturating_add(
+                (u64::try_from(next_frame_offset)
+                    .unwrap_or(u64::MAX)
+                    .saturating_mul(1_000))
+                    / sample_rate,
+            );
+
+            if next_frame_offset < total_frames {
+                cursor.chunk_id = current.id;
+                cursor.sample_offset = next_frame_offset.saturating_mul(channels);
+                cursor.position_ms = merged.end_ms;
+                break;
+            }
+
+            sample_offset = 0;
+            entry_index = entry_index.saturating_add(1);
+            if let Some(next) = state.chunks.get(entry_index) {
+                if next.audio.channels != merged.channels
+                    || next.audio.sample_rate != merged.sample_rate
+                    || next.audio.start_ms != merged.end_ms
+                    || (merged.samples.len() / channels) >= max_frames
+                {
+                    cursor.chunk_id = next.id;
+                    cursor.sample_offset = 0;
+                    cursor.position_ms = next.audio.start_ms;
+                    break;
+                }
+            } else {
+                cursor.chunk_id = current.id;
+                cursor.sample_offset = current.audio.samples.len();
+                cursor.position_ms = merged.end_ms;
+                break;
+            }
+        }
+
+        if merged.samples.is_empty() {
+            return None;
+        }
+
+        Some(merged)
     }
 
     fn wait_for_change(&self, last_seen: &mut u64, stop_requested: &Arc<AtomicBool>) {
@@ -238,69 +419,150 @@ impl LiveChunkBuffer {
         state.generation = state.generation.saturating_add(1);
         self.condvar.notify_all();
     }
+
+    fn resolve_cursor<'a>(
+        state: &'a LiveChunkBufferState,
+        cursor: &mut LiveReadCursor,
+    ) -> Option<(usize, &'a LiveChunkEntry, usize)> {
+        if let Some((idx, entry)) = state
+            .chunks
+            .iter()
+            .enumerate()
+            .find(|(_, entry)| entry.id == cursor.chunk_id)
+        {
+            return Some((
+                idx,
+                entry,
+                cursor.sample_offset.min(entry.audio.samples.len()),
+            ));
+        }
+
+        let (idx, entry) = state
+            .chunks
+            .iter()
+            .enumerate()
+            .find(|(_, entry)| entry.audio.end_ms > cursor.position_ms)?;
+
+        let channels = usize::from(entry.audio.channels);
+        if channels == 0 || entry.audio.sample_rate == 0 {
+            return None;
+        }
+
+        let total_frames = entry.audio.samples.len() / channels;
+        let frame_offset = if cursor.position_ms <= entry.audio.start_ms {
+            0
+        } else {
+            (((cursor.position_ms - entry.audio.start_ms)
+                .saturating_mul(u64::from(entry.audio.sample_rate)))
+                / 1_000)
+                .min(total_frames as u64)
+        } as usize;
+        let sample_offset = frame_offset.saturating_mul(channels);
+        let position_ms = entry.audio.start_ms.saturating_add(
+            (u64::try_from(frame_offset)
+                .unwrap_or(u64::MAX)
+                .saturating_mul(1_000))
+                / u64::from(entry.audio.sample_rate),
+        );
+
+        cursor.chunk_id = entry.id;
+        cursor.sample_offset = sample_offset;
+        cursor.position_ms = position_ms;
+
+        Some((idx, entry, sample_offset))
+    }
 }
 
 struct TimeshiftPlaybackSource {
     queue: Arc<PlaybackQueue>,
     clock: Arc<PlaybackClock>,
-    stop_requested: Arc<AtomicBool>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
-    current_chunk: QueuedPlaybackChunk,
+    current_chunk: Option<QueuedPlaybackChunk>,
     current_index: usize,
     chunk_announced: bool,
+    silence_samples_remaining: usize,
+    channels: u16,
+    sample_rate: u32,
 }
 
 impl TimeshiftPlaybackSource {
     fn new(
         queue: Arc<PlaybackQueue>,
         clock: Arc<PlaybackClock>,
-        stop_requested: Arc<AtomicBool>,
         spectrum_bits: Arc<Vec<AtomicU32>>,
         current_chunk: QueuedPlaybackChunk,
     ) -> Self {
+        let channels = current_chunk.audio.channels;
+        let sample_rate = current_chunk.audio.sample_rate;
         Self {
             queue,
             clock,
-            stop_requested,
             spectrum_bits,
-            current_chunk,
+            current_chunk: Some(current_chunk),
             current_index: 0,
             chunk_announced: false,
+            silence_samples_remaining: 0,
+            channels,
+            sample_rate,
         }
     }
 
     fn remaining_samples(&self) -> usize {
-        self.current_chunk
-            .audio
-            .samples
-            .len()
-            .saturating_sub(self.current_index)
+        match &self.current_chunk {
+            Some(current_chunk) => current_chunk
+                .audio
+                .samples
+                .len()
+                .saturating_sub(self.current_index),
+            None => self.silence_samples_remaining,
+        }
+    }
+
+    fn silence_threshold(&self) -> usize {
+        let channels = usize::from(self.channels.max(1));
+        512_usize.div_ceil(channels) * channels
     }
 
     fn ensure_chunk_announced(&mut self) -> Option<()> {
+        let current_chunk = self.current_chunk.as_ref()?;
         if self.chunk_announced {
             return Some(());
         }
 
-        apply_spectrum_snapshot(&self.spectrum_bits, &self.current_chunk.spectrum_snapshot);
+        apply_spectrum_snapshot(&self.spectrum_bits, &current_chunk.spectrum_snapshot);
         self.chunk_announced = true;
         Some(())
     }
 
     fn advance_chunk(&mut self) -> Option<()> {
-        self.clock
-            .set_playback_cursor_ms(self.current_chunk.audio.end_ms);
-
-        if let Some(next_chunk) = self.queue.pop_blocking(&self.stop_requested) {
-            self.current_chunk = next_chunk;
-            self.current_index = 0;
-            self.chunk_announced = false;
-            return Some(());
+        if let Some(current_chunk) = &self.current_chunk {
+            self.clock
+                .set_playback_cursor_ms(current_chunk.audio.end_ms);
         }
 
-        clear_spectrum(&self.spectrum_bits);
-
-        None
+        match self.queue.try_pop() {
+            QueuePoll::Chunk(next_chunk) => {
+                self.channels = next_chunk.audio.channels;
+                self.sample_rate = next_chunk.audio.sample_rate;
+                self.current_chunk = Some(next_chunk);
+                self.current_index = 0;
+                self.chunk_announced = false;
+                self.silence_samples_remaining = 0;
+                Some(())
+            }
+            QueuePoll::Pending => {
+                self.current_chunk = None;
+                self.current_index = 0;
+                self.chunk_announced = false;
+                self.silence_samples_remaining = self.silence_threshold();
+                clear_spectrum(&self.spectrum_bits);
+                Some(())
+            }
+            QueuePoll::Closed => {
+                clear_spectrum(&self.spectrum_bits);
+                None
+            }
+        }
     }
 }
 
@@ -308,109 +570,51 @@ impl Iterator for TimeshiftPlaybackSource {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_index >= self.current_chunk.audio.samples.len() {
+        loop {
+            if let Some(current_chunk) = self.current_chunk.as_ref() {
+                if self.current_index < current_chunk.audio.samples.len() {
+                    self.ensure_chunk_announced()?;
+                    let sample = current_chunk
+                        .audio
+                        .samples
+                        .get(self.current_index)
+                        .copied()?;
+                    self.current_index += 1;
+                    return Some(sample);
+                }
+            }
+
+            if self.silence_samples_remaining > 0 {
+                self.silence_samples_remaining -= 1;
+                return Some(0.0);
+            }
+
             self.advance_chunk()?;
         }
-
-        self.ensure_chunk_announced()?;
-
-        let sample = self
-            .current_chunk
-            .audio
-            .samples
-            .get(self.current_index)
-            .copied()?;
-        self.current_index += 1;
-
-        Some(sample)
     }
 }
 
 impl Source for TimeshiftPlaybackSource {
     fn current_span_len(&self) -> Option<usize> {
         match self.remaining_samples() {
-            0 => None,
+            0 => Some(self.silence_threshold()),
             remaining => Some(remaining),
         }
     }
 
     fn channels(&self) -> rodio::ChannelCount {
-        rodio::ChannelCount::new(self.current_chunk.audio.channels)
+        rodio::ChannelCount::new(self.channels)
             .expect("timeshift chunk must have non-zero channels")
     }
 
     fn sample_rate(&self) -> rodio::SampleRate {
-        rodio::SampleRate::new(self.current_chunk.audio.sample_rate)
+        rodio::SampleRate::new(self.sample_rate)
             .expect("timeshift chunk must have non-zero sample rate")
     }
 
     fn total_duration(&self) -> Option<Duration> {
         None
     }
-}
-
-fn slice_chunk_from_ms(chunk: &StoredPcmChunk, cursor_ms: u64) -> Option<StoredPcmChunk> {
-    if chunk.end_ms <= cursor_ms {
-        return None;
-    }
-
-    if cursor_ms <= chunk.start_ms {
-        return Some(chunk.clone());
-    }
-
-    let channels = usize::from(chunk.channels);
-    if channels == 0 || chunk.sample_rate == 0 {
-        return None;
-    }
-
-    let total_frames = chunk.samples.len() / channels;
-    if total_frames == 0 {
-        return None;
-    }
-
-    let frame_offset =
-        (((cursor_ms - chunk.start_ms).saturating_mul(u64::from(chunk.sample_rate))) / 1_000)
-            .min(total_frames as u64);
-    if frame_offset >= total_frames as u64 {
-        return None;
-    }
-
-    let start_sample = frame_offset as usize * channels;
-    let start_ms = chunk
-        .start_ms
-        .saturating_add((frame_offset.saturating_mul(1_000)) / u64::from(chunk.sample_rate));
-
-    Some(StoredPcmChunk {
-        channels: chunk.channels,
-        sample_rate: chunk.sample_rate,
-        samples: chunk.samples[start_sample..].to_vec(),
-        start_ms,
-        end_ms: chunk.end_ms,
-    })
-}
-
-fn coalesce_playback_chunks(
-    chunks: Vec<StoredPcmChunk>,
-    target_duration_ms: u64,
-) -> Vec<StoredPcmChunk> {
-    let mut merged = Vec::new();
-
-    for chunk in chunks {
-        match merged.last_mut() {
-            Some(current)
-                if current.channels == chunk.channels
-                    && current.sample_rate == chunk.sample_rate
-                    && current.end_ms == chunk.start_ms
-                    && current.end_ms.saturating_sub(current.start_ms) < target_duration_ms =>
-            {
-                current.samples.extend_from_slice(&chunk.samples);
-                current.end_ms = chunk.end_ms;
-            }
-            _ => merged.push(chunk),
-        }
-    }
-
-    merged
 }
 
 fn buffered_playback_start_ms(live_head_ms: u64, floor_ms: Option<u64>) -> u64 {
@@ -612,7 +816,7 @@ fn run_live_playback_prefetch(
     queue: Arc<PlaybackQueue>,
     event_tx: mpsc::Sender<PlaybackEvent>,
     stop_requested: Arc<AtomicBool>,
-    mut cursor_ms: u64,
+    mut cursor: LiveReadCursor,
     expected_channels: u16,
     expected_sample_rate: u32,
     mut fft_state: FftVizState,
@@ -620,29 +824,21 @@ fn run_live_playback_prefetch(
     let mut wait_generation = 0;
 
     while !stop_requested.load(Ordering::Relaxed) {
-        let (chunks, generation) = live_buffer.snapshot_from(cursor_ms);
-        wait_generation = generation;
-        let chunks = coalesce_playback_chunks(chunks, OUTPUT_CHUNK_MS);
-
-        if chunks.is_empty() {
+        let Some(audio) = live_buffer.read_chunk_from(&mut cursor, OUTPUT_CHUNK_MS) else {
             live_buffer.wait_for_change(&mut wait_generation, &stop_requested);
             continue;
+        };
+
+        if audio.channels != expected_channels || audio.sample_rate != expected_sample_rate {
+            let _ = event_tx.send(PlaybackEvent::RestartRequired);
+            queue.close(PlaybackQueueCloseReason::RestartRequired);
+            return;
         }
 
-        for audio in chunks {
-            if audio.channels != expected_channels || audio.sample_rate != expected_sample_rate {
-                let _ = event_tx.send(PlaybackEvent::RestartRequired);
-                queue.close(PlaybackQueueCloseReason::RestartRequired);
-                return;
-            }
-
-            cursor_ms = audio.end_ms;
-            let chunk =
-                QueuedPlaybackChunk::from_audio(audio, &mut fft_state, playback_viz_params());
-            if !queue.push_blocking(chunk, &stop_requested) {
-                queue.close(PlaybackQueueCloseReason::Stopped);
-                return;
-            }
+        let chunk = QueuedPlaybackChunk::from_audio(audio, &mut fft_state, playback_viz_params());
+        if !queue.push_blocking(chunk, &stop_requested) {
+            queue.close(PlaybackQueueCloseReason::Stopped);
+            return;
         }
     }
 
@@ -703,20 +899,20 @@ fn try_start_live_playback(
     spectrum_bits: Arc<Vec<AtomicU32>>,
     event_tx: mpsc::Sender<PlaybackEvent>,
 ) -> Option<PlaybackStart> {
-    let (chunks, _) = live_buffer.snapshot_from(cursor_ms);
-    let mut chunks = coalesce_playback_chunks(chunks, OUTPUT_CHUNK_MS).into_iter();
-    let initial_audio = chunks.next()?;
+    let mut cursor = live_buffer.cursor_for_ms(cursor_ms)?;
+    let initial_audio = live_buffer.read_chunk_from(&mut cursor, OUTPUT_CHUNK_MS)?;
 
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let expected_channels = initial_audio.channels;
     let expected_sample_rate = initial_audio.sample_rate;
-    let mut worker_cursor_ms = initial_audio.end_ms;
     let initial_chunk =
         QueuedPlaybackChunk::from_audio(initial_audio, &mut fft_state, playback_viz_params());
 
     let queue = Arc::new(PlaybackQueue::default());
-    for audio in chunks.take(PLAYBACK_PREFILL_CHUNKS.saturating_sub(1)) {
-        worker_cursor_ms = audio.end_ms;
+    for _ in 0..PLAYBACK_PREFILL_CHUNKS.saturating_sub(1) {
+        let Some(audio) = live_buffer.read_chunk_from(&mut cursor, OUTPUT_CHUNK_MS) else {
+            break;
+        };
         queue.push_prefilled(QueuedPlaybackChunk::from_audio(
             audio,
             &mut fft_state,
@@ -724,13 +920,7 @@ fn try_start_live_playback(
         ));
     }
 
-    let source = TimeshiftPlaybackSource::new(
-        queue.clone(),
-        clock,
-        stop_requested.clone(),
-        spectrum_bits,
-        initial_chunk,
-    );
+    let source = TimeshiftPlaybackSource::new(queue.clone(), clock, spectrum_bits, initial_chunk);
     let worker_handle = {
         let live_buffer = live_buffer.clone();
         let queue = queue.clone();
@@ -741,7 +931,7 @@ fn try_start_live_playback(
                 queue,
                 event_tx,
                 stop_requested,
-                worker_cursor_ms,
+                cursor,
                 expected_channels,
                 expected_sample_rate,
                 fft_state,
@@ -841,13 +1031,7 @@ fn try_start_playback(
         }
     }
 
-    let source = TimeshiftPlaybackSource::new(
-        queue.clone(),
-        clock,
-        stop_requested.clone(),
-        spectrum_bits,
-        initial_chunk,
-    );
+    let source = TimeshiftPlaybackSource::new(queue.clone(), clock, spectrum_bits, initial_chunk);
     let worker_handle = {
         let store = store.clone();
         let notifier = notifier.clone();
@@ -1143,7 +1327,13 @@ pub(super) fn run_listenmoe_stream(
         thread::spawn(move || run_ingest_loop(station, stop_requested, store_tx, spectrum_bits))
     };
 
-    let mut stream = DeviceSinkBuilder::open_default_sink()?;
+    let mut stream = DeviceSinkBuilder::from_default_device()
+        .and_then(|builder| {
+            builder
+                .with_buffer_size(BufferSize::Fixed(OUTPUT_DEVICE_BUFFER_SIZE))
+                .open_stream()
+        })
+        .or_else(|_| DeviceSinkBuilder::open_default_sink())?;
     stream.log_on_drop(false);
     let sink = Player::connect_new(stream.mixer());
     let (playback_event_tx, playback_event_rx) = mpsc::channel();
@@ -1267,7 +1457,7 @@ fn now_timestamp_ms() -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{buffered_playback_start_ms, coalesce_playback_chunks, slice_chunk_from_ms};
+    use super::{buffered_playback_start_ms, LiveChunkBuffer};
     use crate::listen::store::StoredPcmChunk;
 
     #[test]
@@ -1281,54 +1471,55 @@ mod tests {
     }
 
     #[test]
-    fn slice_chunk_from_cursor_preserves_remaining_samples() {
-        let chunk = StoredPcmChunk {
-            channels: 2,
-            sample_rate: 1_000,
-            samples: (0..20).map(|value| value as f32).collect(),
-            start_ms: 0,
-            end_ms: 5,
-        };
+    fn live_buffer_sequential_reads_do_not_drop_or_duplicate_samples() {
+        let live_buffer = LiveChunkBuffer::default();
+        let original: Vec<f32> = (0..44_100).map(|value| value as f32 / 16.0).collect();
 
-        let sliced = slice_chunk_from_ms(&chunk, 2).expect("slice");
-        assert_eq!(sliced.start_ms, 2);
-        assert_eq!(sliced.end_ms, 5);
-        assert_eq!(
-            sliced.samples,
-            (8..20).map(|value| value as f32).collect::<Vec<_>>()
-        );
+        for (index, chunk) in original.chunks(997).enumerate() {
+            let frames_before = index * 997;
+            let frames_after = frames_before + chunk.len();
+            live_buffer.push(StoredPcmChunk {
+                channels: 1,
+                sample_rate: 44_100,
+                samples: chunk.to_vec(),
+                start_ms: ((frames_before as u64) * 1_000) / 44_100,
+                end_ms: ((frames_after as u64) * 1_000) / 44_100,
+            });
+        }
+
+        let mut cursor = live_buffer.cursor_for_ms(0).expect("cursor");
+        let mut recovered = Vec::new();
+
+        while let Some(chunk) = live_buffer.read_chunk_from(&mut cursor, 137) {
+            recovered.extend_from_slice(&chunk.samples);
+            if recovered.len() >= original.len() {
+                break;
+            }
+        }
+
+        assert_eq!(recovered, original);
     }
 
     #[test]
-    fn coalesce_chunks_merges_adjacent_audio_up_to_target_duration() {
-        let chunks = vec![
-            StoredPcmChunk {
+    fn live_buffer_reads_merge_adjacent_audio_up_to_target_duration() {
+        let live_buffer = LiveChunkBuffer::default();
+        for (start_ms, value) in [(0_u64, 0.0_f32), (100_u64, 1.0_f32), (200_u64, 2.0_f32)] {
+            live_buffer.push(StoredPcmChunk {
                 channels: 2,
                 sample_rate: 1_000,
-                samples: vec![0.0; 400],
-                start_ms: 0,
-                end_ms: 100,
-            },
-            StoredPcmChunk {
-                channels: 2,
-                sample_rate: 1_000,
-                samples: vec![1.0; 400],
-                start_ms: 100,
-                end_ms: 200,
-            },
-            StoredPcmChunk {
-                channels: 2,
-                sample_rate: 1_000,
-                samples: vec![2.0; 400],
-                start_ms: 200,
-                end_ms: 300,
-            },
-        ];
+                samples: vec![value; 400],
+                start_ms,
+                end_ms: start_ms + 100,
+            });
+        }
 
-        let merged = coalesce_playback_chunks(chunks, 1_000);
-        assert_eq!(merged.len(), 1);
-        assert_eq!(merged[0].start_ms, 0);
-        assert_eq!(merged[0].end_ms, 300);
-        assert_eq!(merged[0].samples.len(), 1_200);
+        let mut cursor = live_buffer.cursor_for_ms(0).expect("cursor");
+        let merged = live_buffer
+            .read_chunk_from(&mut cursor, 1_000)
+            .expect("merged chunk");
+
+        assert_eq!(merged.start_ms, 0);
+        assert_eq!(merged.end_ms, 300);
+        assert_eq!(merged.samples.len(), 1_200);
     }
 }
