@@ -700,30 +700,10 @@ fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samp
     }
 }
 
-fn run_direct_audio_output(
-    mixer: rodio::mixer::Mixer,
-    direct_live_enabled: Arc<AtomicBool>,
-    rx: mpsc::Receiver<DirectAudioCommand>,
-) {
-    let mut sink = Player::connect_new(&mixer);
-
-    while let Ok(cmd) = rx.recv() {
-        match cmd {
-            DirectAudioCommand::Append {
-                channels,
-                sample_rate,
-                samples,
-            } => {
-                if direct_live_enabled.load(Ordering::Relaxed) {
-                    append_samples_in_chunks(&sink, channels, sample_rate, samples.as_ref());
-                }
-            }
-            DirectAudioCommand::Clear => {
-                sink.stop();
-                sink = Player::connect_new(&mixer);
-            }
-        }
-    }
+fn reset_direct_player(direct_player: &Arc<Mutex<Player>>, direct_mixer: &rodio::mixer::Mixer) {
+    let mut player = direct_player.lock().expect("direct player poisoned");
+    player.stop();
+    *player = Player::connect_new(direct_mixer);
 }
 
 fn buffered_playback_start_ms(live_head_ms: u64, floor_ms: Option<u64>) -> u64 {
@@ -865,15 +845,6 @@ struct PlaybackStart {
     queue: Arc<PlaybackQueue>,
     prefetch_handle: thread::JoinHandle<()>,
     output_handle: thread::JoinHandle<()>,
-}
-
-enum DirectAudioCommand {
-    Append {
-        channels: u16,
-        sample_rate: u32,
-        samples: Arc<[f32]>,
-    },
-    Clear,
 }
 
 enum StoreCommand {
@@ -1351,7 +1322,8 @@ fn run_one_connection(
     stop_requested: &Arc<AtomicBool>,
     store_tx: &mpsc::Sender<StoreCommand>,
     live_tx: &mpsc::Sender<StoreCommand>,
-    direct_tx: &mpsc::Sender<DirectAudioCommand>,
+    direct_player: &Arc<Mutex<Player>>,
+    direct_mixer: &rodio::mixer::Mixer,
     direct_live_enabled: &Arc<AtomicBool>,
     fft_state: &mut FftVizState,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
@@ -1385,13 +1357,13 @@ fn run_one_connection(
                     symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
                 decode_state.sample_buf = None;
                 if direct_live_enabled.load(Ordering::Relaxed) {
-                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                    reset_direct_player(direct_player, direct_mixer);
                 }
                 continue;
             }
             Err(err) => {
                 if direct_live_enabled.load(Ordering::Relaxed) {
-                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                    reset_direct_player(direct_player, direct_mixer);
                 }
                 eprintln!("Error reading packet: {err:?}");
                 return Ok(RunOutcome::Reconnect);
@@ -1418,10 +1390,15 @@ fn run_one_connection(
 
         match outcome {
             PacketOutcome::Continue => {}
-            PacketOutcome::Reconnect => return Ok(RunOutcome::Reconnect),
+            PacketOutcome::Reconnect => {
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    reset_direct_player(direct_player, direct_mixer);
+                }
+                return Ok(RunOutcome::Reconnect);
+            }
             PacketOutcome::SpecChanged => {
                 if direct_live_enabled.load(Ordering::Relaxed) {
-                    let _ = direct_tx.send(DirectAudioCommand::Clear);
+                    reset_direct_player(direct_player, direct_mixer);
                 }
                 continue;
             }
@@ -1441,16 +1418,11 @@ fn run_one_connection(
             {
                 return Ok(RunOutcome::Stop);
             }
-            if direct_live_enabled.load(Ordering::Relaxed)
-                && direct_tx
-                    .send(DirectAudioCommand::Append {
-                        channels,
-                        sample_rate,
-                        samples: samples.clone(),
-                    })
-                    .is_err()
-            {
-                return Ok(RunOutcome::Stop);
+            if direct_live_enabled.load(Ordering::Relaxed) {
+                let player = direct_player.lock().expect("direct player poisoned");
+                if direct_live_enabled.load(Ordering::Relaxed) {
+                    append_samples_in_chunks(&player, channels, sample_rate, samples.as_ref());
+                }
             }
             if live_tx
                 .send(StoreCommand::Append {
@@ -1472,7 +1444,8 @@ fn run_ingest_loop(
     stop_requested: Arc<AtomicBool>,
     store_tx: mpsc::Sender<StoreCommand>,
     live_tx: mpsc::Sender<StoreCommand>,
-    direct_tx: mpsc::Sender<DirectAudioCommand>,
+    direct_player: Arc<Mutex<Player>>,
+    direct_mixer: rodio::mixer::Mixer,
     direct_live_enabled: Arc<AtomicBool>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) -> Result<()> {
@@ -1513,6 +1486,10 @@ fn run_ingest_loop(
             println!("[{}] Started buffering live stream.", now_string());
         }
 
+        if direct_live_enabled.load(Ordering::Relaxed) {
+            reset_direct_player(&direct_player, &direct_mixer);
+        }
+
         match run_one_connection(
             &mut format,
             &mut track_id,
@@ -1521,7 +1498,8 @@ fn run_ingest_loop(
             &stop_requested,
             &store_tx,
             &live_tx,
-            &direct_tx,
+            &direct_player,
+            &direct_mixer,
             &direct_live_enabled,
             &mut fft_state,
             &spectrum_bits,
@@ -1556,9 +1534,20 @@ pub(super) fn run_listenmoe_stream(
 
     let stop_requested = Arc::new(AtomicBool::new(false));
     let direct_live_enabled = Arc::new(AtomicBool::new(true));
+    let mut stream = DeviceSinkBuilder::from_default_device()
+        .and_then(|builder| {
+            builder
+                .with_buffer_size(BufferSize::Fixed(OUTPUT_DEVICE_BUFFER_SIZE))
+                .open_stream()
+        })
+        .or_else(|_| DeviceSinkBuilder::open_default_sink())?;
+    stream.log_on_drop(false);
+    let direct_mixer = stream.mixer().clone();
+    let direct_player = Arc::new(Mutex::new(Player::connect_new(&direct_mixer)));
+    let (output, output_source) = queue::queue(true);
+    stream.mixer().add(output_source);
     let (store_tx, store_rx) = mpsc::channel();
     let (live_tx, live_rx) = mpsc::channel();
-    let (direct_tx, direct_rx) = mpsc::channel();
     let live_handle = {
         let live_buffer = live_buffer.clone();
         let clock = clock.clone();
@@ -1597,7 +1586,8 @@ pub(super) fn run_listenmoe_stream(
         let stop_requested = stop_requested.clone();
         let store_tx = store_tx.clone();
         let live_tx = live_tx.clone();
-        let direct_tx = direct_tx.clone();
+        let direct_player = direct_player.clone();
+        let direct_mixer = direct_mixer.clone();
         let direct_live_enabled = direct_live_enabled.clone();
         let spectrum_bits = spectrum_bits.clone();
         thread::spawn(move || {
@@ -1606,28 +1596,13 @@ pub(super) fn run_listenmoe_stream(
                 stop_requested,
                 store_tx,
                 live_tx,
-                direct_tx,
+                direct_player,
+                direct_mixer,
                 direct_live_enabled,
                 spectrum_bits,
             )
         })
     };
-
-    let mut stream = DeviceSinkBuilder::from_default_device()
-        .and_then(|builder| {
-            builder
-                .with_buffer_size(BufferSize::Fixed(OUTPUT_DEVICE_BUFFER_SIZE))
-                .open_stream()
-        })
-        .or_else(|_| DeviceSinkBuilder::open_default_sink())?;
-    stream.log_on_drop(false);
-    let direct_handle = {
-        let mixer = stream.mixer().clone();
-        let direct_live_enabled = direct_live_enabled.clone();
-        thread::spawn(move || run_direct_audio_output(mixer, direct_live_enabled, direct_rx))
-    };
-    let (output, output_source) = queue::queue(true);
-    stream.mixer().add(output_source);
     let playback_generation = Arc::new(AtomicU64::new(1));
     let (playback_event_tx, playback_event_rx) = mpsc::channel();
     let mut playback_queue = None;
@@ -1641,12 +1616,12 @@ pub(super) fn run_listenmoe_stream(
             OutputCommandResult::Continue => {}
             OutputCommandResult::Stop => {
                 direct_live_enabled.store(false, Ordering::Relaxed);
-                let _ = direct_tx.send(DirectAudioCommand::Clear);
+                reset_direct_player(&direct_player, &direct_mixer);
                 break;
             }
             OutputCommandResult::RestartPlayback => {
                 direct_live_enabled.store(false, Ordering::Relaxed);
-                let _ = direct_tx.send(DirectAudioCommand::Clear);
+                reset_direct_player(&direct_player, &direct_mixer);
                 source_started = false;
                 teardown_playback_pipeline(
                     &output,
@@ -1714,12 +1689,12 @@ pub(super) fn run_listenmoe_stream(
                     OutputCommandResult::Continue => {}
                     OutputCommandResult::Stop => {
                         direct_live_enabled.store(false, Ordering::Relaxed);
-                        let _ = direct_tx.send(DirectAudioCommand::Clear);
+                        reset_direct_player(&direct_player, &direct_mixer);
                         break;
                     }
                     OutputCommandResult::RestartPlayback => {
                         direct_live_enabled.store(false, Ordering::Relaxed);
-                        let _ = direct_tx.send(DirectAudioCommand::Clear);
+                        reset_direct_player(&direct_player, &direct_mixer);
                         source_started = false;
                         teardown_playback_pipeline(
                             &output,
@@ -1742,7 +1717,7 @@ pub(super) fn run_listenmoe_stream(
     stop_requested.store(true, Ordering::Relaxed);
     drop(store_tx);
     drop(live_tx);
-    drop(direct_tx);
+    reset_direct_player(&direct_player, &direct_mixer);
     teardown_playback_pipeline(
         &output,
         &playback_generation,
@@ -1756,7 +1731,6 @@ pub(super) fn run_listenmoe_stream(
     let _ = ingest_handle.join();
     let _ = live_handle.join();
     let _ = store_handle.join();
-    let _ = direct_handle.join();
     store.lock().expect("timeshift mutex poisoned").clear()?;
     clear_root(&root)?;
 
