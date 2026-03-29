@@ -201,22 +201,18 @@ fn resync_ui(
 ) {
     invalidate_ui_schedule(&ui_sched_id);
 
-    let cursor_ms = match clock.playback_cursor_ms() {
-        0 => {
-            let live_head_ms = clock.live_head_ms();
-            if live_head_ms == 0 {
-                schedule_delayed_resync(
-                    sender,
-                    timeline,
-                    clock.clone(),
-                    ui_sched_id,
-                    Duration::from_millis(250),
-                );
-                return;
-            }
-            live_head_ms
+    let cursor_ms = match current_ui_cursor_ms(clock) {
+        Some(cursor_ms) => cursor_ms,
+        None => {
+            schedule_delayed_resync(
+                sender,
+                timeline,
+                clock.clone(),
+                ui_sched_id,
+                Duration::from_millis(250),
+            );
+            return;
         }
-        cursor_ms => cursor_ms,
     };
 
     if let Some(track) = timeline.track_for_cursor(cursor_ms) {
@@ -224,8 +220,19 @@ fn resync_ui(
         let _ = sender.send(UiEvent::TrackChanged(track));
     }
 
-    schedule_next_ui_switch(sender, timeline, cursor_ms, ui_sched_id);
+    schedule_next_ui_switch(sender, timeline, clock.clone(), cursor_ms, ui_sched_id);
 }
+
+fn current_ui_cursor_ms(clock: &PlaybackClock) -> Option<u64> {
+    match clock.playback_cursor_ms() {
+        0 => {
+            let live_head_ms = clock.live_head_ms();
+            (live_head_ms != 0).then_some(live_head_ms)
+        }
+        cursor_ms => Some(cursor_ms),
+    }
+}
+
 fn schedule_delayed_resync(
     sender: mpsc::Sender<UiEvent>,
     timeline: Arc<TimelineStore>,
@@ -246,6 +253,7 @@ fn schedule_delayed_resync(
 fn schedule_next_ui_switch(
     sender: mpsc::Sender<UiEvent>,
     timeline: Arc<TimelineStore>,
+    clock: Arc<PlaybackClock>,
     cursor_ms: u64,
     ui_sched_id: Arc<AtomicU64>,
 ) {
@@ -265,9 +273,28 @@ fn schedule_next_ui_switch(
             return;
         }
 
-        let next_cursor_ms = next.start_time_ms;
-        let _ = sender.send(UiEvent::TrackChanged(next));
-        schedule_next_ui_switch(sender, timeline, next_cursor_ms, ui_sched_id);
+        let Some(current_cursor_ms) = current_ui_cursor_ms(&clock) else {
+            schedule_delayed_resync(
+                sender,
+                timeline,
+                clock,
+                ui_sched_id,
+                Duration::from_millis(250),
+            );
+            return;
+        };
+
+        if current_cursor_ms < next.start_time_ms {
+            schedule_next_ui_switch(sender, timeline, clock, current_cursor_ms, ui_sched_id);
+            return;
+        }
+
+        if let Some(track) = timeline.track_for_cursor(current_cursor_ms) {
+            debug_gateway!("ui scheduled snap: {} - {}", track.artist, track.title);
+            let _ = sender.send(UiEvent::TrackChanged(track));
+        }
+
+        schedule_next_ui_switch(sender, timeline, clock, current_cursor_ms, ui_sched_id);
     });
 }
 
@@ -301,5 +328,71 @@ fn set_maybe_tls_read_timeout(
         MaybeTlsStream::Plain(tcp) => tcp.set_read_timeout(Some(dur)),
         MaybeTlsStream::Rustls(tls) => tls.get_mut().set_read_timeout(Some(dur)),
         _ => Ok(()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{invalidate_ui_schedule, schedule_next_ui_switch};
+    use crate::listen::PlaybackClock;
+    use crate::meta::timeline::TimelineStore;
+    use crate::meta::track::TrackInfo;
+    use crate::ui::UiEvent;
+    use std::path::PathBuf;
+    use std::sync::{atomic::AtomicU64, mpsc, Arc};
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+    fn temp_file(name: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_nanos();
+        std::env::temp_dir().join(format!("listenmoe-{name}-{unique}.json"))
+    }
+
+    fn track(title: &str, start_time_ms: u64, duration_secs: u32) -> TrackInfo {
+        TrackInfo {
+            artist: "artist".into(),
+            title: title.into(),
+            album: "album".into(),
+            album_cover: None,
+            artist_image: None,
+            start_time_ms,
+            duration_secs,
+        }
+    }
+
+    #[test]
+    fn scheduled_switch_waits_for_cursor_to_reach_next_track() {
+        let path = temp_file("meta-schedule");
+        let timeline = Arc::new(TimelineStore::new(path.clone()));
+        timeline
+            .insert_tracks([track("current", 0, 1), track("next", 1_000, 1)])
+            .expect("insert failed");
+
+        let clock = Arc::new(PlaybackClock::new());
+        clock.set_playback_cursor_ms(500);
+
+        let ui_sched_id = Arc::new(AtomicU64::new(0));
+        let (tx, rx) = mpsc::channel();
+        schedule_next_ui_switch(tx, timeline, clock.clone(), 500, ui_sched_id.clone());
+
+        assert!(
+            rx.recv_timeout(Duration::from_millis(650)).is_err(),
+            "ui should not switch before the playback cursor advances"
+        );
+
+        clock.set_playback_cursor_ms(1_000);
+        let event = rx
+            .recv_timeout(Duration::from_millis(800))
+            .expect("missing track change after cursor advance");
+
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "next"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        invalidate_ui_schedule(&ui_sched_id);
+        let _ = std::fs::remove_file(path);
     }
 }
