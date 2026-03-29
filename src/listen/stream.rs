@@ -1227,11 +1227,13 @@ fn run_one_connection(
     track_id: &mut u32,
     decoder: &mut Box<dyn symphonia::core::codecs::Decoder>,
     decoder_opts: &DecoderOptions,
+    clock: &Arc<PlaybackClock>,
     stop_requested: &Arc<AtomicBool>,
     buffer_tx: &mpsc::Sender<StoreCommand>,
     direct_player: &Arc<Mutex<Player>>,
     direct_mixer: &rodio::mixer::Mixer,
     direct_live_enabled: &Arc<AtomicBool>,
+    capture_enabled: &Arc<AtomicBool>,
     fft_state: &mut FftVizState,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<RunOutcome> {
@@ -1312,25 +1314,39 @@ fn run_one_connection(
         }
 
         if let Some((channels, sample_rate, samples)) = audio {
+            let now_ms = now_timestamp_ms();
+
             if direct_live_enabled.load(Ordering::Relaxed) {
                 let player = direct_player.lock().expect("direct player poisoned");
                 if direct_live_enabled.load(Ordering::Relaxed) {
                     append_samples_in_chunks(&player, channels, sample_rate, &samples);
                 }
-            }
 
-            let now_ms = now_timestamp_ms();
-            let samples: Arc<[f32]> = samples.into();
-            if buffer_tx
-                .send(StoreCommand::Append {
+                if let Some((_start_ms, end_ms)) = compute_chunk_timing(
+                    clock.live_head_ms(),
                     sample_rate,
                     channels,
-                    samples,
+                    samples.len(),
                     now_ms,
-                })
-                .is_err()
-            {
-                return Ok(RunOutcome::Stop);
+                ) {
+                    clock.set_live_head_ms(end_ms);
+                    clock.set_playback_cursor_ms(end_ms);
+                }
+            }
+
+            if capture_enabled.load(Ordering::Relaxed) {
+                let samples: Arc<[f32]> = samples.into();
+                if buffer_tx
+                    .send(StoreCommand::Append {
+                        sample_rate,
+                        channels,
+                        samples,
+                        now_ms,
+                    })
+                    .is_err()
+                {
+                    return Ok(RunOutcome::Stop);
+                }
             }
         }
     }
@@ -1338,11 +1354,13 @@ fn run_one_connection(
 
 fn run_ingest_loop(
     station: Station,
+    clock: Arc<PlaybackClock>,
     stop_requested: Arc<AtomicBool>,
     buffer_tx: mpsc::Sender<StoreCommand>,
     direct_player: Arc<Mutex<Player>>,
     direct_mixer: rodio::mixer::Mixer,
     direct_live_enabled: Arc<AtomicBool>,
+    capture_enabled: Arc<AtomicBool>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) -> Result<()> {
     let primary = station.stream_url().to_string();
@@ -1391,11 +1409,13 @@ fn run_ingest_loop(
             &mut track_id,
             &mut decoder,
             &decoder_opts,
+            &clock,
             &stop_requested,
             &buffer_tx,
             &direct_player,
             &direct_mixer,
             &direct_live_enabled,
+            &capture_enabled,
             &mut fft_state,
             &spectrum_bits,
         )? {
@@ -1425,6 +1445,7 @@ pub(super) fn run_listenmoe_stream(
 
     let stop_requested = Arc::new(AtomicBool::new(false));
     let direct_live_enabled = Arc::new(AtomicBool::new(true));
+    let capture_enabled = Arc::new(AtomicBool::new(false));
     let mut stream = DeviceSinkBuilder::open_default_sink()?;
     stream.log_on_drop(false);
     let direct_mixer = stream.mixer().clone();
@@ -1452,20 +1473,24 @@ pub(super) fn run_listenmoe_stream(
         })
     };
     let ingest_handle = {
+        let clock = clock.clone();
         let stop_requested = stop_requested.clone();
         let buffer_tx = buffer_tx.clone();
         let direct_player = direct_player.clone();
         let direct_mixer = direct_mixer.clone();
         let direct_live_enabled = direct_live_enabled.clone();
+        let capture_enabled = capture_enabled.clone();
         let spectrum_bits = spectrum_bits.clone();
         thread::spawn(move || {
             run_ingest_loop(
                 station,
+                clock,
                 stop_requested,
                 buffer_tx,
                 direct_player,
                 direct_mixer,
                 direct_live_enabled,
+                capture_enabled,
                 spectrum_bits,
             )
         })
@@ -1483,11 +1508,13 @@ pub(super) fn run_listenmoe_stream(
             OutputCommandResult::Continue => {}
             OutputCommandResult::Stop => {
                 direct_live_enabled.store(false, Ordering::Relaxed);
+                capture_enabled.store(false, Ordering::Relaxed);
                 reset_direct_player(&direct_player, &direct_mixer);
                 break;
             }
             OutputCommandResult::RestartPlayback => {
                 direct_live_enabled.store(false, Ordering::Relaxed);
+                capture_enabled.store(true, Ordering::Relaxed);
                 reset_direct_player(&direct_player, &direct_mixer);
                 source_started = false;
                 teardown_playback_pipeline(
@@ -1554,11 +1581,13 @@ pub(super) fn run_listenmoe_stream(
                     OutputCommandResult::Continue => {}
                     OutputCommandResult::Stop => {
                         direct_live_enabled.store(false, Ordering::Relaxed);
+                        capture_enabled.store(false, Ordering::Relaxed);
                         reset_direct_player(&direct_player, &direct_mixer);
                         break;
                     }
                     OutputCommandResult::RestartPlayback => {
                         direct_live_enabled.store(false, Ordering::Relaxed);
+                        capture_enabled.store(true, Ordering::Relaxed);
                         reset_direct_player(&direct_player, &direct_mixer);
                         source_started = false;
                         teardown_playback_pipeline(
