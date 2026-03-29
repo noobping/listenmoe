@@ -44,7 +44,7 @@ enum OutputCommandResult {
 const OUTPUT_CHUNK_MS: u64 = 1_000;
 const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
-const LIVE_BUFFER_MS: u64 = 10 * 60 * 1_000;
+const LIVE_BUFFER_MS: u64 = RETENTION_MS;
 const PLAYBACK_PREFILL_CHUNKS: usize = 8;
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
 
@@ -1052,9 +1052,7 @@ fn try_start_live_playback(
 }
 
 fn try_start_playback(
-    store: &Arc<Mutex<TimeshiftStore>>,
     live_buffer: &Arc<LiveChunkBuffer>,
-    notifier: Arc<PlaybackNotifier>,
     clock: Arc<PlaybackClock>,
     stop_requested: Arc<AtomicBool>,
     output: Arc<queue::SourcesQueueInput>,
@@ -1063,14 +1061,16 @@ fn try_start_playback(
     spectrum_bits: Arc<Vec<AtomicU32>>,
     event_tx: mpsc::Sender<PlaybackEvent>,
 ) -> Result<Option<PlaybackStart>> {
-    let guard = store.lock().expect("timeshift mutex poisoned");
     let live_head = clock.live_head_ms();
-    let floor_ms = guard.earliest_timestamp_ms();
+    let floor_ms = live_buffer.earliest_ms();
     if live_head == 0 {
         return Ok(None);
     }
 
-    let requested_cursor_ms = guard.clamp_cursor_ms(clock.playback_cursor_ms());
+    let requested_cursor_ms = match floor_ms {
+        Some(floor_ms) => clock.playback_cursor_ms().max(floor_ms).min(live_head),
+        None => clock.playback_cursor_ms().min(live_head),
+    };
     let cursor_ms = if requested_cursor_ms == 0 {
         buffered_playback_start_ms(live_head, floor_ms)
     } else {
@@ -1085,108 +1085,17 @@ fn try_start_playback(
         clock.set_playback_cursor_ms(cursor_ms);
     }
 
-    drop(guard);
-
-    if live_buffer
-        .earliest_ms()
-        .is_some_and(|earliest_ms| cursor_ms >= earliest_ms)
-    {
-        if let Some(playback) = try_start_live_playback(
-            live_buffer,
-            cursor_ms,
-            clock.clone(),
-            stop_requested.clone(),
-            output.clone(),
-            playback_generation.clone(),
-            expected_generation,
-            spectrum_bits.clone(),
-            event_tx.clone(),
-        ) {
-            return Ok(Some(playback));
-        }
-    }
-
-    let mut guard = store.lock().expect("timeshift mutex poisoned");
-    let Some(mut cursor) = guard.cursor_for_ms(cursor_ms) else {
-        return Ok(None);
-    };
-    let Some(initial_audio) = guard.read_chunk_from(&mut cursor, OUTPUT_CHUNK_MS)? else {
-        return Ok(None);
-    };
-    drop(guard);
-
-    let mut fft_state = make_fft_state(spectrum_bits.len());
-    let expected_channels = initial_audio.channels;
-    let expected_sample_rate = initial_audio.sample_rate;
-    let initial_chunk =
-        QueuedPlaybackChunk::from_audio(initial_audio, &mut fft_state, playback_viz_params());
-
-    let queue = Arc::new(PlaybackQueue::default());
-    queue.push_prefilled(initial_chunk);
-    for _ in 0..PLAYBACK_PREFILL_CHUNKS.saturating_sub(1) {
-        match read_prefetched_chunk(
-            store,
-            &cursor,
-            expected_channels,
-            expected_sample_rate,
-            &mut fft_state,
-        )? {
-            PrefetchChunkResult::Ready(chunk, next_cursor) => {
-                cursor = next_cursor;
-                queue.push_prefilled(chunk);
-            }
-            PrefetchChunkResult::Pending => break,
-            PrefetchChunkResult::RestartRequired => {
-                queue.close(PlaybackQueueCloseReason::RestartRequired);
-                break;
-            }
-        }
-    }
-
-    let prefetch_stop_requested = stop_requested.clone();
-    let prefetch_handle = {
-        let store = store.clone();
-        let notifier = notifier.clone();
-        let queue = queue.clone();
-        let event_tx = event_tx.clone();
-        thread::spawn(move || {
-            run_playback_prefetch(
-                store,
-                notifier,
-                queue,
-                event_tx,
-                prefetch_stop_requested,
-                cursor,
-                expected_channels,
-                expected_sample_rate,
-                fft_state,
-            )
-        })
-    };
-    let output_handle = {
-        let queue = queue.clone();
-        let stop_requested = stop_requested.clone();
-        let clock = clock.clone();
-        let spectrum_bits = spectrum_bits.clone();
-        let playback_generation = playback_generation.clone();
-        thread::spawn(move || {
-            run_playback_output(
-                output,
-                queue,
-                stop_requested,
-                clock,
-                spectrum_bits,
-                playback_generation,
-                expected_generation,
-            )
-        })
-    };
-
-    Ok(Some(PlaybackStart {
-        queue,
-        prefetch_handle,
-        output_handle,
-    }))
+    Ok(try_start_live_playback(
+        live_buffer,
+        cursor_ms,
+        clock,
+        stop_requested,
+        output,
+        playback_generation,
+        expected_generation,
+        spectrum_bits,
+        event_tx,
+    ))
 }
 
 fn teardown_playback_pipeline(
@@ -1219,7 +1128,6 @@ fn run_buffer_relay(
     live_buffer: Arc<LiveChunkBuffer>,
     clock: Arc<PlaybackClock>,
     direct_live_enabled: Arc<AtomicBool>,
-    store_tx: mpsc::Sender<StoreCommand>,
     stop_requested: Arc<AtomicBool>,
     rx: mpsc::Receiver<StoreCommand>,
 ) -> Result<()> {
@@ -1261,18 +1169,6 @@ fn run_buffer_relay(
                         end_ms,
                         live_buffer.earliest_ms(),
                     ));
-                }
-
-                if store_tx
-                    .send(StoreCommand::Append {
-                        sample_rate,
-                        channels,
-                        samples,
-                        now_ms,
-                    })
-                    .is_err()
-                {
-                    break;
                 }
             }
         }
@@ -1523,10 +1419,6 @@ pub(super) fn run_listenmoe_stream(
     clock: Arc<PlaybackClock>,
     root: PathBuf,
 ) -> Result<()> {
-    let store = Arc::new(Mutex::new(TimeshiftStore::new_session(
-        root.clone(),
-        RETENTION_MS,
-    )?));
     let live_buffer = Arc::new(LiveChunkBuffer::default());
     let notifier = Arc::new(PlaybackNotifier::default());
     clock.reset();
@@ -1539,13 +1431,11 @@ pub(super) fn run_listenmoe_stream(
     let direct_player = Arc::new(Mutex::new(Player::connect_new(&direct_mixer)));
     let (output, output_source) = queue::queue(true);
     stream.mixer().add(output_source);
-    let (store_tx, store_rx) = mpsc::channel();
     let (buffer_tx, buffer_rx) = mpsc::channel();
     let buffer_handle = {
         let live_buffer = live_buffer.clone();
         let clock = clock.clone();
         let direct_live_enabled = direct_live_enabled.clone();
-        let store_tx = store_tx.clone();
         let stop_requested = stop_requested.clone();
         thread::spawn(move || {
             let buffer_stop_requested = stop_requested.clone();
@@ -1553,26 +1443,10 @@ pub(super) fn run_listenmoe_stream(
                 live_buffer,
                 clock,
                 direct_live_enabled,
-                store_tx,
                 buffer_stop_requested,
                 buffer_rx,
             ) {
                 eprintln!("buffer relay error: {err}");
-                stop_requested.store(true, Ordering::Relaxed);
-            }
-        })
-    };
-    let store_handle = {
-        let store = store.clone();
-        let clock = clock.clone();
-        let notifier = notifier.clone();
-        let stop_requested = stop_requested.clone();
-        thread::spawn(move || {
-            let writer_stop_requested = stop_requested.clone();
-            if let Err(err) =
-                run_store_writer(store, clock, notifier, writer_stop_requested, store_rx)
-            {
-                eprintln!("timeshift writer error: {err}");
                 stop_requested.store(true, Ordering::Relaxed);
             }
         })
@@ -1652,9 +1526,7 @@ pub(super) fn run_listenmoe_stream(
 
         if !paused && !source_started && !direct_live_enabled.load(Ordering::Relaxed) {
             if let Some(playback) = try_start_playback(
-                &store,
                 &live_buffer,
-                notifier.clone(),
                 clock.clone(),
                 stop_requested.clone(),
                 output.clone(),
@@ -1709,7 +1581,6 @@ pub(super) fn run_listenmoe_stream(
 
     stop_requested.store(true, Ordering::Relaxed);
     drop(buffer_tx);
-    drop(store_tx);
     reset_direct_player(&direct_player, &direct_mixer);
     teardown_playback_pipeline(
         &output,
@@ -1723,8 +1594,6 @@ pub(super) fn run_listenmoe_stream(
     );
     let _ = ingest_handle.join();
     let _ = buffer_handle.join();
-    let _ = store_handle.join();
-    store.lock().expect("timeshift mutex poisoned").clear()?;
     clear_root(&root)?;
 
     Ok(())
