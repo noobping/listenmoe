@@ -1,6 +1,9 @@
 use std::io::{Read, Write};
 use std::sync::mpsc;
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::time::{Duration, Instant};
 
 use tungstenite::client::connect;
@@ -36,8 +39,8 @@ macro_rules! debug_gateway {
 
 pub(super) fn run_once(
     station: Station,
-    sender: mpsc::Sender<UiEvent>,
     rx: &mpsc::Receiver<Control>,
+    paused_flag: Arc<AtomicBool>,
     clock: Arc<PlaybackClock>,
     timeline: Arc<TimelineStore>,
     paused: &mut bool,
@@ -59,7 +62,6 @@ pub(super) fn run_once(
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
     let mut last_any_msg = Instant::now();
     let mut last_heartbeat_ack: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
-    let mut last_ui_track = None;
 
     loop {
         match rx.try_recv() {
@@ -67,13 +69,12 @@ pub(super) fn run_once(
             Ok(Control::Pause) => {
                 debug_gateway!("Pausing meta data");
                 *paused = true;
-                last_ui_track = None;
+                paused_flag.store(true, Ordering::Relaxed);
             }
             Ok(Control::Resume) => {
                 debug_gateway!("Resuming meta data");
                 *paused = false;
-                last_ui_track = None;
-                sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
+                paused_flag.store(false, Ordering::Relaxed);
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }
@@ -117,9 +118,6 @@ pub(super) fn run_once(
                 if err.kind() == std::io::ErrorKind::WouldBlock
                     || err.kind() == std::io::ErrorKind::TimedOut =>
             {
-                if !*paused {
-                    sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
-                }
                 continue;
             }
             Err(err) => return Err(err.into()),
@@ -160,17 +158,9 @@ pub(super) fn run_once(
                     timeline.insert_tracks(tracks)?;
                     let retention_floor = clock.live_head_ms().saturating_sub(RETENTION_MS);
                     let _ = timeline.prune_before(retention_floor)?;
-
-                    if !*paused {
-                        sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
-                    }
                 }
             }
             _ => {}
-        }
-
-        if !*paused {
-            sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
         }
     }
 
@@ -187,7 +177,7 @@ fn current_ui_cursor_ms(clock: &PlaybackClock) -> Option<u64> {
     }
 }
 
-fn sync_ui_track(
+pub(super) fn sync_ui_track(
     sender: &mpsc::Sender<UiEvent>,
     timeline: &TimelineStore,
     clock: &PlaybackClock,
