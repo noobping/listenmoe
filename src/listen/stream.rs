@@ -761,7 +761,7 @@ fn build_useragent() -> String {
 
 fn handle_live_direct_control(
     rx: &mpsc::Receiver<Control>,
-    sink: &Player,
+    sink: &Arc<queue::SourcesQueueInput>,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<Option<LiveDirectOutcome>> {
     while let Ok(cmd) = rx.try_recv() {
@@ -773,7 +773,8 @@ fn handle_live_direct_control(
                         now_string()
                     );
                 }
-                sink.stop();
+                sink.set_keep_alive_if_empty(false);
+                sink.clear();
                 clear_spectrum(spectrum_bits);
                 return Ok(Some(LiveDirectOutcome::Stop));
             }
@@ -784,7 +785,8 @@ fn handle_live_direct_control(
                         now_string()
                     );
                 }
-                sink.stop();
+                sink.set_keep_alive_if_empty(false);
+                sink.clear();
                 clear_spectrum(spectrum_bits);
                 return Ok(Some(LiveDirectOutcome::TransitionToBuffered));
             }
@@ -861,7 +863,8 @@ fn run_direct_live_until_pause(
     let metadata_opts: MetadataOptions = Default::default();
     let decoder_opts: DecoderOptions = Default::default();
 
-    let mut sink = Player::connect_new(mixer);
+    let (mut sink, sink_source) = queue::queue(true);
+    mixer.add(sink_source);
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let mut live_clock = LiveClockTracker::new(clock.live_head_ms());
 
@@ -891,8 +894,11 @@ fn run_direct_live_until_pause(
             }
         };
 
-        sink.stop();
-        sink = Player::connect_new(mixer);
+        sink.set_keep_alive_if_empty(false);
+        sink.clear();
+        let (new_sink, sink_source) = queue::queue(true);
+        mixer.add(sink_source);
+        sink = new_sink;
         live_clock.mark_reconnect();
         reset_fft_state(
             &mut fft_state.mono_ring,
@@ -965,8 +971,11 @@ fn run_direct_live_until_pause(
                 PacketOutcome::Continue => {}
                 PacketOutcome::Reconnect => break,
                 PacketOutcome::SpecChanged => {
-                    sink.stop();
-                    sink = Player::connect_new(mixer);
+                    sink.set_keep_alive_if_empty(false);
+                    sink.clear();
+                    let (new_sink, sink_source) = queue::queue(true);
+                    mixer.add(sink_source);
+                    sink = new_sink;
                     reset_fft_state(
                         &mut fft_state.mono_ring,
                         &mut fft_state.bars_smooth,

@@ -28,6 +28,7 @@ use super::model::{
 use super::parse::parse_track_batch;
 
 const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
+const TRACK_UPDATE_REQUEST_PAYLOAD: &str = r#"{"op":2}"#;
 
 macro_rules! debug_gateway {
     ($($arg:tt)*) => {
@@ -57,6 +58,7 @@ pub(super) fn run_once(
 
     let heartbeat_ms = read_hello_heartbeat(&mut ws)?;
     let _ = ws.send(Message::Text(HEARTBEAT_PAYLOAD.into()));
+    let _ = ws.send(Message::Text(TRACK_UPDATE_REQUEST_PAYLOAD.into()));
 
     let heartbeat_dur = heartbeat_ms.map(Duration::from_millis);
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
