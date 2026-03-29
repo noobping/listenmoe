@@ -182,7 +182,16 @@ pub(super) fn process_samples_for_viz(
     process_samples_for_viz_inner(samples, channels, sample_rate, fft_state, viz);
 
     if bars_enabled {
-        apply_spectrum_snapshot(spectrum_bits, &build_spectrum_snapshot_bits(fft_state));
+        for (target, value) in spectrum_bits
+            .iter()
+            .zip(fft_state.bars_smooth.iter().copied())
+        {
+            target.store(value.to_bits(), Ordering::Relaxed);
+        }
+
+        for target in spectrum_bits.iter().skip(fft_state.bars_smooth.len()) {
+            target.store(0.0f32.to_bits(), Ordering::Relaxed);
+        }
     } else {
         clear_spectrum(spectrum_bits);
     }
@@ -196,14 +205,6 @@ pub(super) fn build_spectrum_snapshot(
     viz: VizParams,
 ) -> Vec<u32> {
     process_samples_for_viz_inner(samples, channels, sample_rate, fft_state, viz);
-    fft_state
-        .bars_smooth
-        .iter()
-        .map(|value| value.to_bits())
-        .collect()
-}
-
-fn build_spectrum_snapshot_bits(fft_state: &FftVizState) -> Vec<u32> {
     fft_state
         .bars_smooth
         .iter()
