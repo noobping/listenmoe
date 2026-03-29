@@ -97,11 +97,6 @@ impl TimelineStore {
             .next()
             .map(|(_, track)| track.clone())
     }
-
-    pub fn earliest_timestamp_ms(&self) -> Option<u64> {
-        let inner = self.inner.lock().expect("timeline mutex poisoned");
-        inner.first_key_value().map(|(ts, _)| *ts)
-    }
 }
 
 fn load_tracks(path: &Path) -> Option<BTreeMap<u64, TrackInfo>> {

@@ -1,13 +1,21 @@
+#[cfg(test)]
 use std::collections::VecDeque;
-use std::fs::{self, File, OpenOptions};
+use std::fs;
+#[cfg(test)]
+use std::fs::{File, OpenOptions};
+#[cfg(test)]
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(test)]
+use std::path::PathBuf;
 
 use super::Result;
 
 pub const RETENTION_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const GAP_THRESHOLD_MS: u64 = 1_500;
+#[cfg(test)]
 const MAX_SEGMENT_BYTES: u64 = 512 * 1024 * 1024;
+#[cfg(test)]
 const BYTES_PER_SAMPLE: u64 = 4;
 
 pub fn compute_chunk_timing(
@@ -55,6 +63,7 @@ pub struct StoredPcmChunk {
 }
 
 #[derive(Debug, Clone)]
+#[cfg(test)]
 pub struct PlaybackReadCursor {
     segment_file_name: String,
     frame_offset: u64,
@@ -62,6 +71,7 @@ pub struct PlaybackReadCursor {
 }
 
 #[derive(Debug, Clone)]
+#[cfg(test)]
 struct StoredSegment {
     file_name: String,
     start_ms: u64,
@@ -73,6 +83,7 @@ struct StoredSegment {
 }
 
 #[derive(Debug)]
+#[cfg(test)]
 pub struct TimeshiftStore {
     root: PathBuf,
     segments: VecDeque<StoredSegment>,
@@ -82,6 +93,7 @@ pub struct TimeshiftStore {
     retention_ms: u64,
 }
 
+#[cfg(test)]
 impl TimeshiftStore {
     pub fn new_session(root: PathBuf, retention_ms: u64) -> Result<Self> {
         clear_root(&root)?;
@@ -96,16 +108,6 @@ impl TimeshiftStore {
             retention_ms,
         })
     }
-
-    pub fn clear(&mut self) -> Result<()> {
-        self.active_file = None;
-        self.segments.clear();
-        self.live_head_ms = 0;
-        clear_root(&self.root)?;
-        fs::create_dir_all(&self.root)?;
-        Ok(())
-    }
-
     pub fn append_pcm(
         &mut self,
         sample_rate: u32,
@@ -260,25 +262,6 @@ impl TimeshiftStore {
     pub fn earliest_timestamp_ms(&self) -> Option<u64> {
         self.segments.front().map(|segment| segment.start_ms)
     }
-
-    pub fn next_available_timestamp_ms(&self, cursor_ms: u64) -> Option<u64> {
-        self.segments
-            .iter()
-            .find(|segment| segment.end_ms > cursor_ms)
-            .map(|segment| segment.start_ms.max(cursor_ms))
-    }
-
-    pub fn clamp_cursor_ms(&self, cursor_ms: u64) -> u64 {
-        match self.earliest_timestamp_ms() {
-            Some(oldest) => cursor_ms.max(oldest),
-            None => cursor_ms,
-        }
-    }
-
-    pub fn live_head_ms(&self) -> u64 {
-        self.live_head_ms
-    }
-
     fn resolve_cursor<'a>(
         &'a self,
         cursor: &mut PlaybackReadCursor,

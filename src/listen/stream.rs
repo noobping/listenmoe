@@ -19,14 +19,10 @@ use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
 use super::clock::PlaybackClock;
-use super::store::{
-    clear_root, compute_chunk_timing, PlaybackReadCursor, StoredPcmChunk, TimeshiftStore,
-    RETENTION_MS,
-};
+use super::store::{clear_root, compute_chunk_timing, StoredPcmChunk, RETENTION_MS};
 use super::viz::{
     apply_spectrum_snapshot, build_spectrum_snapshot, clear_spectrum, decode_and_process_packet,
-    make_fft_state, process_samples_for_viz, reset_fft_state, DecodeState, FftVizState,
-    PacketOutcome, VizParams,
+    make_fft_state, reset_fft_state, DecodeState, FftVizState, PacketOutcome, VizParams,
 };
 use super::{Control, Result};
 
@@ -42,21 +38,6 @@ enum LiveDirectOutcome {
     TransitionToBuffered,
 }
 
-#[derive(Debug, Clone, Copy)]
-enum LivePlayerCommand {
-    Reset,
-    Stop,
-}
-
-enum LiveVizCommand {
-    Reset,
-    Samples {
-        channels: u16,
-        sample_rate: u32,
-        samples: Arc<[f32]>,
-    },
-}
-
 enum OutputCommandResult {
     Continue,
     Stop,
@@ -68,36 +49,8 @@ const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
 const LIVE_BUFFER_MS: u64 = RETENTION_MS;
 const LIVE_CLOCK_FLUSH_MS: u64 = 250;
-const LIVE_AUDIO_BATCH_MS: u32 = 50;
-const LIVE_AUDIO_QUEUE_TARGET_BUFFERS: usize = 6;
-const LIVE_VIZ_QUEUE_CAPACITY: usize = 8;
 const PLAYBACK_PREFILL_CHUNKS: usize = 8;
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
-
-#[derive(Default)]
-struct PlaybackNotifier {
-    generation: Mutex<u64>,
-    condvar: Condvar,
-}
-
-impl PlaybackNotifier {
-    fn notify(&self) {
-        let mut generation = self.generation.lock().expect("playback notifier poisoned");
-        *generation = generation.saturating_add(1);
-        self.condvar.notify_all();
-    }
-
-    fn wait_for_change(&self, last_seen: &mut u64, stop_requested: &Arc<AtomicBool>) {
-        let generation = self.generation.lock().expect("playback notifier poisoned");
-        let generation = self
-            .condvar
-            .wait_while(generation, |generation| {
-                *generation == *last_seen && !stop_requested.load(Ordering::Relaxed)
-            })
-            .expect("playback notifier poisoned");
-        *last_seen = *generation;
-    }
-}
 
 #[derive(Debug, Clone, Copy)]
 enum PlaybackEvent {
@@ -1081,12 +1034,6 @@ enum StoreCommand {
     },
 }
 
-enum PrefetchChunkResult {
-    Ready(QueuedPlaybackChunk, PlaybackReadCursor),
-    Pending,
-    RestartRequired,
-}
-
 fn playback_viz_params() -> VizParams {
     VizParams {
         peak_attack: 0.08,
@@ -1102,159 +1049,6 @@ fn live_viz_params() -> VizParams {
         peak_release: 0.998,
         sensitivity: 1.25,
         curve: 0.75,
-    }
-}
-
-fn spawn_live_viz_worker(
-    spectrum_bits: Arc<Vec<AtomicU32>>,
-) -> (mpsc::SyncSender<LiveVizCommand>, thread::JoinHandle<()>) {
-    let (tx, rx) = mpsc::sync_channel(LIVE_VIZ_QUEUE_CAPACITY);
-    let handle = thread::spawn(move || {
-        let mut fft_state = make_fft_state(spectrum_bits.len());
-        let viz = live_viz_params();
-
-        while let Ok(cmd) = rx.recv() {
-            match cmd {
-                LiveVizCommand::Reset => reset_fft_state(
-                    &mut fft_state.mono_ring,
-                    &mut fft_state.bars_smooth,
-                    &mut fft_state.bar_peak,
-                    &spectrum_bits,
-                ),
-                LiveVizCommand::Samples {
-                    channels,
-                    sample_rate,
-                    samples,
-                } => process_samples_for_viz(
-                    &samples,
-                    channels,
-                    sample_rate,
-                    true,
-                    &spectrum_bits,
-                    &mut fft_state,
-                    viz,
-                ),
-            }
-        }
-
-        clear_spectrum(&spectrum_bits);
-    });
-
-    (tx, handle)
-}
-
-fn reset_live_viz(tx: &mpsc::SyncSender<LiveVizCommand>, spectrum_bits: &Arc<Vec<AtomicU32>>) {
-    clear_spectrum(spectrum_bits);
-    let _ = tx.try_send(LiveVizCommand::Reset);
-}
-
-fn stop_live_viz(
-    tx: mpsc::SyncSender<LiveVizCommand>,
-    handle: thread::JoinHandle<()>,
-    spectrum_bits: &Arc<Vec<AtomicU32>>,
-) {
-    drop(tx);
-    let _ = handle.join();
-    clear_spectrum(spectrum_bits);
-}
-
-#[derive(Default)]
-struct LiveAudioBatcher {
-    channels: u16,
-    sample_rate: u32,
-    total_samples: usize,
-    head_offset: usize,
-    packets: VecDeque<Arc<[f32]>>,
-}
-
-impl LiveAudioBatcher {
-    fn clear(&mut self) {
-        self.channels = 0;
-        self.sample_rate = 0;
-        self.total_samples = 0;
-        self.head_offset = 0;
-        self.packets.clear();
-    }
-
-    fn push(&mut self, channels: u16, sample_rate: u32, samples: Arc<[f32]>) {
-        if channels == 0 || sample_rate == 0 || samples.is_empty() {
-            return;
-        }
-
-        if self.total_samples == 0 {
-            self.channels = channels;
-            self.sample_rate = sample_rate;
-        } else if self.channels != channels || self.sample_rate != sample_rate {
-            self.clear();
-            self.channels = channels;
-            self.sample_rate = sample_rate;
-        }
-
-        self.total_samples = self.total_samples.saturating_add(samples.len());
-        self.packets.push_back(samples);
-    }
-
-    fn flush_ready(&mut self, sink: &Player) {
-        let channels = usize::from(self.channels);
-        if channels == 0 || self.sample_rate == 0 {
-            return;
-        }
-
-        let Some(nz_channels) = NonZeroU16::new(self.channels) else {
-            return;
-        };
-        let Some(nz_sample_rate) = NonZeroU32::new(self.sample_rate) else {
-            return;
-        };
-
-        let frames_per_batch = (nz_sample_rate.get() * LIVE_AUDIO_BATCH_MS / 1_000).max(1) as usize;
-        let samples_per_batch = frames_per_batch.saturating_mul(channels);
-
-        while self.total_samples >= samples_per_batch
-            || (self.total_samples > 0 && sink.len() < LIVE_AUDIO_QUEUE_TARGET_BUFFERS)
-        {
-            let take_samples = if self.total_samples >= samples_per_batch {
-                samples_per_batch
-            } else {
-                self.total_samples
-            };
-            let samples = self.take_samples(take_samples);
-            sink.append(SamplesBuffer::new(nz_channels, nz_sample_rate, samples));
-
-            if take_samples < samples_per_batch {
-                break;
-            }
-        }
-    }
-
-    fn take_samples(&mut self, sample_count: usize) -> Vec<f32> {
-        let mut remaining = sample_count.min(self.total_samples);
-        let mut out = Vec::with_capacity(remaining);
-
-        while remaining > 0 {
-            let Some(front) = self.packets.front() else {
-                break;
-            };
-
-            let available = front.len().saturating_sub(self.head_offset);
-            let take = remaining.min(available);
-            out.extend_from_slice(&front[self.head_offset..self.head_offset + take]);
-
-            self.head_offset = self.head_offset.saturating_add(take);
-            self.total_samples = self.total_samples.saturating_sub(take);
-            remaining = remaining.saturating_sub(take);
-
-            if self.head_offset >= front.len() {
-                self.packets.pop_front();
-                self.head_offset = 0;
-            }
-        }
-
-        if self.total_samples == 0 {
-            self.head_offset = 0;
-        }
-
-        out
     }
 }
 
@@ -1323,30 +1117,6 @@ impl LiveClockTracker {
     }
 }
 
-fn read_prefetched_chunk(
-    store: &Arc<Mutex<TimeshiftStore>>,
-    cursor: &PlaybackReadCursor,
-    expected_channels: u16,
-    expected_sample_rate: u32,
-    fft_state: &mut FftVizState,
-) -> Result<PrefetchChunkResult> {
-    let mut next_cursor = cursor.clone();
-    let store = store.lock().expect("timeshift mutex poisoned");
-    let Some(audio) = store.read_chunk_from(&mut next_cursor, OUTPUT_CHUNK_MS)? else {
-        return Ok(PrefetchChunkResult::Pending);
-    };
-    drop(store);
-
-    if audio.channels != expected_channels || audio.sample_rate != expected_sample_rate {
-        return Ok(PrefetchChunkResult::RestartRequired);
-    }
-
-    Ok(PrefetchChunkResult::Ready(
-        QueuedPlaybackChunk::from_audio(audio, fft_state, playback_viz_params()),
-        next_cursor,
-    ))
-}
-
 fn run_live_playback_prefetch(
     live_buffer: Arc<LiveChunkBuffer>,
     queue: Arc<PlaybackQueue>,
@@ -1375,52 +1145,6 @@ fn run_live_playback_prefetch(
         if !queue.push_blocking(chunk, &stop_requested) {
             queue.close(PlaybackQueueCloseReason::Stopped);
             return;
-        }
-    }
-
-    queue.close(PlaybackQueueCloseReason::Stopped);
-}
-
-fn run_playback_prefetch(
-    store: Arc<Mutex<TimeshiftStore>>,
-    notifier: Arc<PlaybackNotifier>,
-    queue: Arc<PlaybackQueue>,
-    event_tx: mpsc::Sender<PlaybackEvent>,
-    stop_requested: Arc<AtomicBool>,
-    mut cursor: PlaybackReadCursor,
-    expected_channels: u16,
-    expected_sample_rate: u32,
-    mut fft_state: FftVizState,
-) {
-    let mut wait_generation = 0;
-
-    while !stop_requested.load(Ordering::Relaxed) {
-        match read_prefetched_chunk(
-            &store,
-            &cursor,
-            expected_channels,
-            expected_sample_rate,
-            &mut fft_state,
-        ) {
-            Ok(PrefetchChunkResult::Ready(chunk, next_cursor)) => {
-                cursor = next_cursor;
-                if !queue.push_blocking(chunk, &stop_requested) {
-                    break;
-                }
-            }
-            Ok(PrefetchChunkResult::Pending) => {
-                notifier.wait_for_change(&mut wait_generation, &stop_requested);
-            }
-            Ok(PrefetchChunkResult::RestartRequired) => {
-                let _ = event_tx.send(PlaybackEvent::RestartRequired);
-                queue.close(PlaybackQueueCloseReason::RestartRequired);
-                return;
-            }
-            Err(err) => {
-                eprintln!("playback prefetch error: {err}");
-                stop_requested.store(true, Ordering::Relaxed);
-                break;
-            }
         }
     }
 
@@ -1555,7 +1279,6 @@ fn teardown_playback_pipeline(
     output: Option<&Arc<queue::SourcesQueueInput>>,
     playback_generation: &Arc<AtomicU64>,
     live_buffer: &Arc<LiveChunkBuffer>,
-    notifier: &Arc<PlaybackNotifier>,
     playback_queue: &mut Option<Arc<PlaybackQueue>>,
     prefetch_worker: &mut Option<thread::JoinHandle<()>>,
     output_worker: &mut Option<thread::JoinHandle<()>>,
@@ -1569,7 +1292,6 @@ fn teardown_playback_pipeline(
         queue.close(PlaybackQueueCloseReason::Stopped);
     }
     live_buffer.wake();
-    notifier.notify();
     if let Some(handle) = prefetch_worker.take() {
         let _ = handle.join();
     }
@@ -1636,47 +1358,6 @@ fn run_buffer_relay(
     Ok(())
 }
 
-fn run_store_writer(
-    store: Arc<Mutex<TimeshiftStore>>,
-    clock: Arc<PlaybackClock>,
-    notifier: Arc<PlaybackNotifier>,
-    stop_requested: Arc<AtomicBool>,
-    rx: mpsc::Receiver<StoreCommand>,
-) -> Result<()> {
-    while let Ok(cmd) = rx.recv() {
-        match cmd {
-            StoreCommand::Append {
-                sample_rate,
-                channels,
-                samples,
-                now_ms,
-            } => {
-                let mut store = store.lock().expect("timeshift mutex poisoned");
-                let (_start_ms, end_ms) =
-                    store.append_pcm(sample_rate, channels, samples.as_ref(), now_ms)?;
-                let floor = store.earliest_timestamp_ms();
-                drop(store);
-
-                if clock.playback_cursor_ms() != 0 {
-                    if let Some(floor) = floor {
-                        clock.clamp_playback_floor(floor);
-                    }
-                } else {
-                    clock.set_playback_cursor_ms(buffered_playback_start_ms(end_ms, floor));
-                }
-
-                notifier.notify();
-            }
-        }
-
-        if stop_requested.load(Ordering::Relaxed) {
-            break;
-        }
-    }
-
-    Ok(())
-}
-
 fn run_one_connection(
     format: &mut Box<dyn symphonia::core::formats::FormatReader>,
     track_id: &mut u32,
@@ -1685,7 +1366,6 @@ fn run_one_connection(
     clock: &Arc<PlaybackClock>,
     stop_requested: &Arc<AtomicBool>,
     buffer_tx: &mpsc::Sender<StoreCommand>,
-    live_cmd_rx: &mpsc::Receiver<LivePlayerCommand>,
     direct_player: &mut Player,
     direct_mixer: &rodio::mixer::Mixer,
     direct_live_enabled: &Arc<AtomicBool>,
@@ -1702,16 +1382,6 @@ fn run_one_connection(
     loop {
         if stop_requested.load(Ordering::Relaxed) {
             return Ok(RunOutcome::Stop);
-        }
-
-        while let Ok(cmd) = live_cmd_rx.try_recv() {
-            match cmd {
-                LivePlayerCommand::Reset => reset_direct_player(direct_player, direct_mixer),
-                LivePlayerCommand::Stop => {
-                    direct_player.stop();
-                    return Ok(RunOutcome::Stop);
-                }
-            }
         }
 
         let packet = match format.next_packet() {
@@ -1837,7 +1507,6 @@ fn run_ingest_loop(
     clock: Arc<PlaybackClock>,
     stop_requested: Arc<AtomicBool>,
     buffer_tx: mpsc::Sender<StoreCommand>,
-    live_cmd_rx: mpsc::Receiver<LivePlayerCommand>,
     direct_mixer: rodio::mixer::Mixer,
     direct_live_enabled: Arc<AtomicBool>,
     capture_enabled: Arc<AtomicBool>,
@@ -1893,7 +1562,6 @@ fn run_ingest_loop(
             &clock,
             &stop_requested,
             &buffer_tx,
-            &live_cmd_rx,
             &mut direct_player,
             &direct_mixer,
             &direct_live_enabled,
@@ -1938,12 +1606,10 @@ pub(super) fn run_listenmoe_stream(
     }
 
     let live_buffer = Arc::new(LiveChunkBuffer::default());
-    let notifier = Arc::new(PlaybackNotifier::default());
     let stop_requested = Arc::new(AtomicBool::new(false));
     let direct_live_enabled = Arc::new(AtomicBool::new(false));
     let capture_enabled = Arc::new(AtomicBool::new(true));
     let mut output = None;
-    let (_live_cmd_tx, live_cmd_rx) = mpsc::channel();
     let (buffer_tx, buffer_rx) = mpsc::channel();
     let buffer_handle = {
         let live_buffer = live_buffer.clone();
@@ -1978,7 +1644,6 @@ pub(super) fn run_listenmoe_stream(
                 clock,
                 stop_requested,
                 buffer_tx,
-                live_cmd_rx,
                 direct_mixer,
                 direct_live_enabled,
                 capture_enabled,
@@ -2007,7 +1672,6 @@ pub(super) fn run_listenmoe_stream(
                     output.as_ref(),
                     &playback_generation,
                     &live_buffer,
-                    &notifier,
                     &mut playback_queue,
                     &mut playback_prefetch_worker,
                     &mut playback_output_worker,
@@ -2027,7 +1691,6 @@ pub(super) fn run_listenmoe_stream(
                         output.as_ref(),
                         &playback_generation,
                         &live_buffer,
-                        &notifier,
                         &mut playback_queue,
                         &mut playback_prefetch_worker,
                         &mut playback_output_worker,
@@ -2084,7 +1747,6 @@ pub(super) fn run_listenmoe_stream(
                             output.as_ref(),
                             &playback_generation,
                             &live_buffer,
-                            &notifier,
                             &mut playback_queue,
                             &mut playback_prefetch_worker,
                             &mut playback_output_worker,
@@ -2104,7 +1766,6 @@ pub(super) fn run_listenmoe_stream(
         output.as_ref(),
         &playback_generation,
         &live_buffer,
-        &notifier,
         &mut playback_queue,
         &mut playback_prefetch_worker,
         &mut playback_output_worker,

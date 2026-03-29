@@ -41,19 +41,4 @@ impl PlaybackClock {
     pub fn set_direct_live_mode(&self, value: bool) {
         self.direct_live_mode.store(value, Ordering::Relaxed);
     }
-
-    pub fn snap_playback_to_live(&self) -> u64 {
-        let live = self.live_head_ms();
-        self.set_playback_cursor_ms(live);
-        live
-    }
-
-    pub fn clamp_playback_floor(&self, floor_ms: u64) -> u64 {
-        let current = self.playback_cursor_ms();
-        let clamped = current.max(floor_ms);
-        if clamped != current {
-            self.set_playback_cursor_ms(clamped);
-        }
-        clamped
-    }
 }
