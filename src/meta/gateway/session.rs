@@ -22,7 +22,8 @@ use crate::ui::UiEvent;
 
 use super::control::invalidate_ui_schedule;
 use super::model::{
-    GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, OP_DISPATCH, OP_HEARTBEAT_ACK, OP_HELLO,
+    GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, EVENT_TRACK_UPDATE_REQUEST, OP_DISPATCH,
+    OP_HEARTBEAT_ACK, OP_HELLO,
 };
 use super::parse::parse_track_batch;
 
@@ -150,7 +151,7 @@ pub(super) fn run_once(
                 last_heartbeat_ack = Some(Instant::now());
                 debug_gateway!("Gateway heartbeat");
             }
-            (OP_DISPATCH, Some(EVENT_TRACK_UPDATE)) => {
+            (OP_DISPATCH, Some(EVENT_TRACK_UPDATE | EVENT_TRACK_UPDATE_REQUEST)) => {
                 if let Some(batch) = parse_track_batch(&env.d) {
                     debug_gateway!(
                         "live track update: {} - {} [{}] (duration={})",

@@ -739,10 +739,7 @@ fn buffered_playback_start_ms(live_head_ms: u64, floor_ms: Option<u64>) -> u64 {
 }
 
 fn build_client() -> Result<Client> {
-    Ok(Client::builder()
-        .pool_max_idle_per_host(0)
-        .connect_timeout(Duration::from_secs(5))
-        .build()?)
+    Ok(Client::new())
 }
 
 fn build_useragent() -> String {

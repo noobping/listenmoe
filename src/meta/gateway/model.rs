@@ -109,3 +109,4 @@ pub(super) const OP_HELLO: u8 = 0;
 pub(super) const OP_DISPATCH: u8 = 1;
 pub(super) const OP_HEARTBEAT_ACK: u8 = 10;
 pub(super) const EVENT_TRACK_UPDATE: &str = "TRACK_UPDATE";
+pub(super) const EVENT_TRACK_UPDATE_REQUEST: &str = "TRACK_UPDATE_REQUEST";
