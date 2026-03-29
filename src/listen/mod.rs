@@ -125,7 +125,6 @@ impl Listen {
                 let (tx, rx) = mpsc::channel::<Control>();
                 let station = inner.station;
                 let root = timeshift_root(station);
-                clock.set_direct_live_mode(true);
 
                 inner.state = State::Playing { tx: tx.clone() };
 

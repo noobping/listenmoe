@@ -1592,10 +1592,8 @@ pub(super) fn run_listenmoe_stream(
     clock.reset();
     let mut stream = DeviceSinkBuilder::open_default_sink()?;
     stream.log_on_drop(false);
-    clock.set_direct_live_mode(true);
     let live_outcome =
         run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, stream.mixer());
-    clock.set_direct_live_mode(false);
 
     match live_outcome? {
         LiveDirectOutcome::Stop => {

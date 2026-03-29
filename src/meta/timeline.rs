@@ -89,7 +89,7 @@ impl TimelineStore {
             .next_back()
             .map(|(_, track)| track.clone())
     }
-
+    #[cfg(test)]
     pub fn next_after(&self, cursor_ms: u64) -> Option<TrackInfo> {
         let inner = self.inner.lock().expect("timeline mutex poisoned");
         inner

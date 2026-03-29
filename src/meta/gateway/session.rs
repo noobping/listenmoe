@@ -1,10 +1,6 @@
 use std::io::{Read, Write};
 use std::sync::mpsc;
-use std::sync::{
-    atomic::{AtomicU64, Ordering},
-    Arc,
-};
-use std::thread;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use tungstenite::client::connect;
@@ -17,10 +13,10 @@ use crate::log::{is_verbose, now_string};
 use crate::meta::controller::Control;
 use crate::meta::error::MetaResult;
 use crate::meta::timeline::TimelineStore;
+use crate::meta::track::TrackInfo;
 use crate::station::Station;
 use crate::ui::UiEvent;
 
-use super::control::invalidate_ui_schedule;
 use super::model::{
     GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, EVENT_TRACK_UPDATE_REQUEST, OP_DISPATCH,
     OP_HEARTBEAT_ACK, OP_HELLO,
@@ -43,7 +39,6 @@ pub(super) fn run_once(
     sender: mpsc::Sender<UiEvent>,
     rx: &mpsc::Receiver<Control>,
     clock: Arc<PlaybackClock>,
-    ui_sched_id: Arc<AtomicU64>,
     timeline: Arc<TimelineStore>,
     paused: &mut bool,
 ) -> MetaResult<()> {
@@ -64,27 +59,21 @@ pub(super) fn run_once(
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
     let mut last_any_msg = Instant::now();
     let mut last_heartbeat_ack: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
+    let mut last_ui_track = None;
 
     loop {
         match rx.try_recv() {
-            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => {
-                invalidate_ui_schedule(&ui_sched_id);
-                break;
-            }
+            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
             Ok(Control::Pause) => {
                 debug_gateway!("Pausing meta data");
                 *paused = true;
-                invalidate_ui_schedule(&ui_sched_id);
+                last_ui_track = None;
             }
             Ok(Control::Resume) => {
                 debug_gateway!("Resuming meta data");
                 *paused = false;
-                resync_ui(
-                    sender.clone(),
-                    timeline.clone(),
-                    &clock,
-                    ui_sched_id.clone(),
-                );
+                last_ui_track = None;
+                sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }
@@ -128,6 +117,9 @@ pub(super) fn run_once(
                 if err.kind() == std::io::ErrorKind::WouldBlock
                     || err.kind() == std::io::ErrorKind::TimedOut =>
             {
+                if !*paused {
+                    sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
+                }
                 continue;
             }
             Err(err) => return Err(err.into()),
@@ -163,7 +155,6 @@ pub(super) fn run_once(
                         batch.current.duration_secs
                     );
 
-                    let current = batch.current.clone();
                     let mut tracks = batch.history;
                     tracks.push(batch.current);
                     timeline.insert_tracks(tracks)?;
@@ -171,56 +162,19 @@ pub(super) fn run_once(
                     let _ = timeline.prune_before(retention_floor)?;
 
                     if !*paused {
-                        if clock.is_direct_live_mode() {
-                            invalidate_ui_schedule(&ui_sched_id);
-                            debug_gateway!("ui live snap: {} - {}", current.artist, current.title);
-                            let _ = sender.send(UiEvent::TrackChanged(current));
-                        } else {
-                            resync_ui(
-                                sender.clone(),
-                                timeline.clone(),
-                                &clock,
-                                ui_sched_id.clone(),
-                            );
-                        }
+                        sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
                     }
                 }
             }
             _ => {}
         }
+
+        if !*paused {
+            sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
+        }
     }
 
     Ok(())
-}
-
-fn resync_ui(
-    sender: mpsc::Sender<UiEvent>,
-    timeline: Arc<TimelineStore>,
-    clock: &Arc<PlaybackClock>,
-    ui_sched_id: Arc<AtomicU64>,
-) {
-    invalidate_ui_schedule(&ui_sched_id);
-
-    let cursor_ms = match current_ui_cursor_ms(clock) {
-        Some(cursor_ms) => cursor_ms,
-        None => {
-            schedule_delayed_resync(
-                sender,
-                timeline,
-                clock.clone(),
-                ui_sched_id,
-                Duration::from_millis(250),
-            );
-            return;
-        }
-    };
-
-    if let Some(track) = timeline.track_for_cursor(cursor_ms) {
-        debug_gateway!("ui snap: {} - {}", track.artist, track.title);
-        let _ = sender.send(UiEvent::TrackChanged(track));
-    }
-
-    schedule_next_ui_switch(sender, timeline, clock.clone(), cursor_ms, ui_sched_id);
 }
 
 fn current_ui_cursor_ms(clock: &PlaybackClock) -> Option<u64> {
@@ -233,69 +187,27 @@ fn current_ui_cursor_ms(clock: &PlaybackClock) -> Option<u64> {
     }
 }
 
-fn schedule_delayed_resync(
-    sender: mpsc::Sender<UiEvent>,
-    timeline: Arc<TimelineStore>,
-    clock: Arc<PlaybackClock>,
-    ui_sched_id: Arc<AtomicU64>,
-    wait: Duration,
+fn sync_ui_track(
+    sender: &mpsc::Sender<UiEvent>,
+    timeline: &TimelineStore,
+    clock: &PlaybackClock,
+    last_ui_track: &mut Option<TrackInfo>,
 ) {
-    let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
-    thread::spawn(move || {
-        thread::sleep(wait);
-        if ui_sched_id.load(Ordering::Relaxed) != my_id {
-            return;
-        }
-        resync_ui(sender, timeline, &clock, ui_sched_id);
-    });
-}
-
-fn schedule_next_ui_switch(
-    sender: mpsc::Sender<UiEvent>,
-    timeline: Arc<TimelineStore>,
-    clock: Arc<PlaybackClock>,
-    cursor_ms: u64,
-    ui_sched_id: Arc<AtomicU64>,
-) {
-    let Some(next) = timeline.next_after(cursor_ms) else {
+    let Some(cursor_ms) = current_ui_cursor_ms(clock) else {
+        return;
+    };
+    let Some(track) = timeline.track_for_cursor(cursor_ms) else {
+        *last_ui_track = None;
         return;
     };
 
-    let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
-    let wait_ms = next.start_time_ms.saturating_sub(cursor_ms);
+    if last_ui_track.as_ref() == Some(&track) {
+        return;
+    }
 
-    thread::spawn(move || {
-        if wait_ms > 0 {
-            thread::sleep(Duration::from_millis(wait_ms));
-        }
-
-        if ui_sched_id.load(Ordering::Relaxed) != my_id {
-            return;
-        }
-
-        let Some(current_cursor_ms) = current_ui_cursor_ms(&clock) else {
-            schedule_delayed_resync(
-                sender,
-                timeline,
-                clock,
-                ui_sched_id,
-                Duration::from_millis(250),
-            );
-            return;
-        };
-
-        if current_cursor_ms < next.start_time_ms {
-            schedule_next_ui_switch(sender, timeline, clock, current_cursor_ms, ui_sched_id);
-            return;
-        }
-
-        if let Some(track) = timeline.track_for_cursor(current_cursor_ms) {
-            debug_gateway!("ui scheduled snap: {} - {}", track.artist, track.title);
-            let _ = sender.send(UiEvent::TrackChanged(track));
-        }
-
-        schedule_next_ui_switch(sender, timeline, clock, current_cursor_ms, ui_sched_id);
-    });
+    debug_gateway!("ui sync: {} - {}", track.artist, track.title);
+    let _ = sender.send(UiEvent::TrackChanged(track.clone()));
+    *last_ui_track = Some(track);
 }
 
 fn read_hello_heartbeat<S>(ws: &mut WebSocket<S>) -> MetaResult<Option<u64>>
@@ -333,13 +245,13 @@ fn set_maybe_tls_read_timeout(
 
 #[cfg(test)]
 mod tests {
-    use super::{invalidate_ui_schedule, schedule_next_ui_switch};
+    use super::sync_ui_track;
     use crate::listen::PlaybackClock;
     use crate::meta::timeline::TimelineStore;
     use crate::meta::track::TrackInfo;
     use crate::ui::UiEvent;
     use std::path::PathBuf;
-    use std::sync::{atomic::AtomicU64, mpsc, Arc};
+    use std::sync::{mpsc, Arc};
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     fn temp_file(name: &str) -> PathBuf {
@@ -363,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn scheduled_switch_waits_for_cursor_to_reach_next_track() {
+    fn sync_ui_track_follows_playback_cursor() {
         let path = temp_file("meta-schedule");
         let timeline = Arc::new(TimelineStore::new(path.clone()));
         timeline
@@ -373,18 +285,25 @@ mod tests {
         let clock = Arc::new(PlaybackClock::new());
         clock.set_playback_cursor_ms(500);
 
-        let ui_sched_id = Arc::new(AtomicU64::new(0));
         let (tx, rx) = mpsc::channel();
-        schedule_next_ui_switch(tx, timeline, clock.clone(), 500, ui_sched_id.clone());
+        let mut last_ui_track = None;
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
 
-        assert!(
-            rx.recv_timeout(Duration::from_millis(650)).is_err(),
-            "ui should not switch before the playback cursor advances"
-        );
+        let event = rx
+            .recv_timeout(Duration::from_millis(50))
+            .expect("missing current track");
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "current"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        assert!(rx.recv_timeout(Duration::from_millis(50)).is_err());
 
         clock.set_playback_cursor_ms(1_000);
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
         let event = rx
-            .recv_timeout(Duration::from_millis(800))
+            .recv_timeout(Duration::from_millis(50))
             .expect("missing track change after cursor advance");
 
         match event {
@@ -392,7 +311,6 @@ mod tests {
             other => panic!("unexpected event: {other:?}"),
         }
 
-        invalidate_ui_schedule(&ui_sched_id);
         let _ = std::fs::remove_file(path);
     }
 }
