@@ -53,7 +53,7 @@ enum LiveVizCommand {
     Samples {
         channels: u16,
         sample_rate: u32,
-        samples: Vec<f32>,
+        samples: Arc<[f32]>,
     },
 }
 
@@ -68,6 +68,8 @@ const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
 const LIVE_BUFFER_MS: u64 = RETENTION_MS;
 const LIVE_CLOCK_FLUSH_MS: u64 = 250;
+const LIVE_AUDIO_BATCH_MS: u32 = 50;
+const LIVE_AUDIO_QUEUE_TARGET_BUFFERS: usize = 6;
 const LIVE_VIZ_QUEUE_CAPACITY: usize = 8;
 const PLAYBACK_PREFILL_CHUNKS: usize = 8;
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
@@ -864,12 +866,10 @@ fn run_direct_live_until_pause(
     let mut sink = Player::connect_new(mixer);
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let mut live_clock = LiveClockTracker::new(clock.live_head_ms());
-    let (live_viz_tx, live_viz_handle) = spawn_live_viz_worker(spectrum_bits.clone());
 
     loop {
         if let Some(outcome) = handle_live_direct_control(rx, &sink, spectrum_bits)? {
             live_clock.flush_now(clock);
-            stop_live_viz(live_viz_tx, live_viz_handle, spectrum_bits);
             return Ok(outcome);
         }
 
@@ -896,10 +896,12 @@ fn run_direct_live_until_pause(
         sink.stop();
         sink = Player::connect_new(mixer);
         live_clock.mark_reconnect();
-        fft_state.mono_ring.clear();
-        fft_state.bars_smooth.fill(0.0);
-        fft_state.bar_peak.fill(0.0);
-        reset_live_viz(&live_viz_tx, spectrum_bits);
+        reset_fft_state(
+            &mut fft_state.mono_ring,
+            &mut fft_state.bars_smooth,
+            &mut fft_state.bar_peak,
+            spectrum_bits,
+        );
 
         let mut decode_state = DecodeState {
             sample_buf: None,
@@ -910,7 +912,6 @@ fn run_direct_live_until_pause(
         loop {
             if let Some(outcome) = handle_live_direct_control(rx, &sink, spectrum_bits)? {
                 live_clock.flush_now(clock);
-                stop_live_viz(live_viz_tx, live_viz_handle, spectrum_bits);
                 return Ok(outcome);
             }
 
@@ -934,10 +935,12 @@ fn run_direct_live_until_pause(
                     decoder = symphonia::default::get_codecs()
                         .make(&new_track.codec_params, &decoder_opts)?;
                     decode_state.sample_buf = None;
-                    fft_state.mono_ring.clear();
-                    fft_state.bars_smooth.fill(0.0);
-                    fft_state.bar_peak.fill(0.0);
-                    reset_live_viz(&live_viz_tx, spectrum_bits);
+                    reset_fft_state(
+                        &mut fft_state.mono_ring,
+                        &mut fft_state.bars_smooth,
+                        &mut fft_state.bar_peak,
+                        spectrum_bits,
+                    );
                     continue;
                 }
                 Err(err) => {
@@ -953,7 +956,7 @@ fn run_direct_live_until_pause(
                 &mut track_id,
                 &mut decoder,
                 &decoder_opts,
-                false,
+                true,
                 spectrum_bits,
                 &mut decode_state,
                 &mut fft_state,
@@ -965,24 +968,28 @@ fn run_direct_live_until_pause(
                 PacketOutcome::Reconnect => break,
                 PacketOutcome::SpecChanged => {
                     sink.stop();
-                    fft_state.mono_ring.clear();
-                    fft_state.bars_smooth.fill(0.0);
-                    fft_state.bar_peak.fill(0.0);
-                    reset_live_viz(&live_viz_tx, spectrum_bits);
+                    sink = Player::connect_new(mixer);
+                    reset_fft_state(
+                        &mut fft_state.mono_ring,
+                        &mut fft_state.bars_smooth,
+                        &mut fft_state.bar_peak,
+                        spectrum_bits,
+                    );
                     continue;
                 }
             }
 
             if let Some((channels, sample_rate, samples)) = audio {
-                append_samples_in_chunks(&sink, channels, sample_rate, &samples);
+                let Some(channels) = NonZeroU16::new(channels) else {
+                    continue;
+                };
+                let Some(sample_rate) = NonZeroU32::new(sample_rate) else {
+                    continue;
+                };
                 let sample_count = samples.len();
-                let _ = live_viz_tx.try_send(LiveVizCommand::Samples {
-                    channels,
-                    sample_rate,
-                    samples,
-                });
+                sink.append(SamplesBuffer::new(channels, sample_rate, samples));
                 if live_clock
-                    .advance(sample_rate, channels, sample_count)
+                    .advance(sample_rate.get(), channels.get(), sample_count)
                     .is_some()
                 {
                     live_clock.flush_if_due(clock);
@@ -1142,6 +1149,106 @@ fn stop_live_viz(
     drop(tx);
     let _ = handle.join();
     clear_spectrum(spectrum_bits);
+}
+
+#[derive(Default)]
+struct LiveAudioBatcher {
+    channels: u16,
+    sample_rate: u32,
+    total_samples: usize,
+    head_offset: usize,
+    packets: VecDeque<Arc<[f32]>>,
+}
+
+impl LiveAudioBatcher {
+    fn clear(&mut self) {
+        self.channels = 0;
+        self.sample_rate = 0;
+        self.total_samples = 0;
+        self.head_offset = 0;
+        self.packets.clear();
+    }
+
+    fn push(&mut self, channels: u16, sample_rate: u32, samples: Arc<[f32]>) {
+        if channels == 0 || sample_rate == 0 || samples.is_empty() {
+            return;
+        }
+
+        if self.total_samples == 0 {
+            self.channels = channels;
+            self.sample_rate = sample_rate;
+        } else if self.channels != channels || self.sample_rate != sample_rate {
+            self.clear();
+            self.channels = channels;
+            self.sample_rate = sample_rate;
+        }
+
+        self.total_samples = self.total_samples.saturating_add(samples.len());
+        self.packets.push_back(samples);
+    }
+
+    fn flush_ready(&mut self, sink: &Player) {
+        let channels = usize::from(self.channels);
+        if channels == 0 || self.sample_rate == 0 {
+            return;
+        }
+
+        let Some(nz_channels) = NonZeroU16::new(self.channels) else {
+            return;
+        };
+        let Some(nz_sample_rate) = NonZeroU32::new(self.sample_rate) else {
+            return;
+        };
+
+        let frames_per_batch = (nz_sample_rate.get() * LIVE_AUDIO_BATCH_MS / 1_000).max(1) as usize;
+        let samples_per_batch = frames_per_batch.saturating_mul(channels);
+
+        while self.total_samples >= samples_per_batch
+            || (self.total_samples > 0 && sink.len() < LIVE_AUDIO_QUEUE_TARGET_BUFFERS)
+        {
+            let take_samples = if self.total_samples >= samples_per_batch {
+                samples_per_batch
+            } else {
+                self.total_samples
+            };
+            let samples = self.take_samples(take_samples);
+            sink.append(SamplesBuffer::new(nz_channels, nz_sample_rate, samples));
+
+            if take_samples < samples_per_batch {
+                break;
+            }
+        }
+    }
+
+    fn take_samples(&mut self, sample_count: usize) -> Vec<f32> {
+        let mut remaining = sample_count.min(self.total_samples);
+        let mut out = Vec::with_capacity(remaining);
+
+        while remaining > 0 {
+            let Some(front) = self.packets.front() else {
+                break;
+            };
+
+            let available = front.len().saturating_sub(self.head_offset);
+            let take = remaining.min(available);
+            out.extend_from_slice(&front[self.head_offset..self.head_offset + take]);
+
+            self.head_offset = self.head_offset.saturating_add(take);
+            self.total_samples = self.total_samples.saturating_sub(take);
+            remaining = remaining.saturating_sub(take);
+
+            if self.head_offset >= front.len() {
+                self.packets.pop_front();
+                self.head_offset = 0;
+            }
+        }
+
+        if self.total_samples == 0 {
+            self.head_offset = 0;
+        }
+
+        out
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1810,8 +1917,12 @@ pub(super) fn run_listenmoe_stream(
     clock.reset();
     let mut stream = DeviceSinkBuilder::open_default_sink()?;
     stream.log_on_drop(false);
+    clock.set_direct_live_mode(true);
+    let live_outcome =
+        run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, stream.mixer());
+    clock.set_direct_live_mode(false);
 
-    match run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, stream.mixer())? {
+    match live_outcome? {
         LiveDirectOutcome::Stop => {
             clear_root(&root)?;
             return Ok(());

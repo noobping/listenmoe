@@ -160,6 +160,7 @@ pub(super) fn run_once(
                         batch.current.duration_secs
                     );
 
+                    let current = batch.current.clone();
                     let mut tracks = batch.history;
                     tracks.push(batch.current);
                     timeline.insert_tracks(tracks)?;
@@ -167,12 +168,18 @@ pub(super) fn run_once(
                     let _ = timeline.prune_before(retention_floor)?;
 
                     if !*paused {
-                        resync_ui(
-                            sender.clone(),
-                            timeline.clone(),
-                            &clock,
-                            ui_sched_id.clone(),
-                        );
+                        if clock.is_direct_live_mode() {
+                            invalidate_ui_schedule(&ui_sched_id);
+                            debug_gateway!("ui live snap: {} - {}", current.artist, current.title);
+                            let _ = sender.send(UiEvent::TrackChanged(current));
+                        } else {
+                            resync_ui(
+                                sender.clone(),
+                                timeline.clone(),
+                                &clock,
+                                ui_sched_id.clone(),
+                            );
+                        }
                     }
                 }
             }
@@ -216,7 +223,6 @@ fn resync_ui(
 
     schedule_next_ui_switch(sender, timeline, cursor_ms, ui_sched_id);
 }
-
 fn schedule_delayed_resync(
     sender: mpsc::Sender<UiEvent>,
     timeline: Arc<TimelineStore>,
