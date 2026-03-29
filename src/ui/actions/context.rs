@@ -65,8 +65,8 @@ impl ActionCtx {
 
     pub(super) fn play(&self, set_playback: &dyn Fn(PlaybackStatus)) {
         let _ = self.ui_tx.send(UiEvent::Connecting);
-        self.meta.start();
         self.radio.start();
+        self.meta.start();
         self.play_button.set_visible(false);
         self.pause_button.set_visible(true);
         set_playback(PlaybackStatus::Playing);

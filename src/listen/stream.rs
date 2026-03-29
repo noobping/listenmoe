@@ -825,7 +825,8 @@ fn open_stream(
 
     let http_source = HttpSource { inner: response };
     let mss = MediaSourceStream::new(Box::new(http_source), Default::default());
-    let hint = Hint::new();
+    let mut hint = Hint::new();
+    hint.with_extension("ogg");
 
     let probed = symphonia::default::get_probe().format(&hint, mss, format_opts, metadata_opts)?;
     let format = probed.format;
@@ -1915,7 +1916,7 @@ pub(super) fn run_listenmoe_stream(
     root: PathBuf,
 ) -> Result<()> {
     clock.reset();
-    let mut stream = DeviceSinkBuilder::open_default_sink()?;
+    let mut stream = DeviceSinkBuilder::from_default_device()?.open_stream()?;
     stream.log_on_drop(false);
     clock.set_direct_live_mode(true);
     let live_outcome =
