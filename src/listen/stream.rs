@@ -25,7 +25,8 @@ use super::store::{
 };
 use super::viz::{
     apply_spectrum_snapshot, build_spectrum_snapshot, clear_spectrum, decode_and_process_packet,
-    make_fft_state, reset_fft_state, DecodeState, FftVizState, PacketOutcome, VizParams,
+    make_fft_state, process_samples_for_viz, reset_fft_state, DecodeState, FftVizState,
+    PacketOutcome, VizParams,
 };
 use super::{Control, Result};
 
@@ -47,6 +48,15 @@ enum LivePlayerCommand {
     Stop,
 }
 
+enum LiveVizCommand {
+    Reset,
+    Samples {
+        channels: u16,
+        sample_rate: u32,
+        samples: Vec<f32>,
+    },
+}
+
 enum OutputCommandResult {
     Continue,
     Stop,
@@ -58,6 +68,7 @@ const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
 const LIVE_BUFFER_MS: u64 = RETENTION_MS;
 const LIVE_CLOCK_FLUSH_MS: u64 = 250;
+const LIVE_VIZ_QUEUE_CAPACITY: usize = 8;
 const PLAYBACK_PREFILL_CHUNKS: usize = 8;
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
 
@@ -853,11 +864,12 @@ fn run_direct_live_until_pause(
     let mut sink = Player::connect_new(mixer);
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let mut live_clock = LiveClockTracker::new(clock.live_head_ms());
-    let viz = live_viz_params();
+    let (live_viz_tx, live_viz_handle) = spawn_live_viz_worker(spectrum_bits.clone());
 
     loop {
         if let Some(outcome) = handle_live_direct_control(rx, &sink, spectrum_bits)? {
             live_clock.flush_now(clock);
+            stop_live_viz(live_viz_tx, live_viz_handle, spectrum_bits);
             return Ok(outcome);
         }
 
@@ -884,12 +896,10 @@ fn run_direct_live_until_pause(
         sink.stop();
         sink = Player::connect_new(mixer);
         live_clock.mark_reconnect();
-        reset_fft_state(
-            &mut fft_state.mono_ring,
-            &mut fft_state.bars_smooth,
-            &mut fft_state.bar_peak,
-            spectrum_bits,
-        );
+        fft_state.mono_ring.clear();
+        fft_state.bars_smooth.fill(0.0);
+        fft_state.bar_peak.fill(0.0);
+        reset_live_viz(&live_viz_tx, spectrum_bits);
 
         let mut decode_state = DecodeState {
             sample_buf: None,
@@ -900,6 +910,7 @@ fn run_direct_live_until_pause(
         loop {
             if let Some(outcome) = handle_live_direct_control(rx, &sink, spectrum_bits)? {
                 live_clock.flush_now(clock);
+                stop_live_viz(live_viz_tx, live_viz_handle, spectrum_bits);
                 return Ok(outcome);
             }
 
@@ -923,12 +934,10 @@ fn run_direct_live_until_pause(
                     decoder = symphonia::default::get_codecs()
                         .make(&new_track.codec_params, &decoder_opts)?;
                     decode_state.sample_buf = None;
-                    reset_fft_state(
-                        &mut fft_state.mono_ring,
-                        &mut fft_state.bars_smooth,
-                        &mut fft_state.bar_peak,
-                        spectrum_bits,
-                    );
+                    fft_state.mono_ring.clear();
+                    fft_state.bars_smooth.fill(0.0);
+                    fft_state.bar_peak.fill(0.0);
+                    reset_live_viz(&live_viz_tx, spectrum_bits);
                     continue;
                 }
                 Err(err) => {
@@ -944,11 +953,11 @@ fn run_direct_live_until_pause(
                 &mut track_id,
                 &mut decoder,
                 &decoder_opts,
-                true,
+                false,
                 spectrum_bits,
                 &mut decode_state,
                 &mut fft_state,
-                viz,
+                live_viz_params(),
             )?;
 
             match outcome {
@@ -956,20 +965,24 @@ fn run_direct_live_until_pause(
                 PacketOutcome::Reconnect => break,
                 PacketOutcome::SpecChanged => {
                     sink.stop();
-                    reset_fft_state(
-                        &mut fft_state.mono_ring,
-                        &mut fft_state.bars_smooth,
-                        &mut fft_state.bar_peak,
-                        spectrum_bits,
-                    );
+                    fft_state.mono_ring.clear();
+                    fft_state.bars_smooth.fill(0.0);
+                    fft_state.bar_peak.fill(0.0);
+                    reset_live_viz(&live_viz_tx, spectrum_bits);
                     continue;
                 }
             }
 
             if let Some((channels, sample_rate, samples)) = audio {
                 append_samples_in_chunks(&sink, channels, sample_rate, &samples);
+                let sample_count = samples.len();
+                let _ = live_viz_tx.try_send(LiveVizCommand::Samples {
+                    channels,
+                    sample_rate,
+                    samples,
+                });
                 if live_clock
-                    .advance(sample_rate, channels, samples.len())
+                    .advance(sample_rate, channels, sample_count)
                     .is_some()
                 {
                     live_clock.flush_if_due(clock);
@@ -1076,6 +1089,59 @@ fn live_viz_params() -> VizParams {
         sensitivity: 1.25,
         curve: 0.75,
     }
+}
+
+fn spawn_live_viz_worker(
+    spectrum_bits: Arc<Vec<AtomicU32>>,
+) -> (mpsc::SyncSender<LiveVizCommand>, thread::JoinHandle<()>) {
+    let (tx, rx) = mpsc::sync_channel(LIVE_VIZ_QUEUE_CAPACITY);
+    let handle = thread::spawn(move || {
+        let mut fft_state = make_fft_state(spectrum_bits.len());
+        let viz = live_viz_params();
+
+        while let Ok(cmd) = rx.recv() {
+            match cmd {
+                LiveVizCommand::Reset => reset_fft_state(
+                    &mut fft_state.mono_ring,
+                    &mut fft_state.bars_smooth,
+                    &mut fft_state.bar_peak,
+                    &spectrum_bits,
+                ),
+                LiveVizCommand::Samples {
+                    channels,
+                    sample_rate,
+                    samples,
+                } => process_samples_for_viz(
+                    &samples,
+                    channels,
+                    sample_rate,
+                    true,
+                    &spectrum_bits,
+                    &mut fft_state,
+                    viz,
+                ),
+            }
+        }
+
+        clear_spectrum(&spectrum_bits);
+    });
+
+    (tx, handle)
+}
+
+fn reset_live_viz(tx: &mpsc::SyncSender<LiveVizCommand>, spectrum_bits: &Arc<Vec<AtomicU32>>) {
+    clear_spectrum(spectrum_bits);
+    let _ = tx.try_send(LiveVizCommand::Reset);
+}
+
+fn stop_live_viz(
+    tx: mpsc::SyncSender<LiveVizCommand>,
+    handle: thread::JoinHandle<()>,
+    spectrum_bits: &Arc<Vec<AtomicU32>>,
+) {
+    drop(tx);
+    let _ = handle.join();
+    clear_spectrum(spectrum_bits);
 }
 
 #[derive(Debug, Clone, Copy)]
