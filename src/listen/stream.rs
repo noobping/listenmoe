@@ -1922,7 +1922,7 @@ pub(super) fn run_listenmoe_stream(
     root: PathBuf,
 ) -> Result<()> {
     clock.reset();
-    let mut stream = DeviceSinkBuilder::from_default_device()?.open_stream()?;
+    let mut stream = DeviceSinkBuilder::open_default_sink()?;
     stream.log_on_drop(false);
     clock.set_direct_live_mode(true);
     let live_outcome =
