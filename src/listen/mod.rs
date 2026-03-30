@@ -117,7 +117,6 @@ impl Listen {
                 return;
             }
             State::Paused { tx } => {
-                snap_resume_cursor_to_live(&clock);
                 let _ = tx.send(Control::Resume);
                 inner.state = State::Playing { tx: tx.clone() };
                 return;
@@ -147,13 +146,6 @@ impl Listen {
         }
         inner.state = State::Stopped;
         clock.reset();
-    }
-}
-
-fn snap_resume_cursor_to_live(clock: &PlaybackClock) {
-    let live_head = clock.live_head_ms();
-    if live_head != 0 {
-        clock.set_playback_cursor_ms(live_head);
     }
 }
 
@@ -192,17 +184,31 @@ fn unique_session_id() -> u128 {
 
 #[cfg(test)]
 mod tests {
-    use super::snap_resume_cursor_to_live;
-    use super::PlaybackClock;
+    use std::sync::atomic::AtomicU32;
+    use std::sync::{mpsc, Arc};
+
+    use super::{Control, Inner, Listen, PlaybackClock, State};
+    use crate::station::Station;
 
     #[test]
-    fn resume_cursor_snaps_to_live_head() {
-        let clock = PlaybackClock::new();
+    fn resume_from_paused_preserves_playback_cursor() {
+        let (tx, rx) = mpsc::channel();
+        let mut inner = Inner {
+            station: Station::Jpop,
+            state: State::Paused { tx },
+        };
+        let clock = Arc::new(PlaybackClock::new());
         clock.set_live_head_ms(9_000);
         clock.set_playback_cursor_ms(1_000);
+        let spectrum_bits = Arc::new((0..48).map(|_| AtomicU32::new(0)).collect());
 
-        snap_resume_cursor_to_live(&clock);
+        Listen::start_inner(&mut inner, spectrum_bits, clock.clone());
 
-        assert_eq!(clock.playback_cursor_ms(), 9_000);
+        assert_eq!(clock.playback_cursor_ms(), 1_000);
+        assert!(matches!(inner.state, State::Playing { .. }));
+        assert!(matches!(
+            rx.recv().expect("missing control"),
+            Control::Resume
+        ));
     }
 }
