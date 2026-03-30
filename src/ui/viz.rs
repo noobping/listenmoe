@@ -11,8 +11,13 @@ pub struct VizHandle {
 impl VizHandle {
     pub fn set_values(&self, new_vals: &[f32]) {
         let mut v = self.values.borrow_mut();
-        v.clear();
-        v.extend(new_vals.iter().map(|x| x.clamp(0.0, 1.0)));
+        if v.len() != new_vals.len() {
+            v.resize(new_vals.len(), 0.0);
+        }
+
+        for (dst, src) in v.iter_mut().zip(new_vals.iter()) {
+            *dst = src.clamp(0.0, 1.0);
+        }
     }
 }
 

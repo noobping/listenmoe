@@ -13,6 +13,8 @@ pub(super) struct GatewaySongPayload {
     pub song: Song,
     #[serde(rename = "startTime")]
     pub start_time: String,
+    #[serde(rename = "lastPlayed", default)]
+    pub last_played: Vec<Song>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -45,6 +47,14 @@ impl Song {
             .join(", ")
     }
 
+    pub fn display_album(self: &Self) -> String {
+        self.albums
+            .first()
+            .and_then(|album| album.name.as_deref())
+            .map(str::to_owned)
+            .unwrap_or_default()
+    }
+
     pub fn album_cover_url(self: &Self) -> Option<String> {
         self.albums
             .first()
@@ -72,6 +82,7 @@ pub(super) struct Artist {
 
 #[derive(Debug, Deserialize)]
 pub(super) struct Album {
+    pub name: Option<String>,
     pub image: Option<String>,
 }
 
@@ -98,3 +109,4 @@ pub(super) const OP_HELLO: u8 = 0;
 pub(super) const OP_DISPATCH: u8 = 1;
 pub(super) const OP_HEARTBEAT_ACK: u8 = 10;
 pub(super) const EVENT_TRACK_UPDATE: &str = "TRACK_UPDATE";
+pub(super) const EVENT_TRACK_UPDATE_REQUEST: &str = "TRACK_UPDATE_REQUEST";

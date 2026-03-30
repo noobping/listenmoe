@@ -1,8 +1,7 @@
-use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::sync::mpsc;
 use std::sync::{
-    atomic::{AtomicU64, Ordering},
+    atomic::{AtomicBool, Ordering},
     Arc,
 };
 use std::time::{Duration, Instant};
@@ -12,22 +11,24 @@ use tungstenite::protocol::WebSocket;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message;
 
+use crate::listen::{PlaybackClock, RETENTION_MS};
 use crate::log::{is_verbose, now_string};
 use crate::meta::controller::Control;
 use crate::meta::error::MetaResult;
-use crate::meta::schedule::{
-    pick_track_for_playback, schedule_next_from_history, schedule_ui_switch,
-};
+use crate::meta::timeline::TimelineStore;
 use crate::meta::track::TrackInfo;
 use crate::station::Station;
+use crate::ui::UiEvent;
 
-use super::control::invalidate_ui_schedule;
+use super::history::{PlayHistoryClient, RECENT_HISTORY_COUNT};
 use super::model::{
-    GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, OP_DISPATCH, OP_HEARTBEAT_ACK, OP_HELLO,
+    GatewayEnvelope, GatewayHello, EVENT_TRACK_UPDATE, EVENT_TRACK_UPDATE_REQUEST, OP_DISPATCH,
+    OP_HEARTBEAT_ACK, OP_HELLO,
 };
-use super::parse::parse_track_info;
+use super::parse::parse_track_batch;
 
 const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
+const TRACK_UPDATE_REQUEST_PAYLOAD: &str = r#"{"op":2}"#;
 
 macro_rules! debug_gateway {
     ($($arg:tt)*) => {
@@ -37,71 +38,51 @@ macro_rules! debug_gateway {
     };
 }
 
-/// Single websocket session, with a simple heartbeat loop.
-/// Keeps history and does "snap-to-buffered-track" on Resume.
 pub(super) fn run_once(
     station: Station,
-    sender: mpsc::Sender<TrackInfo>,
     rx: &mpsc::Receiver<Control>,
-    lag_ms: Arc<AtomicU64>,
-    ui_sched_id: Arc<AtomicU64>,
+    paused_flag: Arc<AtomicBool>,
+    clock: Arc<PlaybackClock>,
+    timeline: Arc<TimelineStore>,
     paused: &mut bool,
 ) -> MetaResult<()> {
     if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
         return Ok(());
     }
 
+    let history_client = PlayHistoryClient::new()?;
     let url = station.ws_url();
     let (mut ws, _response) = connect(url)?;
     set_maybe_tls_read_timeout(ws.get_mut(), Duration::from_millis(200))?;
     debug_gateway!("Gateway connected to LISTEN.moe");
 
-    // Read hello and get heartbeat interval (if any).
     let heartbeat_ms = read_hello_heartbeat(&mut ws)?;
-    // Send an immediate heartbeat once after HELLO, then continue on the interval.
     let _ = ws.send(Message::Text(HEARTBEAT_PAYLOAD.into()));
+    let _ = ws.send(Message::Text(TRACK_UPDATE_REQUEST_PAYLOAD.into()));
+    refresh_timeline_from_history(station, &history_client, &timeline, &clock)?;
 
     let heartbeat_dur = heartbeat_ms.map(Duration::from_millis);
     let mut last_heartbeat: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
-
-    // Liveness tracking: when the network interface changes, the socket may stop delivering
-    // messages without cleanly closing.
     let mut last_any_msg = Instant::now();
     let mut last_heartbeat_ack: Option<Instant> = heartbeat_dur.map(|_| Instant::now());
 
-    let mut history: VecDeque<TrackInfo> = VecDeque::new();
-
     loop {
-        // Check for control messages first.
         match rx.try_recv() {
-            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => {
-                invalidate_ui_schedule(&ui_sched_id);
-                break;
-            }
+            Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
             Ok(Control::Pause) => {
                 debug_gateway!("Pausing meta data");
                 *paused = true;
-                invalidate_ui_schedule(&ui_sched_id); // invalidate any pending scheduled sends
+                paused_flag.store(true, Ordering::Relaxed);
             }
             Ok(Control::Resume) => {
                 debug_gateway!("Resuming meta data");
                 *paused = false;
-                invalidate_ui_schedule(&ui_sched_id); // invalidate timers from before pause
-
-                // Snap UI to the track that matches buffered playback time.
-                let lag = lag_ms.load(Ordering::Relaxed);
-                // Immediately snap UI to what playback should be on resume.
-                if let Some(track) = pick_track_for_playback(&history, lag) {
-                    debug_gateway!("ui snap: {} - {}", track.artist, track.title);
-                    let _ = sender.send(track);
-                }
-                // Also schedule the next switch that should happen after resume
-                schedule_next_from_history(sender.clone(), &history, lag, ui_sched_id.clone());
+                paused_flag.store(false, Ordering::Relaxed);
+                refresh_timeline_from_history(station, &history_client, &timeline, &clock)?;
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }
 
-        // Heartbeat: if an interval is known, send a heartbeat when it elapses.
         if let (Some(interval), Some(last)) = (heartbeat_dur, last_heartbeat.as_mut()) {
             if last.elapsed() >= interval {
                 if let Err(err) = ws.send(Message::Text(HEARTBEAT_PAYLOAD.into())) {
@@ -112,7 +93,6 @@ pub(super) fn run_once(
             }
         }
 
-        // If the socket goes silent, force a reconnect.
         if let Some(hb) = heartbeat_ms {
             if let Some(ack) = last_heartbeat_ack.as_ref() {
                 let max_silence = Duration::from_millis(hb.saturating_mul(3));
@@ -125,7 +105,6 @@ pub(super) fn run_once(
                 }
             }
         } else {
-            // No heartbeat info from the server — fall back to a generic inactivity timeout.
             const MAX_INACTIVITY: Duration = Duration::from_secs(30);
             if last_any_msg.elapsed() > MAX_INACTIVITY {
                 eprintln!(
@@ -136,15 +115,13 @@ pub(super) fn run_once(
             }
         }
 
-        // Incoming messages.
         let msg = match ws.read() {
             Ok(msg) => msg,
             Err(tungstenite::Error::ConnectionClosed) => break,
-            Err(tungstenite::Error::Io(ref e))
-                if e.kind() == std::io::ErrorKind::WouldBlock
-                    || e.kind() == std::io::ErrorKind::TimedOut =>
+            Err(tungstenite::Error::Io(ref err))
+                if err.kind() == std::io::ErrorKind::WouldBlock
+                    || err.kind() == std::io::ErrorKind::TimedOut =>
             {
-                // No websocket message right now; loop again so the process can check controls/heartbeats.
                 continue;
             }
             Err(err) => return Err(err.into()),
@@ -170,40 +147,22 @@ pub(super) fn run_once(
                 last_heartbeat_ack = Some(Instant::now());
                 debug_gateway!("Gateway heartbeat");
             }
-            (OP_DISPATCH, Some(EVENT_TRACK_UPDATE)) => {
-                if let Some(info) = parse_track_info(&env.d) {
+            (OP_DISPATCH, Some(EVENT_TRACK_UPDATE | EVENT_TRACK_UPDATE_REQUEST)) => {
+                if let Some(batch) = parse_track_batch(&env.d) {
                     debug_gateway!(
-                        "live track update: {} - {} (duration={})",
-                        info.artist,
-                        info.title,
-                        info.duration_secs
+                        "live track update: {} - {} [{}] (duration={})",
+                        batch.current.artist,
+                        batch.current.title,
+                        batch.current.album,
+                        batch.current.duration_secs
                     );
 
-                    history.push_back(info);
-
-                    if !*paused {
-                        let lag = lag_ms.load(Ordering::Relaxed);
-                        let my_id = ui_sched_id.fetch_add(1, Ordering::Relaxed) + 1;
-
-                        if let Some(track) = history.back() {
-                            debug_gateway!(
-                                "ui {} scheduled: {} - {} (lag_ms={})",
-                                my_id,
-                                track.artist,
-                                track.title,
-                                lag
-                            );
-
-                            // Schedule the *new* track to appear when playback reaches it
-                            schedule_ui_switch(
-                                sender.clone(),
-                                track.clone(),
-                                lag,
-                                ui_sched_id.clone(),
-                                my_id,
-                            );
-                        }
-                    }
+                    let mut tracks = batch.history;
+                    tracks.push(batch.current);
+                    timeline.insert_tracks(tracks)?;
+                    let retention_floor = clock.live_head_ms().saturating_sub(RETENTION_MS);
+                    let _ = timeline.prune_before(retention_floor)?;
+                    refresh_timeline_from_history(station, &history_client, &timeline, &clock)?;
                 }
             }
             _ => {}
@@ -213,7 +172,62 @@ pub(super) fn run_once(
     Ok(())
 }
 
-/// Read the initial hello and extract the heartbeat interval (if any).
+fn refresh_timeline_from_history(
+    station: Station,
+    history_client: &PlayHistoryClient,
+    timeline: &TimelineStore,
+    clock: &PlaybackClock,
+) -> MetaResult<()> {
+    let tracks = match history_client.fetch_recent_tracks(station, RECENT_HISTORY_COUNT) {
+        Ok(tracks) => tracks,
+        Err(err) => {
+            eprintln!("Gateway history backfill error: {err}");
+            return Ok(());
+        }
+    };
+
+    if tracks.is_empty() {
+        return Ok(());
+    }
+
+    if let Some(current) = tracks.last() {
+        debug_gateway!("history backfill: {} - {}", current.artist, current.title);
+    }
+
+    timeline.insert_tracks(tracks)?;
+    let retention_floor = clock.live_head_ms().saturating_sub(RETENTION_MS);
+    let _ = timeline.prune_before(retention_floor)?;
+    Ok(())
+}
+
+pub(super) fn sync_ui_track(
+    sender: &mpsc::Sender<UiEvent>,
+    timeline: &TimelineStore,
+    clock: &PlaybackClock,
+    last_ui_track: &mut Option<TrackInfo>,
+) {
+    let track = if clock.is_live_playback() {
+        timeline.latest_track()
+    } else {
+        match clock.playback_cursor_ms() {
+            0 => None,
+            cursor_ms => timeline.track_for_cursor(cursor_ms),
+        }
+    };
+    let Some(track) = track else {
+        *last_ui_track = None;
+        return;
+    };
+
+    if last_ui_track.as_ref() == Some(&track) {
+        return;
+    }
+
+    debug_gateway!("ui sync: {} - {}", track.artist, track.title);
+    let _ = sender.send(UiEvent::TrackChanged(track.clone()));
+    *last_ui_track = Some(track);
+}
+
 fn read_hello_heartbeat<S>(ws: &mut WebSocket<S>) -> MetaResult<Option<u64>>
 where
     S: Read + Write,
@@ -244,5 +258,131 @@ fn set_maybe_tls_read_timeout(
         MaybeTlsStream::Plain(tcp) => tcp.set_read_timeout(Some(dur)),
         MaybeTlsStream::Rustls(tls) => tls.get_mut().set_read_timeout(Some(dur)),
         _ => Ok(()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sync_ui_track;
+    use crate::listen::PlaybackClock;
+    use crate::meta::timeline::TimelineStore;
+    use crate::meta::track::TrackInfo;
+    use crate::ui::UiEvent;
+    use std::path::PathBuf;
+    use std::sync::{mpsc, Arc};
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+    fn temp_file(name: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_nanos();
+        std::env::temp_dir().join(format!("listenmoe-{name}-{unique}.json"))
+    }
+
+    fn track(title: &str, start_time_ms: u64, duration_secs: u32) -> TrackInfo {
+        TrackInfo {
+            artist: "artist".into(),
+            title: title.into(),
+            album: "album".into(),
+            album_cover: None,
+            artist_image: None,
+            start_time_ms,
+            duration_secs,
+        }
+    }
+
+    #[test]
+    fn sync_ui_track_follows_playback_cursor() {
+        let path = temp_file("meta-schedule");
+        let timeline = Arc::new(TimelineStore::new(path.clone()));
+        timeline
+            .insert_tracks([track("current", 0, 1), track("next", 1_000, 1)])
+            .expect("insert failed");
+
+        let clock = Arc::new(PlaybackClock::new());
+        clock.set_playback_cursor_ms(500);
+
+        let (tx, rx) = mpsc::channel();
+        let mut last_ui_track = None;
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+
+        let event = rx
+            .recv_timeout(Duration::from_millis(50))
+            .expect("missing current track");
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "current"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        assert!(rx.recv_timeout(Duration::from_millis(50)).is_err());
+
+        clock.set_playback_cursor_ms(1_000);
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        let event = rx
+            .recv_timeout(Duration::from_millis(50))
+            .expect("missing track change after cursor advance");
+
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "next"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn sync_ui_track_prefers_live_head_while_live_playback_is_active() {
+        let path = temp_file("meta-live");
+        let timeline = Arc::new(TimelineStore::new(path.clone()));
+        timeline
+            .insert_tracks([track("previous", 0, 1), track("current", 1_000, 10)])
+            .expect("insert failed");
+
+        let clock = Arc::new(PlaybackClock::new());
+        clock.set_playback_cursor_ms(500);
+        clock.set_live_playback(true);
+
+        let (tx, rx) = mpsc::channel();
+        let mut last_ui_track = None;
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+
+        let event = rx
+            .recv_timeout(Duration::from_millis(50))
+            .expect("missing live track");
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "current"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn sync_ui_track_uses_latest_live_track_even_if_cursor_is_old() {
+        let path = temp_file("meta-live-latest");
+        let timeline = Arc::new(TimelineStore::new(path.clone()));
+        timeline
+            .insert_tracks([track("old", 0, 1), track("new", 120_000, 10)])
+            .expect("insert failed");
+
+        let clock = Arc::new(PlaybackClock::new());
+        clock.set_playback_cursor_ms(500);
+        clock.set_live_playback(true);
+
+        let (tx, rx) = mpsc::channel();
+        let mut last_ui_track = None;
+        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+
+        let event = rx
+            .recv_timeout(Duration::from_millis(50))
+            .expect("missing latest live track");
+        match event {
+            UiEvent::TrackChanged(track) => assert_eq!(track.title, "new"),
+            other => panic!("unexpected event: {other:?}"),
+        }
+
+        let _ = std::fs::remove_file(path);
     }
 }

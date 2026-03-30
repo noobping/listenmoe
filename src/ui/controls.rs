@@ -29,6 +29,14 @@ pub struct MediaControls {
     player: Rc<Player>,
 }
 
+#[derive(Debug, Clone)]
+pub struct NowPlaying {
+    pub title: String,
+    pub artist: String,
+    pub album: String,
+    pub art_url: Option<String>,
+}
+
 impl MediaControls {
     pub fn set_playback(&self, status: PlaybackStatus) {
         let player = self.player.clone();
@@ -37,25 +45,48 @@ impl MediaControls {
         });
     }
 
-    pub fn set_metadata(&self, title: &str, artist: &str, album: &str, art_url: Option<&str>) {
+    pub fn set_metadata(&self, now_playing: Option<NowPlaying>) {
         let player = self.player.clone();
-        let title = title.to_string();
-        let artist = artist.to_string();
-        let album = album.to_string();
-        let art_url = art_url.map(str::to_string);
 
         glib::MainContext::default().spawn_local(async move {
-            let mut b = Metadata::builder()
-                .title(title)
-                .artist([artist])
-                .album(album);
+            let metadata = if let Some(now_playing) = now_playing {
+                let mut b = Metadata::builder()
+                    .title(now_playing.title)
+                    .artist([now_playing.artist])
+                    .album(now_playing.album);
 
-            if let Some(url) = art_url {
-                b = b.art_url(url);
-            }
+                if let Some(url) = now_playing.art_url {
+                    b = b.art_url(url);
+                }
 
-            let _ = player.set_metadata(b.build()).await;
+                b.build()
+            } else {
+                Metadata::builder().build()
+            };
+
+            let _ = player.set_metadata(metadata).await;
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NowPlaying;
+
+    #[test]
+    fn now_playing_keeps_album_and_art() {
+        let now_playing = NowPlaying {
+            title: "title".into(),
+            artist: "artist".into(),
+            album: "album".into(),
+            art_url: Some("https://example.test/cover.jpg".into()),
+        };
+
+        assert_eq!(now_playing.album, "album");
+        assert_eq!(
+            now_playing.art_url.as_deref(),
+            Some("https://example.test/cover.jpg")
+        );
     }
 }
 

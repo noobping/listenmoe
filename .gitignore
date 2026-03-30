@@ -10,6 +10,7 @@
 *cache
 *~
 .flatpak
+_build.state*/
 AppDir
 data/*/apps/*.xml
 debug
