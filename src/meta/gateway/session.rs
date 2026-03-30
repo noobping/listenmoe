@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::sync::mpsc;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
     Arc,
 };
 use std::time::{Duration, Instant};
@@ -205,6 +205,8 @@ pub(super) fn sync_ui_track(
     timeline: &TimelineStore,
     clock: &PlaybackClock,
     last_ui_track: &mut Option<TrackInfo>,
+    generation: u64,
+    run_generation: &AtomicU64,
 ) {
     let track = if clock.is_live_playback() {
         timeline.latest_track()
@@ -220,6 +222,10 @@ pub(super) fn sync_ui_track(
     };
 
     if last_ui_track.as_ref() == Some(&track) {
+        return;
+    }
+
+    if run_generation.load(Ordering::Relaxed) != generation {
         return;
     }
 
@@ -269,7 +275,7 @@ mod tests {
     use crate::meta::track::TrackInfo;
     use crate::ui::UiEvent;
     use std::path::PathBuf;
-    use std::sync::{mpsc, Arc};
+    use std::sync::{atomic::AtomicU64, mpsc, Arc};
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     fn temp_file(name: &str) -> PathBuf {
@@ -302,10 +308,18 @@ mod tests {
 
         let clock = Arc::new(PlaybackClock::new());
         clock.set_playback_cursor_ms(500);
+        let run_generation = AtomicU64::new(1);
 
         let (tx, rx) = mpsc::channel();
         let mut last_ui_track = None;
-        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
 
         let event = rx
             .recv_timeout(Duration::from_millis(50))
@@ -315,11 +329,25 @@ mod tests {
             other => panic!("unexpected event: {other:?}"),
         }
 
-        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
         assert!(rx.recv_timeout(Duration::from_millis(50)).is_err());
 
         clock.set_playback_cursor_ms(1_000);
-        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
         let event = rx
             .recv_timeout(Duration::from_millis(50))
             .expect("missing track change after cursor advance");
@@ -343,10 +371,18 @@ mod tests {
         let clock = Arc::new(PlaybackClock::new());
         clock.set_playback_cursor_ms(500);
         clock.set_live_playback(true);
+        let run_generation = AtomicU64::new(1);
 
         let (tx, rx) = mpsc::channel();
         let mut last_ui_track = None;
-        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
 
         let event = rx
             .recv_timeout(Duration::from_millis(50))
@@ -370,10 +406,18 @@ mod tests {
         let clock = Arc::new(PlaybackClock::new());
         clock.set_playback_cursor_ms(500);
         clock.set_live_playback(true);
+        let run_generation = AtomicU64::new(1);
 
         let (tx, rx) = mpsc::channel();
         let mut last_ui_track = None;
-        sync_ui_track(&tx, &timeline, &clock, &mut last_ui_track);
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
 
         let event = rx
             .recv_timeout(Duration::from_millis(50))
@@ -382,6 +426,35 @@ mod tests {
             UiEvent::TrackChanged(track) => assert_eq!(track.title, "new"),
             other => panic!("unexpected event: {other:?}"),
         }
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn sync_ui_track_ignores_stale_generation() {
+        let path = temp_file("meta-stale-generation");
+        let timeline = Arc::new(TimelineStore::new(path.clone()));
+        timeline
+            .insert_tracks([track("current", 0, 10)])
+            .expect("insert failed");
+
+        let clock = Arc::new(PlaybackClock::new());
+        clock.set_live_playback(true);
+        let run_generation = AtomicU64::new(2);
+
+        let (tx, rx) = mpsc::channel();
+        let mut last_ui_track = None;
+        sync_ui_track(
+            &tx,
+            &timeline,
+            &clock,
+            &mut last_ui_track,
+            1,
+            &run_generation,
+        );
+
+        assert!(rx.recv_timeout(Duration::from_millis(50)).is_err());
+        assert!(last_ui_track.is_none());
 
         let _ = std::fs::remove_file(path);
     }

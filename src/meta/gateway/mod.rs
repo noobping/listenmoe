@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
     Arc,
 };
 use std::thread;
@@ -31,6 +31,8 @@ pub fn run_meta_loop(
     rx: mpsc::Receiver<Control>,
     clock: Arc<PlaybackClock>,
     timeline: Arc<TimelineStore>,
+    generation: u64,
+    run_generation: Arc<AtomicU64>,
 ) -> MetaResult<()> {
     let mut paused = false;
     let retry_delay = Duration::from_secs(5);
@@ -42,14 +44,24 @@ pub fn run_meta_loop(
         let timeline = timeline.clone();
         let paused_flag = paused_flag.clone();
         let stop_requested = stop_requested.clone();
+        let run_generation = run_generation.clone();
         thread::spawn(move || {
             let mut last_ui_track = None;
 
-            while !stop_requested.load(Ordering::Relaxed) {
+            while !stop_requested.load(Ordering::Relaxed)
+                && run_generation.load(Ordering::Relaxed) == generation
+            {
                 if paused_flag.load(Ordering::Relaxed) {
                     last_ui_track = None;
                 } else {
-                    sync_ui_track(&sender, &timeline, &clock, &mut last_ui_track);
+                    sync_ui_track(
+                        &sender,
+                        &timeline,
+                        &clock,
+                        &mut last_ui_track,
+                        generation,
+                        &run_generation,
+                    );
                 }
 
                 thread::sleep(UI_FOLLOW_INTERVAL);

@@ -2,7 +2,10 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::mpsc;
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -32,6 +35,7 @@ struct Inner {
     state: State,
     sender: mpsc::Sender<UiEvent>,
     clock: Arc<PlaybackClock>,
+    run_generation: Arc<AtomicU64>,
 }
 
 #[derive(Debug)]
@@ -51,6 +55,7 @@ impl Meta {
                 state: State::Stopped,
                 sender,
                 clock,
+                run_generation: Arc::new(AtomicU64::new(0)),
             }),
         })
     }
@@ -104,6 +109,10 @@ impl Meta {
                 let station = inner.station;
                 let sender = inner.sender.clone();
                 let clock = inner.clock.clone();
+                let run_generation = inner.run_generation.clone();
+                let generation = run_generation
+                    .fetch_add(1, Ordering::Relaxed)
+                    .saturating_add(1);
                 let timeline = Arc::new(TimelineStore::new(timeline_path(station)));
                 if let Err(err) = timeline.clear() {
                     eprintln!("Failed to clear metadata timeline: {err}");
@@ -112,7 +121,15 @@ impl Meta {
                 inner.state = State::Running { tx: tx.clone() };
 
                 thread::spawn(move || {
-                    if let Err(err) = run_meta_loop(station, sender, rx, clock, timeline.clone()) {
+                    if let Err(err) = run_meta_loop(
+                        station,
+                        sender,
+                        rx,
+                        clock,
+                        timeline.clone(),
+                        generation,
+                        run_generation.clone(),
+                    ) {
                         eprintln!("Gateway error in metadata loop: {err}");
                     }
                     if let Err(err) = timeline.clear() {
@@ -124,6 +141,7 @@ impl Meta {
     }
 
     fn stop_inner(inner: &mut Inner) {
+        inner.run_generation.fetch_add(1, Ordering::Relaxed);
         if let State::Running { tx } = &inner.state {
             let _ = tx.send(Control::Stop);
         }
