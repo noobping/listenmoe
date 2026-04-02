@@ -42,7 +42,8 @@ Available flags:
 - `-a`, `--autoplay`: start playing automatically on launch
 - `-j`, `--jpop`: use J-POP as default station
 - `-k`, `--kpop`: use K-POP as default station
-- `-p`, `--preferences`: save current startup flags as defaults
+- `-p`, `--pause`: use pause behavior instead of stop
+- `--preferences`: save current startup flags as defaults
 - `--no-discord`: disable Discord Rich Presence at runtime
 - `-s`, `--stop`: use stop behavior instead of pause
 - `-v`, `--verbose`: print extra startup diagnostics

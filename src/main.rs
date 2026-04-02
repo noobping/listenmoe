@@ -53,7 +53,8 @@ Options:
   -a, --autoplay    Start playing automatically on launch
   -j, --jpop        Use J-POP as default station
   -k, --kpop        Use K-POP as default station
-  -p, --preferences Save current startup flags as defaults
+  -p, --pause       Use pause behavior instead of stop
+      --preferences Save current startup flags as defaults
   -s, --stop        Use stop behavior instead of pause
       --no-discord  Disable Discord Rich Presence at runtime
   -v, --verbose     Print extra startup diagnostics
@@ -66,19 +67,28 @@ Options:
 }
 
 fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
+    parse_cli_args(
+        default_options,
+        std::env::args_os().map(|arg| arg.to_string_lossy().into_owned()),
+    )
+}
+
+fn parse_cli_args<I>(default_options: ui::UiOptions, args: I) -> Result<CliAction, String>
+where
+    I: IntoIterator<Item = String>,
+{
     let mut options = default_options;
     let mut passthrough_args = Vec::new();
     let mut verbose = false;
     let mut save_preferences = false;
 
-    let mut args = std::env::args_os();
+    let mut args = args.into_iter();
     if let Some(program) = args.next() {
-        passthrough_args.push(program.to_string_lossy().into_owned());
+        passthrough_args.push(program);
     }
 
     let mut parse_flags = true;
     for arg in args {
-        let arg = arg.to_string_lossy().into_owned();
         if !parse_flags {
             passthrough_args.push(arg);
             continue;
@@ -111,11 +121,11 @@ fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
                         'k' => {
                             options.station = station::Station::Kpop;
                         }
+                        'p' => {
+                            options.stop_instead_pause = false;
+                        }
                         's' => {
                             options.stop_instead_pause = true;
-                        }
-                        'p' => {
-                            save_preferences = true;
                         }
                         'v' => {
                             verbose = true;
@@ -136,10 +146,13 @@ fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
             "-k" | "--kpop" => {
                 options.station = station::Station::Kpop;
             }
+            "-p" | "--pause" => {
+                options.stop_instead_pause = false;
+            }
             "-s" | "--stop" => {
                 options.stop_instead_pause = true;
             }
-            "-p" | "--preferences" => {
+            "--preferences" => {
                 save_preferences = true;
             }
             "--no-discord" => {
@@ -243,6 +256,111 @@ fn main() -> ExitCode {
         Err(err) => {
             eprintln!("{err}");
             ExitCode::FAILURE
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_cli_args, CliAction};
+    use crate::station::Station;
+    use crate::ui::UiOptions;
+
+    fn parse(args: &[&str], default_options: UiOptions) -> UiOptions {
+        match parse_cli_args(
+            default_options,
+            args.iter()
+                .map(|arg| (*arg).to_string())
+                .collect::<Vec<_>>(),
+        )
+        .expect("parse failed")
+        {
+            CliAction::Run { ui_options, .. } => ui_options,
+            other => panic!("unexpected action: {}", action_name(&other)),
+        }
+    }
+
+    fn action_name(action: &CliAction) -> &'static str {
+        match action {
+            CliAction::Run { .. } => "run",
+            CliAction::Help => "help",
+            CliAction::Version => "version",
+        }
+    }
+
+    #[test]
+    fn pause_flag_overrides_saved_stop_behavior() {
+        let default_options = UiOptions {
+            station: Station::Jpop,
+            autoplay: false,
+            stop_instead_pause: true,
+            discord_enabled: true,
+        };
+
+        let options = parse(&["listenmoe", "--pause"], default_options);
+
+        assert!(!options.stop_instead_pause);
+    }
+
+    #[test]
+    fn last_transport_flag_wins() {
+        let default_options = UiOptions {
+            station: Station::Jpop,
+            autoplay: false,
+            stop_instead_pause: false,
+            discord_enabled: true,
+        };
+
+        let options = parse(&["listenmoe", "--stop", "--pause"], default_options);
+        assert!(!options.stop_instead_pause);
+
+        let options = parse(&["listenmoe", "--pause", "--stop"], default_options);
+        assert!(options.stop_instead_pause);
+    }
+
+    #[test]
+    fn short_pause_flag_does_not_enable_preferences_save() {
+        let default_options = UiOptions {
+            station: Station::Jpop,
+            autoplay: false,
+            stop_instead_pause: true,
+            discord_enabled: true,
+        };
+
+        match parse_cli_args(default_options, ["listenmoe".to_string(), "-p".to_string()])
+            .expect("parse failed")
+        {
+            CliAction::Run {
+                ui_options,
+                save_preferences,
+                ..
+            } => {
+                assert!(!ui_options.stop_instead_pause);
+                assert!(!save_preferences);
+            }
+            other => panic!("unexpected action: {}", action_name(&other)),
+        }
+    }
+
+    #[test]
+    fn preferences_save_is_long_flag_only() {
+        let default_options = UiOptions {
+            station: Station::Jpop,
+            autoplay: false,
+            stop_instead_pause: false,
+            discord_enabled: true,
+        };
+
+        match parse_cli_args(
+            default_options,
+            ["listenmoe".to_string(), "--preferences".to_string()],
+        )
+        .expect("parse failed")
+        {
+            CliAction::Run {
+                save_preferences, ..
+            } => assert!(save_preferences),
+            other => panic!("unexpected action: {}", action_name(&other)),
         }
     }
 }
