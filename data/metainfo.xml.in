@@ -80,6 +80,14 @@
   </provides>
 
   <releases>
+    <release version="1.1.1" date="2026-04-02">
+      <description>
+        <ul>
+          <li>Changed pause, resume, and station switching behavior.</li>
+          <li>Added startup options for pause/resume or stop behavior, with play/stop now the default.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-03-07">
       <description>
         <p>Added preferences and keyboard shortcuts.</p>

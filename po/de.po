@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.1\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -84,11 +84,11 @@ msgstr "Automatisch abspielen"
 msgid "Start playing automatically on launch"
 msgstr "Beim Start automatisch abspielen"
 
-msgid "Use stop instead of pause"
-msgstr "Stopp statt Pause verwenden"
+msgid "Enable pause and resume"
+msgstr "Pause und Fortsetzen aktivieren"
 
-msgid "Use stop behavior for the main playback button"
-msgstr "Stoppverhalten für die Haupt-Wiedergabetaste verwenden"
+msgid "Use pause and resume for the main playback button"
+msgstr "Für die Haupt-Wiedergabetaste Pause und Fortsetzen verwenden"
 
 msgid "Discord Rich Presence"
 msgstr "Discord Rich Presence"
@@ -176,3 +176,9 @@ msgstr "Ein Problem behoben, bei dem die Wiedergabe während einer Netzwerkunter
 
 msgid "Added preferences and keyboard shortcuts."
 msgstr "Einstellungen und Tastenkürzel hinzugefügt."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Das Verhalten beim Pausieren, Fortsetzen und Wechseln des Senders wurde geändert."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Startoptionen für Pause/Fortsetzen oder Stoppverhalten hinzugefügt; Abspielen/Stopp ist jetzt der Standard."

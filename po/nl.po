@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.1\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -84,11 +84,11 @@ msgstr "Automatisch afspelen"
 msgid "Start playing automatically on launch"
 msgstr "Start automatisch met afspelen bij opstarten"
 
-msgid "Use stop instead of pause"
-msgstr "Stop gebruiken in plaats van pauze"
+msgid "Enable pause and resume"
+msgstr "Pauzeren en hervatten inschakelen"
 
-msgid "Use stop behavior for the main playback button"
-msgstr "Gebruik stopgedrag voor de hoofd-afspeelknop"
+msgid "Use pause and resume for the main playback button"
+msgstr "Pauzeren en hervatten gebruiken voor de hoofd-afspeelknop"
 
 msgid "Discord Rich Presence"
 msgstr "Discord Rich Presence"
@@ -176,3 +176,9 @@ msgstr "Een probleem opgelost waarbij gepauzeerde weergave werd hervat tijdens e
 
 msgid "Added preferences and keyboard shortcuts."
 msgstr "Voorkeuren en sneltoetsen toegevoegd."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Het gedrag van pauzeren, hervatten en wisselen van zender is gewijzigd."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Opstartopties toegevoegd voor pauzeren/hervatten of stopgedrag; afspelen/stoppen is nu de standaard."

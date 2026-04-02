@@ -84,10 +84,10 @@ msgstr ""
 msgid "Start playing automatically on launch"
 msgstr ""
 
-msgid "Use stop instead of pause"
+msgid "Enable pause and resume"
 msgstr ""
 
-msgid "Use stop behavior for the main playback button"
+msgid "Use pause and resume for the main playback button"
 msgstr ""
 
 msgid "Discord Rich Presence"
@@ -176,4 +176,10 @@ msgid "Fixed an issue where paused playback resumed during a network disruption.
 msgstr ""
 
 msgid "Added preferences and keyboard shortcuts."
+msgstr ""
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr ""
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
 msgstr ""

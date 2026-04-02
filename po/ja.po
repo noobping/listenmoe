@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.1.0\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.1.1\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -84,11 +84,11 @@ msgstr "自動再生"
 msgid "Start playing automatically on launch"
 msgstr "起動時に自動で再生を開始"
 
-msgid "Use stop instead of pause"
-msgstr "一時停止の代わりに停止を使う"
+msgid "Enable pause and resume"
+msgstr "一時停止と再開を有効にする"
 
-msgid "Use stop behavior for the main playback button"
-msgstr "メイン再生ボタンに停止動作を使用"
+msgid "Use pause and resume for the main playback button"
+msgstr "メイン再生ボタンで一時停止と再開を使用する"
 
 msgid "Discord Rich Presence"
 msgstr "Discord Rich Presence"
@@ -176,3 +176,9 @@ msgstr "ネットワークが中断された際、一時停止中でも再生が
 
 msgid "Added preferences and keyboard shortcuts."
 msgstr "設定とキーボードショートカットを追加しました。"
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "一時停止、再開、およびステーション切り替えの動作を変更しました。"
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "一時停止/再開または停止動作の起動オプションを追加し、再生/停止がデフォルトになりました。"
