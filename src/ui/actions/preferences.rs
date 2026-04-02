@@ -68,22 +68,22 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     }
     group.add(&autoplay_row);
 
-    let stop_row = adw::SwitchRow::builder()
-        .title(gettext("Use stop instead of pause"))
-        .subtitle(gettext("Use stop behavior for the main playback button"))
-        .active(options.borrow().stop_instead_pause)
+    let pause_resume_row = adw::SwitchRow::builder()
+        .title(gettext("Enable pause and resume"))
+        .subtitle(gettext("Use pause and resume for the main playback button"))
+        .active(options.borrow().pause_resume_enabled)
         .build();
     {
         let options = options.clone();
-        stop_row.connect_active_notify(move |row| {
+        pause_resume_row.connect_active_notify(move |row| {
             let mut opts = options.borrow_mut();
-            opts.stop_instead_pause = row.is_active();
+            opts.pause_resume_enabled = row.is_active();
             if let Err(err) = preferences::save_ui_options(*opts) {
                 eprintln!("{err}");
             }
         });
     }
-    group.add(&stop_row);
+    group.add(&pause_resume_row);
 
     let discord_row = adw::SwitchRow::builder()
         .title(gettext("Discord Rich Presence"))

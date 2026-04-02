@@ -23,7 +23,7 @@ const APP_NAME: &str = "Listen Moe";
 pub struct UiOptions {
     pub station: Station,
     pub autoplay: bool,
-    pub stop_instead_pause: bool,
+    pub pause_resume_enabled: bool,
     pub discord_enabled: bool,
 }
 
@@ -32,7 +32,7 @@ impl Default for UiOptions {
         Self {
             station: Station::Jpop,
             autoplay: false,
-            stop_instead_pause: false,
+            pause_resume_enabled: false,
             discord_enabled: true,
         }
     }
@@ -60,7 +60,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         css_provider,
         viz,
         viz_handle,
-    } = layout::build_window_layout(app, options.stop_instead_pause);
+    } = layout::build_window_layout(app, options.pause_resume_enabled);
 
     let (controls, ctrl_rx) = actions::build_actions(
         &window,
@@ -72,7 +72,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &meta,
         &ui_tx,
         &current_track,
-        options.stop_instead_pause,
+        options.pause_resume_enabled,
     );
 
     actions::populate_menu(&window, &play_button, &menu, &radio, &meta);
@@ -108,5 +108,15 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     window.present();
     if options.autoplay {
         actions::activate_window_action(&window, "win.play");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UiOptions;
+
+    #[test]
+    fn defaults_to_stop_behavior() {
+        assert!(!UiOptions::default().pause_resume_enabled);
     }
 }

@@ -30,16 +30,16 @@ pub(super) struct WindowLayout {
     pub(super) viz_handle: viz::VizHandle,
 }
 
-pub(super) fn build_window_layout(app: &Application, stop_instead_pause: bool) -> WindowLayout {
+pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool) -> WindowLayout {
     let win_title = WindowTitle::new(APP_NAME, &gettext("J-POP and K-POP radio"));
 
     let play_button = Button::from_icon_name("media-playback-start-symbolic");
     play_button.set_action_name(Some("win.play"));
 
-    let pause_button_icon = if stop_instead_pause {
-        "media-playback-stop-symbolic"
-    } else {
+    let pause_button_icon = if pause_resume_enabled {
         "media-playback-pause-symbolic"
+    } else {
+        "media-playback-stop-symbolic"
     };
     let pause_button = Button::from_icon_name(pause_button_icon);
     pause_button.set_action_name(Some("win.pause"));

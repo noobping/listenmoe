@@ -9,16 +9,32 @@ use std::path::PathBuf;
 const SHARED_SCHEMA_ID: &str = "io.github.noobping.listenmoe";
 const KEY_STATION: &str = "default-station";
 const KEY_AUTOPLAY: &str = "autoplay";
-const KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
+const KEY_PAUSE_RESUME_ENABLED: &str = "pause-resume-enabled";
+const LEGACY_KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
 const KEY_DISCORD_ENABLED: &str = "discord-enabled";
 const FALLBACK_CONFIG_FILE: &str = "preferences.json";
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize)]
 struct StoredUiOptions {
     station: StoredStation,
     autoplay: bool,
+    pause_resume_enabled: bool,
     stop_instead_pause: bool,
     discord_enabled: bool,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+struct StoredUiOptionsOnDisk {
+    #[serde(default)]
+    station: Option<StoredStation>,
+    #[serde(default)]
+    autoplay: Option<bool>,
+    #[serde(default)]
+    pause_resume_enabled: Option<bool>,
+    #[serde(default)]
+    stop_instead_pause: Option<bool>,
+    #[serde(default)]
+    discord_enabled: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -42,22 +58,102 @@ impl From<UiOptions> for StoredUiOptions {
                 Station::Jpop => StoredStation::Jpop,
             },
             autoplay: options.autoplay,
-            stop_instead_pause: options.stop_instead_pause,
+            pause_resume_enabled: options.pause_resume_enabled,
+            stop_instead_pause: !options.pause_resume_enabled,
             discord_enabled: options.discord_enabled,
         }
     }
 }
 
-impl From<StoredUiOptions> for UiOptions {
-    fn from(options: StoredUiOptions) -> Self {
-        Self {
-            station: match options.station {
+impl StoredUiOptionsOnDisk {
+    fn into_ui_options(self) -> UiOptions {
+        let defaults = UiOptions::default();
+        UiOptions {
+            station: match self.station.unwrap_or(match defaults.station {
+                Station::Kpop => StoredStation::Kpop,
+                Station::Jpop => StoredStation::Jpop,
+            }) {
                 StoredStation::Kpop => Station::Kpop,
                 StoredStation::Jpop => Station::Jpop,
             },
-            autoplay: options.autoplay,
-            stop_instead_pause: options.stop_instead_pause,
-            discord_enabled: options.discord_enabled,
+            autoplay: self.autoplay.unwrap_or(defaults.autoplay),
+            pause_resume_enabled: resolve_pause_resume_enabled(
+                self.pause_resume_enabled,
+                self.stop_instead_pause,
+                defaults.pause_resume_enabled,
+            ),
+            discord_enabled: self.discord_enabled.unwrap_or(defaults.discord_enabled),
+        }
+    }
+
+    fn migrated_from_legacy_stop_flag(&self) -> bool {
+        self.pause_resume_enabled.is_none() && self.stop_instead_pause.is_some()
+    }
+}
+
+fn resolve_pause_resume_enabled(
+    pause_resume_enabled: Option<bool>,
+    legacy_stop_instead_pause: Option<bool>,
+    default: bool,
+) -> bool {
+    pause_resume_enabled.unwrap_or_else(|| {
+        legacy_stop_instead_pause
+            .map(|value| !value)
+            .unwrap_or(default)
+    })
+}
+
+fn load_pause_resume_enabled_from_settings(settings: &gio::Settings) -> (bool, bool) {
+    let pause_resume_enabled = settings
+        .user_value(KEY_PAUSE_RESUME_ENABLED)
+        .map(|_| settings.boolean(KEY_PAUSE_RESUME_ENABLED));
+    let legacy_stop_instead_pause = settings
+        .user_value(LEGACY_KEY_STOP_INSTEAD_PAUSE)
+        .map(|_| settings.boolean(LEGACY_KEY_STOP_INSTEAD_PAUSE));
+    let migrated_from_legacy =
+        pause_resume_enabled.is_none() && legacy_stop_instead_pause.is_some();
+
+    (
+        resolve_pause_resume_enabled(
+            pause_resume_enabled,
+            legacy_stop_instead_pause,
+            UiOptions::default().pause_resume_enabled,
+        ),
+        migrated_from_legacy,
+    )
+}
+
+fn migrate_legacy_gsettings_pause_resume_preference(
+    settings: &gio::Settings,
+    pause_resume_enabled: bool,
+) {
+    if settings
+        .set_boolean(KEY_PAUSE_RESUME_ENABLED, pause_resume_enabled)
+        .is_ok()
+    {
+        gio::Settings::sync();
+    }
+}
+
+fn migrate_legacy_fallback_preferences(options: UiOptions) {
+    let _ = save_ui_options(options);
+}
+
+fn default_stored_station() -> StoredStation {
+    match UiOptions::default().station {
+        Station::Kpop => StoredStation::Kpop,
+        Station::Jpop => StoredStation::Jpop,
+    }
+}
+
+impl Default for StoredUiOptionsOnDisk {
+    fn default() -> Self {
+        Self {
+            station: Some(default_stored_station()),
+            autoplay: Some(UiOptions::default().autoplay),
+            pause_resume_enabled: Some(UiOptions::default().pause_resume_enabled),
+            stop_instead_pause: Some(!UiOptions::default().pause_resume_enabled),
+            discord_enabled: Some(UiOptions::default().discord_enabled),
         }
     }
 }
@@ -88,11 +184,16 @@ pub fn load_ui_options() -> Option<UiOptions> {
             "kpop" => Station::Kpop,
             _ => Station::Jpop,
         };
+        let (pause_resume_enabled, migrated_from_legacy) =
+            load_pause_resume_enabled_from_settings(&settings);
+        if migrated_from_legacy {
+            migrate_legacy_gsettings_pause_resume_preference(&settings, pause_resume_enabled);
+        }
 
         return Some(UiOptions {
             station,
             autoplay: settings.boolean(KEY_AUTOPLAY),
-            stop_instead_pause: settings.boolean(KEY_STOP_INSTEAD_PAUSE),
+            pause_resume_enabled,
             discord_enabled: settings.boolean(KEY_DISCORD_ENABLED),
         });
     }
@@ -107,8 +208,13 @@ pub fn load_ui_options() -> Option<UiOptions> {
         }
         Err(_) => return None,
     };
-    let stored: StoredUiOptions = serde_json::from_str(&raw).ok()?;
-    Some(stored.into())
+    let stored: StoredUiOptionsOnDisk = serde_json::from_str(&raw).ok()?;
+    let migrated_from_legacy = stored.migrated_from_legacy_stop_flag();
+    let options = stored.into_ui_options();
+    if migrated_from_legacy {
+        migrate_legacy_fallback_preferences(options);
+    }
+    Some(options)
 }
 
 pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
@@ -120,8 +226,11 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
             .set_boolean(KEY_AUTOPLAY, options.autoplay)
             .map_err(|err| format!("Failed to save autoplay preference: {err}"))?;
         settings
-            .set_boolean(KEY_STOP_INSTEAD_PAUSE, options.stop_instead_pause)
-            .map_err(|err| format!("Failed to save stop behavior preference: {err}"))?;
+            .set_boolean(KEY_PAUSE_RESUME_ENABLED, options.pause_resume_enabled)
+            .map_err(|err| format!("Failed to save pause/resume preference: {err}"))?;
+        settings
+            .set_boolean(LEGACY_KEY_STOP_INSTEAD_PAUSE, !options.pause_resume_enabled)
+            .map_err(|err| format!("Failed to save legacy stop behavior preference: {err}"))?;
         settings
             .set_boolean(KEY_DISCORD_ENABLED, options.discord_enabled)
             .map_err(|err| format!("Failed to save Discord preference: {err}"))?;
@@ -147,4 +256,66 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
     })?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{resolve_pause_resume_enabled, StoredUiOptions, StoredUiOptionsOnDisk};
+    use crate::station::Station;
+    use crate::ui::UiOptions;
+
+    #[test]
+    fn legacy_stop_flag_maps_to_pause_resume_enabled() {
+        assert!(resolve_pause_resume_enabled(None, Some(false), false));
+        assert!(!resolve_pause_resume_enabled(None, Some(true), true));
+    }
+
+    #[test]
+    fn explicit_pause_resume_value_wins_over_legacy_flag() {
+        assert!(!resolve_pause_resume_enabled(
+            Some(false),
+            Some(false),
+            true
+        ));
+        assert!(resolve_pause_resume_enabled(Some(true), Some(true), false));
+    }
+
+    #[test]
+    fn legacy_fallback_json_deserializes_into_pause_resume_enabled() {
+        let stored: StoredUiOptionsOnDisk = serde_json::from_str(
+            r#"{
+                "station": "jpop",
+                "autoplay": true,
+                "stop_instead_pause": false,
+                "discord_enabled": true
+            }"#,
+        )
+        .expect("legacy preferences should deserialize");
+
+        let options = stored.into_ui_options();
+
+        assert!(options.pause_resume_enabled);
+        assert!(options.autoplay);
+        assert!(matches!(options.station, Station::Jpop));
+    }
+
+    #[test]
+    fn stored_preferences_include_legacy_stop_flag_for_compatibility() {
+        let stored = serde_json::to_value(StoredUiOptions::from(UiOptions {
+            station: Station::Kpop,
+            autoplay: false,
+            pause_resume_enabled: true,
+            discord_enabled: false,
+        }))
+        .expect("preferences should serialize");
+
+        assert_eq!(
+            stored.get("pause_resume_enabled").and_then(|v| v.as_bool()),
+            Some(true)
+        );
+        assert_eq!(
+            stored.get("stop_instead_pause").and_then(|v| v.as_bool()),
+            Some(false)
+        );
+    }
 }

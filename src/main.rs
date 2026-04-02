@@ -122,10 +122,10 @@ where
                             options.station = station::Station::Kpop;
                         }
                         'p' => {
-                            options.stop_instead_pause = false;
+                            options.pause_resume_enabled = true;
                         }
                         's' => {
-                            options.stop_instead_pause = true;
+                            options.pause_resume_enabled = false;
                         }
                         'v' => {
                             verbose = true;
@@ -147,10 +147,10 @@ where
                 options.station = station::Station::Kpop;
             }
             "-p" | "--pause" => {
-                options.stop_instead_pause = false;
+                options.pause_resume_enabled = true;
             }
             "-s" | "--stop" => {
-                options.stop_instead_pause = true;
+                options.pause_resume_enabled = false;
             }
             "--preferences" => {
                 save_preferences = true;
@@ -210,10 +210,10 @@ fn run() -> Result<(), String> {
 
     if log::is_verbose() {
         println!(
-            "Starting {APP_NAME} {APP_VERSION} with station={:?}, autoplay={}, stop_instead_pause={}, discord_enabled={}",
+            "Starting {APP_NAME} {APP_VERSION} with station={:?}, autoplay={}, pause_resume_enabled={}, discord_enabled={}",
             ui_options.station,
             ui_options.autoplay,
-            ui_options.stop_instead_pause,
+            ui_options.pause_resume_enabled,
             ui_options.discord_enabled
         );
     }
@@ -293,13 +293,13 @@ mod tests {
         let default_options = UiOptions {
             station: Station::Jpop,
             autoplay: false,
-            stop_instead_pause: true,
+            pause_resume_enabled: false,
             discord_enabled: true,
         };
 
         let options = parse(&["listenmoe", "--pause"], default_options);
 
-        assert!(!options.stop_instead_pause);
+        assert!(options.pause_resume_enabled);
     }
 
     #[test]
@@ -307,15 +307,15 @@ mod tests {
         let default_options = UiOptions {
             station: Station::Jpop,
             autoplay: false,
-            stop_instead_pause: false,
+            pause_resume_enabled: false,
             discord_enabled: true,
         };
 
         let options = parse(&["listenmoe", "--stop", "--pause"], default_options);
-        assert!(!options.stop_instead_pause);
+        assert!(options.pause_resume_enabled);
 
         let options = parse(&["listenmoe", "--pause", "--stop"], default_options);
-        assert!(options.stop_instead_pause);
+        assert!(!options.pause_resume_enabled);
     }
 
     #[test]
@@ -323,7 +323,7 @@ mod tests {
         let default_options = UiOptions {
             station: Station::Jpop,
             autoplay: false,
-            stop_instead_pause: true,
+            pause_resume_enabled: false,
             discord_enabled: true,
         };
 
@@ -335,7 +335,7 @@ mod tests {
                 save_preferences,
                 ..
             } => {
-                assert!(!ui_options.stop_instead_pause);
+                assert!(ui_options.pause_resume_enabled);
                 assert!(!save_preferences);
             }
             other => panic!("unexpected action: {}", action_name(&other)),
@@ -347,7 +347,7 @@ mod tests {
         let default_options = UiOptions {
             station: Station::Jpop,
             autoplay: false,
-            stop_instead_pause: false,
+            pause_resume_enabled: false,
             discord_enabled: true,
         };
 

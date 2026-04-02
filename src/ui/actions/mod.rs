@@ -67,7 +67,7 @@ pub fn build_actions(
     meta: &Rc<Meta>,
     ui_tx: &mpsc::Sender<UiEvent>,
     current_track: &Rc<RefCell<Option<(String, String)>>>,
-    stop_instead_pause: bool,
+    pause_resume_enabled: bool,
 ) -> (
     Option<Rc<MediaControls>>,
     Option<mpsc::Receiver<MediaControlEvent>>,
@@ -98,7 +98,7 @@ pub fn build_actions(
         meta,
         ui_tx,
         current_track,
-        stop_instead_pause,
+        pause_resume_enabled,
     );
     add_transport_actions(window, &ctx, &set_playback);
     add_window_actions(window, &ctx);

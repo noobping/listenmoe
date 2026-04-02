@@ -26,7 +26,7 @@ pub(super) struct ActionCtx {
     meta: Rc<Meta>,
     ui_tx: mpsc::Sender<UiEvent>,
     current_track: Rc<RefCell<Option<(String, String)>>>,
-    stop_instead_pause: bool,
+    pause_resume_enabled: bool,
 }
 
 impl ActionCtx {
@@ -39,7 +39,7 @@ impl ActionCtx {
         meta: &Rc<Meta>,
         ui_tx: &mpsc::Sender<UiEvent>,
         current_track: &Rc<RefCell<Option<(String, String)>>>,
-        stop_instead_pause: bool,
+        pause_resume_enabled: bool,
     ) -> Self {
         Self {
             window: window.clone(),
@@ -50,7 +50,7 @@ impl ActionCtx {
             meta: meta.clone(),
             ui_tx: ui_tx.clone(),
             current_track: current_track.clone(),
-            stop_instead_pause,
+            pause_resume_enabled,
         }
     }
 
@@ -73,7 +73,7 @@ impl ActionCtx {
     }
 
     pub(super) fn pause(&self, set_playback: &dyn Fn(PlaybackStatus)) {
-        if self.stop_instead_pause {
+        if !self.pause_resume_enabled {
             self.stop(set_playback);
             return;
         }
@@ -96,10 +96,10 @@ impl ActionCtx {
         if self.play_button.is_visible() {
             activate_window_action(&self.window, "win.play");
         } else if self.pause_button.is_visible() {
-            if self.stop_instead_pause {
-                activate_window_action(&self.window, "win.stop");
-            } else {
+            if self.pause_resume_enabled {
                 activate_window_action(&self.window, "win.pause");
+            } else {
+                activate_window_action(&self.window, "win.stop");
             }
         }
     }
