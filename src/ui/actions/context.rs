@@ -3,7 +3,7 @@ use adw::prelude::DisplayExt;
 use adw::WindowTitle;
 use gettextrs::gettext;
 use mpris_server::PlaybackStatus;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::mpsc;
 
@@ -22,6 +22,10 @@ pub(super) struct ActionCtx {
     win_title: WindowTitle,
     play_button: Button,
     pause_button: Button,
+    playback_playing: Rc<Cell<bool>>,
+    update_active: Rc<Cell<bool>>,
+    update_title_override: Rc<Cell<bool>>,
+    normal_title: Rc<RefCell<(String, String)>>,
     radio: Rc<Listen>,
     meta: Rc<Meta>,
     ui_tx: mpsc::Sender<UiEvent>,
@@ -35,6 +39,10 @@ impl ActionCtx {
         win_title: &WindowTitle,
         play_button: &Button,
         pause_button: &Button,
+        playback_playing: &Rc<Cell<bool>>,
+        update_active: &Rc<Cell<bool>>,
+        update_title_override: &Rc<Cell<bool>>,
+        normal_title: &Rc<RefCell<(String, String)>>,
         radio: &Rc<Listen>,
         meta: &Rc<Meta>,
         ui_tx: &mpsc::Sender<UiEvent>,
@@ -46,6 +54,10 @@ impl ActionCtx {
             win_title: win_title.clone(),
             play_button: play_button.clone(),
             pause_button: pause_button.clone(),
+            playback_playing: playback_playing.clone(),
+            update_active: update_active.clone(),
+            update_title_override: update_title_override.clone(),
+            normal_title: normal_title.clone(),
             radio: radio.clone(),
             meta: meta.clone(),
             ui_tx: ui_tx.clone(),
@@ -55,11 +67,17 @@ impl ActionCtx {
     }
 
     fn set_idle_ui(&self) {
-        self.pause_button.set_visible(false);
-        self.play_button.set_visible(true);
-        self.win_title.set_title(APP_NAME);
-        self.win_title
-            .set_subtitle(&gettext("J-POP and K-POP radio"));
+        self.playback_playing.set(false);
+        if !self.update_active.get() {
+            self.pause_button.set_visible(false);
+            self.play_button.set_visible(true);
+        }
+        let subtitle = gettext("J-POP and K-POP radio");
+        *self.normal_title.borrow_mut() = (APP_NAME.to_string(), subtitle.clone());
+        if !self.update_title_override.get() {
+            self.win_title.set_title(APP_NAME);
+            self.win_title.set_subtitle(&subtitle);
+        }
         *self.current_track.borrow_mut() = None;
     }
 
@@ -67,8 +85,11 @@ impl ActionCtx {
         let _ = self.ui_tx.send(UiEvent::Connecting);
         self.radio.start();
         self.meta.start();
-        self.play_button.set_visible(false);
-        self.pause_button.set_visible(true);
+        self.playback_playing.set(true);
+        if !self.update_active.get() {
+            self.play_button.set_visible(false);
+            self.pause_button.set_visible(true);
+        }
         set_playback(PlaybackStatus::Playing);
     }
 
@@ -93,14 +114,14 @@ impl ActionCtx {
     }
 
     pub(super) fn toggle(&self) {
-        if self.play_button.is_visible() {
-            activate_window_action(&self.window, "win.play");
-        } else if self.pause_button.is_visible() {
+        if self.playback_playing.get() {
             if self.pause_resume_enabled {
                 activate_window_action(&self.window, "win.pause");
             } else {
                 activate_window_action(&self.window, "win.stop");
             }
+        } else {
+            activate_window_action(&self.window, "win.play");
         }
     }
 
@@ -125,7 +146,7 @@ impl ActionCtx {
     }
 
     pub(super) fn next_station(&self) {
-        if self.play_button.is_visible() {
+        if !self.playback_playing.get() {
             activate_window_action(&self.window, "win.play");
             return;
         }
@@ -137,7 +158,7 @@ impl ActionCtx {
     }
 
     pub(super) fn prev_station(&self) {
-        if self.play_button.is_visible() {
+        if !self.playback_playing.get() {
             return;
         }
 

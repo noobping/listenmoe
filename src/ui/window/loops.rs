@@ -1,7 +1,6 @@
 use crate::log::{is_verbose, now_string};
 use crate::ui::discord::Discord;
 
-use adw::gtk::Button;
 use adw::{
     glib,
     gtk::{
@@ -15,6 +14,8 @@ use adw::{
     StyleManager, WindowTitle,
 };
 use gettextrs::gettext;
+use std::cell::Cell;
+use std::rc::Rc;
 use std::time::Instant;
 use std::{
     sync::{atomic::AtomicU32, atomic::Ordering, mpsc, Arc},
@@ -28,7 +29,8 @@ use super::super::{
     viz::VizHandle,
 };
 use super::state::{
-    CoverFetchResult, MetadataSetter, RuntimeState, SharedTrack, UiEvent, UiResetReason,
+    CoverFetchResult, MetadataSetter, RuntimeState, SharedTitle, SharedTrack, UiEvent,
+    UiResetReason,
 };
 
 const COVER_MAX_SIZE: i32 = 250;
@@ -43,7 +45,9 @@ const VIZ_MAX_FALL_PER_FRAME: f32 = 0.028;
 pub(super) struct UiUpdateLoopCtx {
     pub(super) window: ApplicationWindow,
     pub(super) win_title: WindowTitle,
-    pub(super) pause_button: Button,
+    pub(super) normal_title: SharedTitle,
+    pub(super) playback_playing: Rc<Cell<bool>>,
+    pub(super) update_title_override: Rc<Cell<bool>>,
     pub(super) art_picture: Picture,
     pub(super) art_popover: Popover,
     pub(super) style_manager: StyleManager,
@@ -61,7 +65,9 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
     let UiUpdateLoopCtx {
         window,
         win_title,
-        pause_button,
+        normal_title,
+        playback_playing,
+        update_title_override,
         art_picture,
         art_popover,
         style_manager,
@@ -78,7 +84,7 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
     let mut runtime = RuntimeState::new(current_track);
 
     let mut discord = Discord::new(discord_enabled);
-    let mut was_playing = pause_button.is_visible();
+    let mut was_playing = playback_playing.get();
     let mut last_track: Option<(String, String)> = None;
     let mut next_discord_refresh = Instant::now();
     const DISCORD_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
@@ -95,7 +101,7 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
             }
         }
 
-        let is_playing = pause_button.is_visible();
+        let is_playing = playback_playing.get();
         if was_playing && !is_playing {
             let _ = discord.clear();
             last_track = None;
@@ -116,8 +122,13 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
         for event in ui_rx.try_iter() {
             match event {
                 UiEvent::Connecting => {
-                    win_title.set_title(APP_NAME);
-                    win_title.set_subtitle(&gettext("Connecting..."));
+                    let title = APP_NAME.to_string();
+                    let subtitle = gettext("Connecting...");
+                    *normal_title.borrow_mut() = (title.clone(), subtitle.clone());
+                    if !update_title_override.get() {
+                        win_title.set_title(&title);
+                        win_title.set_subtitle(&subtitle);
+                    }
                     runtime.clear_track();
                     runtime.set_latest_cover_url(None);
                     clear_art_ui(&art_picture, &art_popover, &style_manager, &css_provider);
@@ -128,6 +139,8 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
                 UiEvent::Reset(reason) => {
                     reset_ui_state(
                         &win_title,
+                        &normal_title,
+                        &update_title_override,
                         &art_picture,
                         &art_popover,
                         &style_manager,
@@ -142,8 +155,11 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
                     }
                 }
                 UiEvent::TrackChanged(info) => {
-                    win_title.set_title(&info.artist);
-                    win_title.set_subtitle(&info.title);
+                    *normal_title.borrow_mut() = (info.artist.clone(), info.title.clone());
+                    if !update_title_override.get() {
+                        win_title.set_title(&info.artist);
+                        win_title.set_subtitle(&info.title);
+                    }
                     runtime.set_track(&info);
 
                     if discord.is_enabled() && is_verbose() {
@@ -258,6 +274,8 @@ fn clear_art_ui(
 
 fn reset_ui_state(
     win_title: &WindowTitle,
+    normal_title: &SharedTitle,
+    update_title_override: &Rc<Cell<bool>>,
     art_picture: &Picture,
     art_popover: &Popover,
     style_manager: &StyleManager,
@@ -265,8 +283,12 @@ fn reset_ui_state(
     runtime: &mut RuntimeState,
     metadata_setter: &MetadataSetter,
 ) {
-    win_title.set_title(APP_NAME);
-    win_title.set_subtitle(&gettext("J-POP and K-POP radio"));
+    let subtitle = gettext("J-POP and K-POP radio");
+    *normal_title.borrow_mut() = (APP_NAME.to_string(), subtitle.clone());
+    if !update_title_override.get() {
+        win_title.set_title(APP_NAME);
+        win_title.set_subtitle(&subtitle);
+    }
     runtime.clear_track();
     runtime.set_latest_cover_url(None);
     clear_art_ui(art_picture, art_popover, style_manager, css_provider);

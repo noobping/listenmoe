@@ -7,7 +7,7 @@ use adw::gtk::{
 };
 use adw::{Application, WindowTitle};
 use mpris_server::PlaybackStatus;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::mpsc;
 
@@ -63,6 +63,10 @@ pub fn build_actions(
     win_title: &WindowTitle,
     play_button: &Button,
     pause_button: &Button,
+    playback_playing: &Rc<Cell<bool>>,
+    update_active: &Rc<Cell<bool>>,
+    update_title_override: &Rc<Cell<bool>>,
+    normal_title: &Rc<RefCell<(String, String)>>,
     radio: &Rc<Listen>,
     meta: &Rc<Meta>,
     ui_tx: &mpsc::Sender<UiEvent>,
@@ -94,6 +98,10 @@ pub fn build_actions(
         win_title,
         play_button,
         pause_button,
+        playback_playing,
+        update_active,
+        update_title_override,
+        normal_title,
         radio,
         meta,
         ui_tx,

@@ -6,6 +6,8 @@ use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
 
+#[cfg(target_os = "windows")]
+use adw::prelude::ApplicationExt;
 use adw::prelude::GtkWindowExt;
 use adw::Application;
 use std::{cell::RefCell, rc::Rc, sync::mpsc};
@@ -51,8 +53,18 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     let WindowLayout {
         window,
         win_title,
+        normal_title,
+        playback_playing,
+        update_active,
+        update_title_override,
         play_button,
         pause_button,
+        #[cfg(target_os = "windows")]
+        update_button,
+        #[cfg(target_os = "windows")]
+        update_progress_area,
+        #[cfg(target_os = "windows")]
+        update_progress,
         menu,
         art_picture,
         art_popover,
@@ -68,6 +80,10 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &win_title,
         &play_button,
         &pause_button,
+        &playback_playing,
+        &update_active,
+        &update_title_override,
+        &normal_title,
         &radio,
         &meta,
         &ui_tx,
@@ -75,7 +91,33 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         options.pause_resume_enabled,
     );
 
-    actions::populate_menu(&window, &play_button, &menu, &radio, &meta);
+    #[cfg(target_os = "windows")]
+    let updater: Option<crate::updater::UpdaterController> = {
+        let updater = crate::updater::register_window(
+            app,
+            &window,
+            crate::updater::UpdateUi {
+                win_title: win_title.clone(),
+                normal_title: normal_title.clone(),
+                playback_playing: playback_playing.clone(),
+                update_active: update_active.clone(),
+                update_title_override: update_title_override.clone(),
+                play_button: play_button.clone(),
+                pause_button: pause_button.clone(),
+                update_button: update_button.clone(),
+                update_progress_area: update_progress_area.clone(),
+                update_progress: update_progress.clone(),
+            },
+        );
+
+        if let Some(updater) = updater.clone() {
+            app.connect_shutdown(move |_| updater.shutdown());
+        }
+
+        updater
+    };
+
+    actions::populate_menu(&window, &playback_playing, &menu, &radio, &meta);
 
     let metadata_setter: MetadataSetter = {
         let controls = controls.clone();
@@ -89,7 +131,9 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     loops::spawn_ui_update_loop(UiUpdateLoopCtx {
         window: window.clone(),
         win_title: win_title.clone(),
-        pause_button: pause_button.clone(),
+        normal_title,
+        playback_playing,
+        update_title_override,
         art_picture,
         art_popover,
         style_manager,
@@ -106,6 +150,10 @@ pub fn build_ui(app: &Application, options: UiOptions) {
     loops::spawn_viz_loop(viz, viz_handle, spectrum_bits);
 
     window.present();
+    #[cfg(target_os = "windows")]
+    if let Some(updater) = updater {
+        updater.after_window_presented();
+    }
     if options.autoplay {
         actions::activate_window_action(&window, "win.play");
     }

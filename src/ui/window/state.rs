@@ -1,11 +1,16 @@
 use crate::meta::TrackInfo;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use super::super::controls::NowPlaying;
 
 pub(super) type CoverFetchResult = (String, Result<Vec<u8>, String>);
 pub(super) type SharedTrack = Rc<RefCell<Option<(String, String)>>>;
+pub(super) type SharedTitle = Rc<RefCell<(String, String)>>;
+pub(super) type SharedFlag = Rc<Cell<bool>>;
 pub(super) type MetadataSetter = Rc<dyn Fn(Option<NowPlaying>)>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -11,6 +11,8 @@ mod meta;
 mod preferences;
 mod station;
 mod ui;
+#[cfg(target_os = "windows")]
+mod updater;
 
 #[cfg(debug_assertions)]
 const APP_ID: &str = "io.github.noobping.listenmoe.Devel";
@@ -251,6 +253,14 @@ fn run() -> Result<(), String> {
 }
 
 fn main() -> ExitCode {
+    #[cfg(target_os = "windows")]
+    {
+        let args = std::env::args_os().collect::<Vec<_>>();
+        if let Some(code) = updater::handle_special_command(&args) {
+            return code;
+        }
+    }
+
     match run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
