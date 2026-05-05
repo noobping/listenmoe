@@ -27,21 +27,22 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     page.add(&experimental_group);
     window.add(&page);
 
-    let station_row = adw::ActionRow::builder()
-        .title(gettext("Default station"))
-        .build();
     let station_choices = [gettext("J-POP"), gettext("K-POP")];
-    let station_dropdown =
-        gtk::DropDown::from_strings(&[station_choices[0].as_str(), station_choices[1].as_str()]);
-    station_dropdown.set_selected(match options.borrow().station {
-        Station::Kpop => 1,
-        Station::Jpop => 0,
-    });
+    let station_model =
+        gtk::StringList::new(&[station_choices[0].as_str(), station_choices[1].as_str()]);
+    let station_row = adw::ComboRow::builder()
+        .title(gettext("Default station"))
+        .model(&station_model)
+        .selected(match options.borrow().station {
+            Station::Kpop => 1,
+            Station::Jpop => 0,
+        })
+        .build();
     {
         let options = options.clone();
-        station_dropdown.connect_selected_notify(move |dropdown| {
+        station_row.connect_selected_notify(move |row| {
             let mut opts = options.borrow_mut();
-            opts.station = if dropdown.selected() == 1 {
+            opts.station = if row.selected() == 1 {
                 Station::Kpop
             } else {
                 Station::Jpop
@@ -51,8 +52,6 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
             }
         });
     }
-    station_row.add_suffix(&station_dropdown);
-    station_row.set_activatable_widget(Some(&station_dropdown));
     startup_group.add(&station_row);
 
     let autoplay_row = adw::SwitchRow::builder()
