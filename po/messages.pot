@@ -186,3 +186,84 @@ msgstr ""
 
 msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
 msgstr ""
+
+msgid "Check for updates"
+msgstr ""
+
+msgid "Cancel update"
+msgstr ""
+
+msgid "Update progress"
+msgstr ""
+
+msgid "Couldn't check for updates"
+msgstr ""
+
+msgid "Try again later."
+msgstr ""
+
+msgid "Already up to date"
+msgstr ""
+
+msgid "You have the latest version of Listen Moe."
+msgstr ""
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr ""
+
+msgid "Couldn't download the update"
+msgstr ""
+
+msgid "Update canceled"
+msgstr ""
+
+msgid "The update was canceled."
+msgstr ""
+
+msgid "The update check was canceled."
+msgstr ""
+
+msgid "The downloaded installer will not be installed."
+msgstr ""
+
+msgid "Installing update"
+msgstr ""
+
+msgid "Listen Moe will close."
+msgstr ""
+
+msgid "Couldn't install the update"
+msgstr ""
+
+msgid "Checking for updates"
+msgstr ""
+
+msgid "Downloading update"
+msgstr ""
+
+msgid "Install update"
+msgstr ""
+
+msgid "Update ready"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Downloaded"
+msgstr ""
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr ""
+
+msgid "A newer Windows release is available."
+msgstr ""
+
+msgid "The installer is ready to run."
+msgstr ""
+
+msgid "Couldn't start the installer."
+msgstr ""
+
+msgid "Separate experimental features from stable features."
+msgstr ""

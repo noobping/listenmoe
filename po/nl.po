@@ -185,3 +185,84 @@ msgstr "Het gedrag van pauzeren, hervatten en wisselen van zender is gewijzigd."
 
 msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
 msgstr "Opstartopties toegevoegd voor pauzeren/hervatten of stopgedrag; afspelen/stoppen is nu de standaard."
+
+msgid "Check for updates"
+msgstr "Controleren op updates"
+
+msgid "Cancel update"
+msgstr "Update annuleren"
+
+msgid "Update progress"
+msgstr "Updatevoortgang"
+
+msgid "Couldn't check for updates"
+msgstr "Kon niet controleren op updates"
+
+msgid "Try again later."
+msgstr "Probeer het later opnieuw."
+
+msgid "Already up to date"
+msgstr "Al up-to-date"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Je hebt de nieuwste versie van Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "De release-metadata bevat geen geldige SHA-256-digest."
+
+msgid "Couldn't download the update"
+msgstr "Kon de update niet downloaden"
+
+msgid "Update canceled"
+msgstr "Update geannuleerd"
+
+msgid "The update was canceled."
+msgstr "De update is geannuleerd."
+
+msgid "The update check was canceled."
+msgstr "De updatecontrole is geannuleerd."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Het gedownloade installatieprogramma wordt niet geïnstalleerd."
+
+msgid "Installing update"
+msgstr "Update installeren"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe wordt afgesloten."
+
+msgid "Couldn't install the update"
+msgstr "Kon de update niet installeren"
+
+msgid "Checking for updates"
+msgstr "Controleren op updates"
+
+msgid "Downloading update"
+msgstr "Update downloaden"
+
+msgid "Install update"
+msgstr "Update installeren"
+
+msgid "Update ready"
+msgstr "Update gereed"
+
+msgid "Version"
+msgstr "Versie"
+
+msgid "Downloaded"
+msgstr "Gedownload"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Zoeken naar een nieuwere Windows-installer op GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Er is een nieuwere Windows-versie beschikbaar."
+
+msgid "The installer is ready to run."
+msgstr "Het installatieprogramma is klaar om te starten."
+
+msgid "Couldn't start the installer."
+msgstr "Kon het installatieprogramma niet starten."
+
+msgid "Separate experimental features from stable features."
+msgstr "Experimentele functies gescheiden van stabiele functies."

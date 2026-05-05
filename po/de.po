@@ -185,3 +185,84 @@ msgstr "Das Verhalten beim Pausieren, Fortsetzen und Wechseln des Senders wurde 
 
 msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
 msgstr "Startoptionen für Pause/Fortsetzen oder Stoppverhalten hinzugefügt; Abspielen/Stopp ist jetzt der Standard."
+
+msgid "Check for updates"
+msgstr "Nach Updates suchen"
+
+msgid "Cancel update"
+msgstr "Update abbrechen"
+
+msgid "Update progress"
+msgstr "Update-Fortschritt"
+
+msgid "Couldn't check for updates"
+msgstr "Es konnte nicht nach Updates gesucht werden."
+
+msgid "Try again later."
+msgstr "Später erneut versuchen."
+
+msgid "Already up to date"
+msgstr "Bereits aktuell"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Du hast die neueste Version von Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Den Release-Metadaten fehlt ein gültiger SHA-256-Digest."
+
+msgid "Couldn't download the update"
+msgstr "Das Update konnte nicht heruntergeladen werden"
+
+msgid "Update canceled"
+msgstr "Update abgebrochen"
+
+msgid "The update was canceled."
+msgstr "Das Update wurde abgebrochen."
+
+msgid "The update check was canceled."
+msgstr "Die Update-Suche wurde abgebrochen."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Der heruntergeladene Installer wird nicht installiert."
+
+msgid "Installing update"
+msgstr "Update wird installiert"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe wird geschlossen."
+
+msgid "Couldn't install the update"
+msgstr "Das Update konnte nicht installiert werden"
+
+msgid "Checking for updates"
+msgstr "Suche nach Updates"
+
+msgid "Downloading update"
+msgstr "Update wird heruntergeladen"
+
+msgid "Install update"
+msgstr "Update installieren"
+
+msgid "Update ready"
+msgstr "Update bereit"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Downloaded"
+msgstr "Heruntergeladen"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Es wird auf GitHub Releases nach einem neueren Windows-Installer gesucht."
+
+msgid "A newer Windows release is available."
+msgstr "Eine neuere Windows-Version ist verfügbar."
+
+msgid "The installer is ready to run."
+msgstr "Der Installer ist bereit."
+
+msgid "Couldn't start the installer."
+msgstr "Der Installer konnte nicht gestartet werden."
+
+msgid "Separate experimental features from stable features."
+msgstr "Experimentelle Funktionen von stabilen Funktionen getrennt."
