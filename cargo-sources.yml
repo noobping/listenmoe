@@ -1600,13 +1600,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/mpris-server/mpris-server-0.9.0.crate
-  sha256: 392ce2be7224867869df37e473f28871ab0ff725c0014f1b196ba56a38aea9a8
-  dest: cargo/vendor/mpris-server-0.9.0
+  url: https://static.crates.io/crates/mpris-server/mpris-server-0.10.0.crate
+  sha256: 70cf358e9a9516cc35ed40eebd56cbe80f5190a7a2b3cd0c2d358c86b879132b
+  dest: cargo/vendor/mpris-server-0.10.0
 - type: inline
-  contents: '{"package": "392ce2be7224867869df37e473f28871ab0ff725c0014f1b196ba56a38aea9a8",
+  contents: '{"package": "70cf358e9a9516cc35ed40eebd56cbe80f5190a7a2b3cd0c2d358c86b879132b",
     "files": {}}'
-  dest: cargo/vendor/mpris-server-0.9.0
+  dest: cargo/vendor/mpris-server-0.10.0
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
@@ -2970,13 +2970,13 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/tungstenite/tungstenite-0.28.0.crate
-  sha256: 8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442
-  dest: cargo/vendor/tungstenite-0.28.0
+  url: https://static.crates.io/crates/tungstenite/tungstenite-0.29.0.crate
+  sha256: 6c01152af293afb9c7c2a57e4b559c5620b421f6d133261c60dd2d0cdb38e6b8
+  dest: cargo/vendor/tungstenite-0.29.0
 - type: inline
-  contents: '{"package": "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442",
+  contents: '{"package": "6c01152af293afb9c7c2a57e4b559c5620b421f6d133261c60dd2d0cdb38e6b8",
     "files": {}}'
-  dest: cargo/vendor/tungstenite-0.28.0
+  dest: cargo/vendor/tungstenite-0.29.0
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
@@ -3037,16 +3037,6 @@
   contents: '{"package": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed",
     "files": {}}'
   dest: cargo/vendor/url-2.5.8
-  dest-filename: .cargo-checksum.json
-- type: archive
-  archive-type: tar-gzip
-  url: https://static.crates.io/crates/utf-8/utf-8-0.7.6.crate
-  sha256: 09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9
-  dest: cargo/vendor/utf-8-0.7.6
-- type: inline
-  contents: '{"package": "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9",
-    "files": {}}'
-  dest: cargo/vendor/utf-8-0.7.6
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
