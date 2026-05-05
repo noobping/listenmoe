@@ -250,6 +250,7 @@ jobs:
           Write-Host "Using ProductVersion: $ver"
 
           & $candle `
+            -ext WixUtilExtension `
             -dBundleDir="$(Resolve-Path bundle)" `
             -dProductVersion="$ver" `
             -out wix\generated\ `
@@ -257,6 +258,7 @@ jobs:
             wix\generated\AppFiles.wxs
 
           & $light `
+            -ext WixUtilExtension `
             -out listenmoe.msi `
             wix\generated\listenmoe.wixobj `
             wix\generated\AppFiles.wixobj
