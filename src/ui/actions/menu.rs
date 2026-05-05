@@ -1,5 +1,7 @@
 use adw::gtk::{self, ApplicationWindow};
 use gettextrs::gettext;
+#[cfg(target_os = "windows")]
+use gtk::glib::variant::ToVariant;
 use std::{cell::Cell, rc::Rc};
 
 use crate::listen::Listen;
@@ -35,15 +37,19 @@ pub fn populate_menu(
     );
     #[cfg(target_os = "windows")]
     {
-        menu.append(
-            Some(&gettext("Check for updates")),
-            Some("win.check-for-updates"),
-        );
-        menu.append(Some(&gettext("Cancel update")), Some("win.cancel-update"));
+        append_hidden_when_disabled(menu, &gettext("Check for updates"), "win.check-for-updates");
+        append_hidden_when_disabled(menu, &gettext("Cancel update"), "win.cancel-update");
     }
     menu.append(Some(&gettext("Preferences")), Some("win.preferences"));
     menu.append(Some(&gettext("About")), Some("win.about"));
     menu.append(Some(&gettext("Quit")), Some("win.quit"));
+}
+
+#[cfg(target_os = "windows")]
+fn append_hidden_when_disabled(menu: &gtk::gio::Menu, label: &str, detailed_action: &str) {
+    let item = gtk::gio::MenuItem::new(Some(label), Some(detailed_action));
+    item.set_attribute_value("hidden-when", Some(&"action-disabled".to_variant()));
+    menu.append_item(&item);
 }
 
 fn register_station_action(

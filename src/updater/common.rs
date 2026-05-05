@@ -40,6 +40,7 @@ struct UpdaterControllerInner {
     app: Application,
     ui: UpdateUi,
     state: RefCell<UpdateState>,
+    check_action: SimpleAction,
     cancel_action: SimpleAction,
     auto_check_started: Cell<bool>,
     next_run_id: Cell<u64>,
@@ -126,6 +127,7 @@ impl UpdaterController {
                 app: app.clone(),
                 ui,
                 state: RefCell::new(UpdateState::Idle),
+                check_action: SimpleAction::new("check-for-updates", None),
                 cancel_action: SimpleAction::new("cancel-update", None),
                 auto_check_started: Cell::new(false),
                 next_run_id: Cell::new(0),
@@ -156,14 +158,14 @@ impl UpdaterController {
     }
 
     fn install_actions(&self, window: &ApplicationWindow) {
-        let check_action = SimpleAction::new("check-for-updates", None);
         {
             let controller = self.clone();
-            check_action.connect_activate(move |_, _| controller.start_check(CheckMode::Manual));
+            self.inner
+                .check_action
+                .connect_activate(move |_, _| controller.start_check(CheckMode::Manual));
         }
-        window.add_action(&check_action);
+        window.add_action(&self.inner.check_action);
 
-        self.inner.cancel_action.set_enabled(false);
         {
             let controller = self.clone();
             self.inner
@@ -171,6 +173,7 @@ impl UpdaterController {
                 .connect_activate(move |_, _| controller.cancel_update());
         }
         window.add_action(&self.inner.cancel_action);
+        self.set_update_menu_options(true, false);
 
         {
             let controller = self.clone();
@@ -227,6 +230,7 @@ impl UpdaterController {
 
         let run_id = self.next_run_id();
         *self.inner.state.borrow_mut() = UpdateState::Checking { mode, run_id };
+        self.set_update_menu_options(false, matches!(mode, CheckMode::Manual));
         if matches!(mode, CheckMode::Manual) {
             self.present_checking();
         }
@@ -238,6 +242,7 @@ impl UpdaterController {
         }) {
             log_error(format!("Failed to spawn update check worker: {error}"));
             *self.inner.state.borrow_mut() = UpdateState::Idle;
+            self.set_update_menu_options(true, false);
             if matches!(mode, CheckMode::Manual) {
                 self.present_temporary_status(
                     gettext("Couldn't check for updates"),
@@ -317,6 +322,7 @@ impl UpdaterController {
                 release.version
             ));
             *self.inner.state.borrow_mut() = UpdateState::Idle;
+            self.set_update_menu_options(true, false);
             if matches!(mode, CheckMode::Manual) {
                 self.present_temporary_status(
                     gettext("Couldn't check for updates"),
@@ -349,6 +355,7 @@ impl UpdaterController {
             cancel: cancel.clone(),
             downloaded: 0,
         };
+        self.set_update_menu_options(false, true);
         self.present_download(&release, 0);
 
         let (tx, rx) = mpsc::channel();
@@ -360,6 +367,7 @@ impl UpdaterController {
         }) {
             log_error(format!("Failed to spawn update download worker: {error}"));
             *self.inner.state.borrow_mut() = UpdateState::Idle;
+            self.set_update_menu_options(true, false);
             if matches!(mode, CheckMode::Manual) {
                 self.present_temporary_status(
                     gettext("Couldn't download the update"),
@@ -512,6 +520,7 @@ impl UpdaterController {
         match platform::launch_update(download) {
             Ok(()) => {
                 *self.inner.state.borrow_mut() = UpdateState::Installing;
+                self.set_update_menu_options(false, false);
                 self.set_update_progress(Some(1.0));
                 self.set_update_title(
                     gettext("Installing update"),
@@ -591,7 +600,7 @@ impl UpdaterController {
     fn present_temporary_status(&self, title: String, subtitle: String) {
         self.restore_transport_controls();
         self.inner.ui.update_title_override.set(true);
-        self.inner.cancel_action.set_enabled(false);
+        self.set_update_menu_options(true, false);
         self.inner
             .status_generation
             .set(self.next_status_generation());
@@ -620,12 +629,12 @@ impl UpdaterController {
         self.inner.ui.play_button.set_visible(false);
         self.inner.ui.pause_button.set_visible(false);
         self.inner.ui.update_button.set_visible(true);
-        self.inner.cancel_action.set_enabled(true);
+        self.set_update_menu_options(false, true);
     }
 
     fn hide_update_ui(&self) {
         self.restore_transport_controls();
-        self.inner.cancel_action.set_enabled(false);
+        self.set_update_menu_options(true, false);
         self.inner.ui.update_title_override.set(false);
         self.restore_normal_title();
     }
@@ -659,6 +668,11 @@ impl UpdaterController {
             .update_progress
             .set(fraction.map(|fraction| fraction.clamp(0.0, 1.0)));
         self.inner.ui.update_progress_area.queue_draw();
+    }
+
+    fn set_update_menu_options(&self, check_enabled: bool, cancel_enabled: bool) {
+        self.inner.check_action.set_enabled(check_enabled);
+        self.inner.cancel_action.set_enabled(cancel_enabled);
     }
 
     fn next_run_id(&self) -> u64 {
