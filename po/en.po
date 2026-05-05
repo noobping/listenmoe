@@ -69,6 +69,9 @@ msgstr "Preferences"
 msgid "Startup Defaults"
 msgstr "Startup Defaults"
 
+msgid "Experimental Features"
+msgstr "Experimental Features"
+
 msgid "Default station"
 msgstr "Default station"
 

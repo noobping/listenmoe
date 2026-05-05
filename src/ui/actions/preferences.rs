@@ -18,9 +18,13 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     window.set_default_size(360, 370);
 
     let page = adw::PreferencesPage::new();
-    let group = adw::PreferencesGroup::new();
-    group.set_title(&gettext("Startup Defaults"));
-    page.add(&group);
+    let startup_group = adw::PreferencesGroup::new();
+    startup_group.set_title(&gettext("Startup Defaults"));
+    page.add(&startup_group);
+
+    let experimental_group = adw::PreferencesGroup::new();
+    experimental_group.set_title(&gettext("Experimental Features"));
+    page.add(&experimental_group);
     window.add(&page);
 
     let station_row = adw::ActionRow::builder()
@@ -49,7 +53,7 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     }
     station_row.add_suffix(&station_dropdown);
     station_row.set_activatable_widget(Some(&station_dropdown));
-    group.add(&station_row);
+    startup_group.add(&station_row);
 
     let autoplay_row = adw::SwitchRow::builder()
         .title(gettext("Autoplay"))
@@ -66,7 +70,7 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
             }
         });
     }
-    group.add(&autoplay_row);
+    startup_group.add(&autoplay_row);
 
     let pause_resume_row = adw::SwitchRow::builder()
         .title(gettext("Enable pause and resume"))
@@ -83,7 +87,7 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
             }
         });
     }
-    group.add(&pause_resume_row);
+    experimental_group.add(&pause_resume_row);
 
     let discord_row = adw::SwitchRow::builder()
         .title(gettext("Discord Rich Presence"))
@@ -98,7 +102,7 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
             eprintln!("{err}");
         }
     });
-    group.add(&discord_row);
+    startup_group.add(&discord_row);
 
     window.present();
 }

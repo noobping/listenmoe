@@ -69,6 +69,9 @@ msgstr "Preferencias"
 msgid "Startup Defaults"
 msgstr "Valores predeterminados de inicio"
 
+msgid "Experimental Features"
+msgstr "Funciones experimentales"
+
 msgid "Default station"
 msgstr "Emisora predeterminada"
 
