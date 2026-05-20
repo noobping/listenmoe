@@ -16,7 +16,7 @@ FileDescription = "J-POP and K-POP radio"
 
 [dependencies]
 rodio = { version = "0.22.1", default-features = false, features = ["playback"] }
-symphonia = { version = "0.5.5", features = ["ogg", "vorbis", "mp3"] }
+symphonia = { version = "0.6.0", features = ["ogg", "vorbis", "mp3"] }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 adw = { version = "0.8.1", package = "libadwaita", features = ["v1_5"] }
 serde_json = "1.0.148"
