@@ -1,21 +1,14 @@
 use reqwest::blocking::Client;
 use rodio::{buffer::SamplesBuffer, queue, DeviceSinkBuilder};
-#[cfg(feature = "experimental")]
 use rodio::{Player, Source};
-#[cfg(feature = "experimental")]
 use std::collections::VecDeque;
 use std::num::{NonZeroU16, NonZeroU32};
-#[cfg(feature = "experimental")]
 use std::path::PathBuf;
 use std::sync::atomic::AtomicU32;
-#[cfg(feature = "experimental")]
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc};
-#[cfg(feature = "experimental")]
 use std::sync::{Condvar, Mutex};
-#[cfg(feature = "experimental")]
 use std::thread;
-#[cfg(feature = "experimental")]
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
@@ -29,19 +22,16 @@ use crate::http_source::HttpSource;
 use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
-use super::clock::PlaybackClock;
-#[cfg(feature = "experimental")]
-use super::store::{clear_root, compute_chunk_timing, StoredPcmChunk, RETENTION_MS};
-#[cfg(feature = "experimental")]
-use super::viz::{apply_spectrum_snapshot, build_spectrum_snapshot, FftVizState};
-use super::viz::{
+use super::super::clock::PlaybackClock;
+use super::super::store::{clear_root, compute_chunk_timing, StoredPcmChunk, RETENTION_MS};
+use super::super::viz::{apply_spectrum_snapshot, build_spectrum_snapshot, FftVizState};
+use super::super::viz::{
     clear_spectrum, decode_and_process_packet, make_fft_state, reset_fft_state, DecodeState,
     PacketOutcome, VizParams,
 };
-use super::{Control, Result};
+use super::super::{Control, Result};
 
 #[derive(Debug, Clone, Copy)]
-#[cfg(feature = "experimental")]
 enum RunOutcome {
     Stop,
     Reconnect,
@@ -50,51 +40,39 @@ enum RunOutcome {
 #[derive(Debug, Clone, Copy)]
 enum LiveDirectOutcome {
     Stop,
-    #[cfg(feature = "experimental")]
     TransitionToBuffered,
 }
 
-#[cfg(feature = "experimental")]
 enum OutputCommandResult {
     Continue,
     Stop,
     RestartPlayback,
 }
 
-#[cfg(feature = "experimental")]
 const OUTPUT_CHUNK_MS: u64 = 1_000;
-#[cfg(feature = "experimental")]
 const OUTPUT_MIN_HEADROOM_MS: u64 = 8_000;
-#[cfg(feature = "experimental")]
 const OUTPUT_WAIT_TIMEOUT_MS: u64 = 25;
-#[cfg(feature = "experimental")]
 const LIVE_BUFFER_MS: u64 = RETENTION_MS;
 const LIVE_CLOCK_FLUSH_MS: u64 = 250;
-#[cfg(feature = "experimental")]
 const PLAYBACK_PREFILL_CHUNKS: usize = 8;
-#[cfg(feature = "experimental")]
 const PLAYBACK_QUEUE_MAX_CHUNKS: usize = 16;
 
 #[derive(Debug, Clone, Copy)]
-#[cfg(feature = "experimental")]
 enum PlaybackEvent {
     RestartRequired,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg(feature = "experimental")]
 enum PlaybackQueueCloseReason {
     Stopped,
     RestartRequired,
 }
 
-#[cfg(feature = "experimental")]
 struct QueuedPlaybackChunk {
     audio: StoredPcmChunk,
     spectrum_snapshot: Vec<u32>,
 }
 
-#[cfg(feature = "experimental")]
 impl QueuedPlaybackChunk {
     fn from_audio(audio: StoredPcmChunk, fft_state: &mut FftVizState, viz: VizParams) -> Self {
         let spectrum_snapshot = build_spectrum_snapshot(
@@ -113,20 +91,17 @@ impl QueuedPlaybackChunk {
 }
 
 #[derive(Default)]
-#[cfg(feature = "experimental")]
 struct PlaybackQueueState {
     chunks: VecDeque<QueuedPlaybackChunk>,
     close_reason: Option<PlaybackQueueCloseReason>,
 }
 
 #[derive(Default)]
-#[cfg(feature = "experimental")]
 struct PlaybackQueue {
     state: Mutex<PlaybackQueueState>,
     condvar: Condvar,
 }
 
-#[cfg(feature = "experimental")]
 impl PlaybackQueue {
     fn push_prefilled(&self, chunk: QueuedPlaybackChunk) {
         let mut state = self.state.lock().expect("playback queue poisoned");
@@ -182,7 +157,6 @@ impl PlaybackQueue {
 }
 
 #[derive(Default)]
-#[cfg(feature = "experimental")]
 struct LiveChunkBufferState {
     chunks: VecDeque<LiveChunkEntry>,
     generation: u64,
@@ -190,14 +164,12 @@ struct LiveChunkBufferState {
 }
 
 #[derive(Debug, Clone)]
-#[cfg(feature = "experimental")]
 struct LiveChunkEntry {
     id: u64,
     audio: StoredPcmChunk,
 }
 
 #[derive(Debug, Clone)]
-#[cfg(feature = "experimental")]
 struct LiveReadCursor {
     chunk_id: u64,
     sample_offset: usize,
@@ -205,13 +177,11 @@ struct LiveReadCursor {
 }
 
 #[derive(Default)]
-#[cfg(feature = "experimental")]
 struct LiveChunkBuffer {
     state: Mutex<LiveChunkBufferState>,
     condvar: Condvar,
 }
 
-#[cfg(feature = "experimental")]
 impl LiveChunkBuffer {
     fn push(&self, chunk: StoredPcmChunk) {
         let mut state = self.state.lock().expect("live chunk buffer poisoned");
@@ -488,14 +458,12 @@ impl LiveChunkBuffer {
     }
 }
 
-#[cfg(feature = "experimental")]
 struct AbortableSource<I> {
     inner: I,
     playback_generation: Arc<AtomicU64>,
     expected_generation: u64,
 }
 
-#[cfg(feature = "experimental")]
 impl<I> AbortableSource<I> {
     fn new(inner: I, playback_generation: Arc<AtomicU64>, expected_generation: u64) -> Self {
         Self {
@@ -506,7 +474,6 @@ impl<I> AbortableSource<I> {
     }
 }
 
-#[cfg(feature = "experimental")]
 impl<I> Iterator for AbortableSource<I>
 where
     I: Source,
@@ -522,7 +489,6 @@ where
     }
 }
 
-#[cfg(feature = "experimental")]
 impl<I> Source for AbortableSource<I>
 where
     I: Source,
@@ -548,7 +514,6 @@ where
     }
 }
 
-#[cfg(feature = "experimental")]
 fn drain_finished_chunks(
     in_flight: &mut VecDeque<(mpsc::Receiver<()>, u64)>,
     clock: &Arc<PlaybackClock>,
@@ -577,7 +542,6 @@ fn drain_finished_chunks(
     }
 }
 
-#[cfg(feature = "experimental")]
 fn wait_for_oldest_chunk(
     in_flight: &mut VecDeque<(mpsc::Receiver<()>, u64)>,
     clock: &Arc<PlaybackClock>,
@@ -616,7 +580,6 @@ fn wait_for_oldest_chunk(
     }
 }
 
-#[cfg(feature = "experimental")]
 fn run_playback_output(
     output: Arc<queue::SourcesQueueInput>,
     playback_queue: Arc<PlaybackQueue>,
@@ -697,7 +660,6 @@ fn run_playback_output(
     clear_spectrum(&spectrum_bits);
 }
 
-#[cfg(feature = "experimental")]
 fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samples: &[f32]) {
     const CHUNK_MS: u32 = 10;
 
@@ -721,13 +683,11 @@ fn append_samples_in_chunks(sink: &Player, channels: u16, sample_rate: u32, samp
     }
 }
 
-#[cfg(feature = "experimental")]
 fn reset_direct_player(direct_player: &mut Player, direct_mixer: &rodio::mixer::Mixer) {
     direct_player.stop();
     *direct_player = Player::connect_new(direct_mixer);
 }
 
-#[cfg(feature = "experimental")]
 fn buffered_playback_start_ms(live_head_ms: u64, floor_ms: Option<u64>) -> u64 {
     let buffered = live_head_ms.saturating_sub(OUTPUT_MIN_HEADROOM_MS);
     match floor_ms {
@@ -776,7 +736,6 @@ fn handle_live_direct_control(
                 clear_spectrum(spectrum_bits);
                 return Ok(Some(LiveDirectOutcome::Stop));
             }
-            #[cfg(feature = "experimental")]
             Control::Pause => {
                 if is_verbose() {
                     println!(
@@ -789,7 +748,6 @@ fn handle_live_direct_control(
                 clear_spectrum(spectrum_bits);
                 return Ok(Some(LiveDirectOutcome::TransitionToBuffered));
             }
-            #[cfg(feature = "experimental")]
             Control::Resume => {}
         }
     }
@@ -1010,7 +968,6 @@ fn run_direct_live_until_pause(
     }
 }
 
-#[cfg(feature = "experimental")]
 fn handle_output_command(
     cmd: Control,
     paused: &mut bool,
@@ -1051,7 +1008,6 @@ fn handle_output_command(
     Ok(OutputCommandResult::Continue)
 }
 
-#[cfg(feature = "experimental")]
 fn handle_output_control(
     rx: &mpsc::Receiver<Control>,
     paused: &mut bool,
@@ -1068,14 +1024,12 @@ fn handle_output_control(
     Ok(OutputCommandResult::Continue)
 }
 
-#[cfg(feature = "experimental")]
 struct PlaybackStart {
     queue: Arc<PlaybackQueue>,
     prefetch_handle: thread::JoinHandle<()>,
     output_handle: thread::JoinHandle<()>,
 }
 
-#[cfg(feature = "experimental")]
 enum StoreCommand {
     Append {
         sample_rate: u32,
@@ -1085,7 +1039,6 @@ enum StoreCommand {
     },
 }
 
-#[cfg(feature = "experimental")]
 fn playback_viz_params() -> VizParams {
     VizParams {
         peak_attack: 0.08,
@@ -1169,7 +1122,6 @@ impl LiveClockTracker {
     }
 }
 
-#[cfg(feature = "experimental")]
 fn run_live_playback_prefetch(
     live_buffer: Arc<LiveChunkBuffer>,
     queue: Arc<PlaybackQueue>,
@@ -1204,7 +1156,6 @@ fn run_live_playback_prefetch(
     queue.close(PlaybackQueueCloseReason::Stopped);
 }
 
-#[cfg(feature = "experimental")]
 fn try_start_live_playback(
     live_buffer: &Arc<LiveChunkBuffer>,
     cursor_ms: u64,
@@ -1282,7 +1233,6 @@ fn try_start_live_playback(
     })
 }
 
-#[cfg(feature = "experimental")]
 fn try_start_playback(
     live_buffer: &Arc<LiveChunkBuffer>,
     clock: Arc<PlaybackClock>,
@@ -1330,7 +1280,6 @@ fn try_start_playback(
     ))
 }
 
-#[cfg(feature = "experimental")]
 fn teardown_playback_pipeline(
     output: Option<&Arc<queue::SourcesQueueInput>>,
     playback_generation: &Arc<AtomicU64>,
@@ -1357,7 +1306,6 @@ fn teardown_playback_pipeline(
     clear_spectrum(spectrum_bits);
 }
 
-#[cfg(feature = "experimental")]
 fn run_buffer_relay(
     live_buffer: Arc<LiveChunkBuffer>,
     clock: Arc<PlaybackClock>,
@@ -1415,7 +1363,6 @@ fn run_buffer_relay(
     Ok(())
 }
 
-#[cfg(feature = "experimental")]
 fn run_one_connection(
     format: &mut Box<dyn symphonia::core::formats::FormatReader>,
     track_id: &mut u32,
@@ -1560,7 +1507,6 @@ fn run_one_connection(
     }
 }
 
-#[cfg(feature = "experimental")]
 fn run_ingest_loop(
     station: Station,
     clock: Arc<PlaybackClock>,
@@ -1641,24 +1587,7 @@ fn run_ingest_loop(
     Ok(())
 }
 
-#[cfg(not(feature = "experimental"))]
-pub(super) fn run_listenmoe_stream(
-    station: Station,
-    rx: mpsc::Receiver<Control>,
-    spectrum_bits: Arc<Vec<AtomicU32>>,
-    clock: Arc<PlaybackClock>,
-) -> Result<()> {
-    clock.reset();
-    clock.set_live_playback(true);
-    let mut stream = DeviceSinkBuilder::open_default_sink()?;
-    stream.log_on_drop(false);
-    let _ = run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, stream.mixer())?;
-    clock.set_live_playback(false);
-    Ok(())
-}
-
-#[cfg(feature = "experimental")]
-pub(super) fn run_listenmoe_stream(
+pub(in crate::listen) fn run_listenmoe_stream(
     station: Station,
     rx: mpsc::Receiver<Control>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
@@ -1678,7 +1607,6 @@ pub(super) fn run_listenmoe_stream(
             clear_root(&root)?;
             return Ok(());
         }
-        #[cfg(feature = "experimental")]
         LiveDirectOutcome::TransitionToBuffered => {
             clock.set_live_playback(false);
         }
@@ -1864,7 +1792,7 @@ fn now_timestamp_ms() -> u64 {
         .as_millis() as u64
 }
 
-#[cfg(all(test, feature = "experimental"))]
+#[cfg(test)]
 mod tests {
     use super::{buffered_playback_start_ms, LiveChunkBuffer};
     use crate::listen::store::StoredPcmChunk;
