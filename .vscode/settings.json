@@ -8,6 +8,12 @@
     "rust-analyzer.cargo.buildScripts.enable": true,
     "rust-analyzer.checkOnSave": false,
     "files.watcherExclude": {
+        ".git/objects/**": true,
+        ".git/subtree-cache/**": true,
+        ".hg/store/**": true,
+        "*/.git/objects/**": true,
+        "*/.git/subtree-cache/**": true,
+        "*/.hg/store/**": true,
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/.hg/store/**": true,
