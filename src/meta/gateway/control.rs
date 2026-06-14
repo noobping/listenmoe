@@ -14,12 +14,17 @@ pub(super) fn handle_outer_control(
     paused: &mut bool,
     empty_sleep: Duration,
 ) -> OuterLoopAction {
+    #[cfg(not(feature = "experimental"))]
+    let _ = paused;
+
     match rx.try_recv() {
         Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => OuterLoopAction::Stop,
+        #[cfg(feature = "experimental")]
         Ok(Control::Pause) => {
             *paused = true;
             OuterLoopAction::Sleep(Duration::from_secs(1))
         }
+        #[cfg(feature = "experimental")]
         Ok(Control::Resume) => {
             *paused = false;
             OuterLoopAction::Sleep(Duration::from_secs(1))

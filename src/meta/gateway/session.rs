@@ -11,7 +11,7 @@ use tungstenite::protocol::WebSocket;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message;
 
-use crate::listen::{PlaybackClock, RETENTION_MS};
+use crate::listen::PlaybackClock;
 use crate::log::{is_verbose, now_string};
 use crate::meta::controller::Control;
 use crate::meta::error::MetaResult;
@@ -29,6 +29,7 @@ use super::parse::parse_track_batch;
 
 const HEARTBEAT_PAYLOAD: &str = r#"{"op":9}"#;
 const TRACK_UPDATE_REQUEST_PAYLOAD: &str = r#"{"op":2}"#;
+const TIMELINE_RETENTION_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 
 macro_rules! debug_gateway {
     ($($arg:tt)*) => {
@@ -46,6 +47,12 @@ pub(super) fn run_once(
     timeline: Arc<TimelineStore>,
     paused: &mut bool,
 ) -> MetaResult<()> {
+    #[cfg(not(feature = "experimental"))]
+    {
+        let _ = &paused_flag;
+        let _ = &paused;
+    }
+
     if let Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) = rx.try_recv() {
         return Ok(());
     }
@@ -69,11 +76,13 @@ pub(super) fn run_once(
     loop {
         match rx.try_recv() {
             Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
+            #[cfg(feature = "experimental")]
             Ok(Control::Pause) => {
                 debug_gateway!("Pausing meta data");
                 *paused = true;
                 paused_flag.store(true, Ordering::Relaxed);
             }
+            #[cfg(feature = "experimental")]
             Ok(Control::Resume) => {
                 debug_gateway!("Resuming meta data");
                 *paused = false;
@@ -160,7 +169,8 @@ pub(super) fn run_once(
                     let mut tracks = batch.history;
                     tracks.push(batch.current);
                     timeline.insert_tracks(tracks)?;
-                    let retention_floor = clock.live_head_ms().saturating_sub(RETENTION_MS);
+                    let retention_floor =
+                        clock.live_head_ms().saturating_sub(TIMELINE_RETENTION_MS);
                     let _ = timeline.prune_before(retention_floor)?;
                     refresh_timeline_from_history(station, &history_client, &timeline, &clock)?;
                 }
@@ -195,7 +205,7 @@ fn refresh_timeline_from_history(
     }
 
     timeline.insert_tracks(tracks)?;
-    let retention_floor = clock.live_head_ms().saturating_sub(RETENTION_MS);
+    let retention_floor = clock.live_head_ms().saturating_sub(TIMELINE_RETENTION_MS);
     let _ = timeline.prune_before(retention_floor)?;
     Ok(())
 }

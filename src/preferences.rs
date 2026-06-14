@@ -9,7 +9,9 @@ use std::path::PathBuf;
 const SHARED_SCHEMA_ID: &str = "io.github.noobping.listenmoe";
 const KEY_STATION: &str = "default-station";
 const KEY_AUTOPLAY: &str = "autoplay";
+#[cfg(feature = "experimental")]
 const KEY_PAUSE_RESUME_ENABLED: &str = "pause-resume-enabled";
+#[cfg(feature = "experimental")]
 const LEGACY_KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
 const KEY_DISCORD_ENABLED: &str = "discord-enabled";
 const FALLBACK_CONFIG_FILE: &str = "preferences.json";
@@ -18,7 +20,9 @@ const FALLBACK_CONFIG_FILE: &str = "preferences.json";
 struct StoredUiOptions {
     station: StoredStation,
     autoplay: bool,
+    #[cfg(feature = "experimental")]
     pause_resume_enabled: bool,
+    #[cfg(feature = "experimental")]
     stop_instead_pause: bool,
     discord_enabled: bool,
 }
@@ -29,8 +33,10 @@ struct StoredUiOptionsOnDisk {
     station: Option<StoredStation>,
     #[serde(default)]
     autoplay: Option<bool>,
+    #[cfg(feature = "experimental")]
     #[serde(default)]
     pause_resume_enabled: Option<bool>,
+    #[cfg(feature = "experimental")]
     #[serde(default)]
     stop_instead_pause: Option<bool>,
     #[serde(default)]
@@ -58,8 +64,10 @@ impl From<UiOptions> for StoredUiOptions {
                 Station::Jpop => StoredStation::Jpop,
             },
             autoplay: options.autoplay,
-            pause_resume_enabled: options.pause_resume_enabled,
-            stop_instead_pause: !options.pause_resume_enabled,
+            #[cfg(feature = "experimental")]
+            pause_resume_enabled: options.pause_resume_enabled(),
+            #[cfg(feature = "experimental")]
+            stop_instead_pause: !options.pause_resume_enabled(),
             discord_enabled: options.discord_enabled,
         }
     }
@@ -77,20 +85,23 @@ impl StoredUiOptionsOnDisk {
                 StoredStation::Jpop => Station::Jpop,
             },
             autoplay: self.autoplay.unwrap_or(defaults.autoplay),
+            #[cfg(feature = "experimental")]
             pause_resume_enabled: resolve_pause_resume_enabled(
                 self.pause_resume_enabled,
                 self.stop_instead_pause,
-                defaults.pause_resume_enabled,
+                defaults.pause_resume_enabled(),
             ),
             discord_enabled: self.discord_enabled.unwrap_or(defaults.discord_enabled),
         }
     }
 
+    #[cfg(feature = "experimental")]
     fn migrated_from_legacy_stop_flag(&self) -> bool {
         self.pause_resume_enabled.is_none() && self.stop_instead_pause.is_some()
     }
 }
 
+#[cfg(feature = "experimental")]
 fn resolve_pause_resume_enabled(
     pause_resume_enabled: Option<bool>,
     legacy_stop_instead_pause: Option<bool>,
@@ -103,6 +114,7 @@ fn resolve_pause_resume_enabled(
     })
 }
 
+#[cfg(feature = "experimental")]
 fn load_pause_resume_enabled_from_settings(settings: &gio::Settings) -> (bool, bool) {
     let pause_resume_enabled = settings
         .user_value(KEY_PAUSE_RESUME_ENABLED)
@@ -117,12 +129,13 @@ fn load_pause_resume_enabled_from_settings(settings: &gio::Settings) -> (bool, b
         resolve_pause_resume_enabled(
             pause_resume_enabled,
             legacy_stop_instead_pause,
-            UiOptions::default().pause_resume_enabled,
+            UiOptions::default().pause_resume_enabled(),
         ),
         migrated_from_legacy,
     )
 }
 
+#[cfg(feature = "experimental")]
 fn migrate_legacy_gsettings_pause_resume_preference(
     settings: &gio::Settings,
     pause_resume_enabled: bool,
@@ -135,6 +148,7 @@ fn migrate_legacy_gsettings_pause_resume_preference(
     }
 }
 
+#[cfg(feature = "experimental")]
 fn migrate_legacy_fallback_preferences(options: UiOptions) {
     let _ = save_ui_options(options);
 }
@@ -151,8 +165,10 @@ impl Default for StoredUiOptionsOnDisk {
         Self {
             station: Some(default_stored_station()),
             autoplay: Some(UiOptions::default().autoplay),
-            pause_resume_enabled: Some(UiOptions::default().pause_resume_enabled),
-            stop_instead_pause: Some(!UiOptions::default().pause_resume_enabled),
+            #[cfg(feature = "experimental")]
+            pause_resume_enabled: Some(UiOptions::default().pause_resume_enabled()),
+            #[cfg(feature = "experimental")]
+            stop_instead_pause: Some(!UiOptions::default().pause_resume_enabled()),
             discord_enabled: Some(UiOptions::default().discord_enabled),
         }
     }
@@ -184,8 +200,10 @@ pub fn load_ui_options() -> Option<UiOptions> {
             "kpop" => Station::Kpop,
             _ => Station::Jpop,
         };
+        #[cfg(feature = "experimental")]
         let (pause_resume_enabled, migrated_from_legacy) =
             load_pause_resume_enabled_from_settings(&settings);
+        #[cfg(feature = "experimental")]
         if migrated_from_legacy {
             migrate_legacy_gsettings_pause_resume_preference(&settings, pause_resume_enabled);
         }
@@ -193,6 +211,7 @@ pub fn load_ui_options() -> Option<UiOptions> {
         return Some(UiOptions {
             station,
             autoplay: settings.boolean(KEY_AUTOPLAY),
+            #[cfg(feature = "experimental")]
             pause_resume_enabled,
             discord_enabled: settings.boolean(KEY_DISCORD_ENABLED),
         });
@@ -209,8 +228,10 @@ pub fn load_ui_options() -> Option<UiOptions> {
         Err(_) => return None,
     };
     let stored: StoredUiOptionsOnDisk = serde_json::from_str(&raw).ok()?;
+    #[cfg(feature = "experimental")]
     let migrated_from_legacy = stored.migrated_from_legacy_stop_flag();
     let options = stored.into_ui_options();
+    #[cfg(feature = "experimental")]
     if migrated_from_legacy {
         migrate_legacy_fallback_preferences(options);
     }
@@ -225,12 +246,18 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
         settings
             .set_boolean(KEY_AUTOPLAY, options.autoplay)
             .map_err(|err| format!("Failed to save autoplay preference: {err}"))?;
-        settings
-            .set_boolean(KEY_PAUSE_RESUME_ENABLED, options.pause_resume_enabled)
-            .map_err(|err| format!("Failed to save pause/resume preference: {err}"))?;
-        settings
-            .set_boolean(LEGACY_KEY_STOP_INSTEAD_PAUSE, !options.pause_resume_enabled)
-            .map_err(|err| format!("Failed to save legacy stop behavior preference: {err}"))?;
+        #[cfg(feature = "experimental")]
+        {
+            settings
+                .set_boolean(KEY_PAUSE_RESUME_ENABLED, options.pause_resume_enabled())
+                .map_err(|err| format!("Failed to save pause/resume preference: {err}"))?;
+            settings
+                .set_boolean(
+                    LEGACY_KEY_STOP_INSTEAD_PAUSE,
+                    !options.pause_resume_enabled(),
+                )
+                .map_err(|err| format!("Failed to save legacy stop behavior preference: {err}"))?;
+        }
         settings
             .set_boolean(KEY_DISCORD_ENABLED, options.discord_enabled)
             .map_err(|err| format!("Failed to save Discord preference: {err}"))?;
@@ -260,16 +287,30 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{resolve_pause_resume_enabled, StoredUiOptions, StoredUiOptionsOnDisk};
+    #[cfg(feature = "experimental")]
+    use super::resolve_pause_resume_enabled;
+    use super::{StoredUiOptions, StoredUiOptionsOnDisk};
     use crate::station::Station;
     use crate::ui::UiOptions;
 
+    fn test_options() -> UiOptions {
+        UiOptions {
+            station: Station::Kpop,
+            autoplay: false,
+            #[cfg(feature = "experimental")]
+            pause_resume_enabled: true,
+            discord_enabled: false,
+        }
+    }
+
+    #[cfg(feature = "experimental")]
     #[test]
     fn legacy_stop_flag_maps_to_pause_resume_enabled() {
         assert!(resolve_pause_resume_enabled(None, Some(false), false));
         assert!(!resolve_pause_resume_enabled(None, Some(true), true));
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn explicit_pause_resume_value_wins_over_legacy_flag() {
         assert!(!resolve_pause_resume_enabled(
@@ -280,6 +321,7 @@ mod tests {
         assert!(resolve_pause_resume_enabled(Some(true), Some(true), false));
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn legacy_fallback_json_deserializes_into_pause_resume_enabled() {
         let stored: StoredUiOptionsOnDisk = serde_json::from_str(
@@ -294,20 +336,16 @@ mod tests {
 
         let options = stored.into_ui_options();
 
-        assert!(options.pause_resume_enabled);
+        assert!(options.pause_resume_enabled());
         assert!(options.autoplay);
         assert!(matches!(options.station, Station::Jpop));
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn stored_preferences_include_legacy_stop_flag_for_compatibility() {
-        let stored = serde_json::to_value(StoredUiOptions::from(UiOptions {
-            station: Station::Kpop,
-            autoplay: false,
-            pause_resume_enabled: true,
-            discord_enabled: false,
-        }))
-        .expect("preferences should serialize");
+        let stored = serde_json::to_value(StoredUiOptions::from(test_options()))
+            .expect("preferences should serialize");
 
         assert_eq!(
             stored.get("pause_resume_enabled").and_then(|v| v.as_bool()),
@@ -317,5 +355,37 @@ mod tests {
             stored.get("stop_instead_pause").and_then(|v| v.as_bool()),
             Some(false)
         );
+    }
+
+    #[cfg(not(feature = "experimental"))]
+    #[test]
+    fn stable_preferences_ignore_pause_resume_json_keys() {
+        let stored: StoredUiOptionsOnDisk = serde_json::from_str(
+            r#"{
+                "station": "jpop",
+                "autoplay": true,
+                "pause_resume_enabled": true,
+                "stop_instead_pause": false,
+                "discord_enabled": true
+            }"#,
+        )
+        .expect("stable preferences should ignore experimental keys");
+
+        let options = stored.into_ui_options();
+
+        assert!(!options.pause_resume_enabled());
+        assert!(options.autoplay);
+        assert!(matches!(options.station, Station::Jpop));
+        assert!(options.discord_enabled);
+    }
+
+    #[cfg(not(feature = "experimental"))]
+    #[test]
+    fn stable_stored_preferences_omit_pause_resume_keys() {
+        let stored = serde_json::to_value(StoredUiOptions::from(test_options()))
+            .expect("preferences should serialize");
+
+        assert!(stored.get("pause_resume_enabled").is_none());
+        assert!(stored.get("stop_instead_pause").is_none());
     }
 }

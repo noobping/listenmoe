@@ -22,9 +22,13 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     startup_group.set_title(&gettext("Startup Defaults"));
     page.add(&startup_group);
 
-    let experimental_group = adw::PreferencesGroup::new();
-    experimental_group.set_title(&gettext("Experimental Features"));
-    page.add(&experimental_group);
+    #[cfg(feature = "experimental")]
+    let experimental_group = {
+        let group = adw::PreferencesGroup::new();
+        group.set_title(&gettext("Experimental Features"));
+        page.add(&group);
+        group
+    };
     window.add(&page);
 
     let station_choices = [gettext("J-POP"), gettext("K-POP")];
@@ -71,22 +75,25 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     }
     startup_group.add(&autoplay_row);
 
-    let pause_resume_row = adw::SwitchRow::builder()
-        .title(gettext("Enable pause and resume"))
-        .subtitle(gettext("Use pause and resume for the main playback button"))
-        .active(options.borrow().pause_resume_enabled)
-        .build();
+    #[cfg(feature = "experimental")]
     {
-        let options = options.clone();
-        pause_resume_row.connect_active_notify(move |row| {
-            let mut opts = options.borrow_mut();
-            opts.pause_resume_enabled = row.is_active();
-            if let Err(err) = preferences::save_ui_options(*opts) {
-                eprintln!("{err}");
-            }
-        });
+        let pause_resume_row = adw::SwitchRow::builder()
+            .title(gettext("Enable pause and resume"))
+            .subtitle(gettext("Use pause and resume for the main playback button"))
+            .active(options.borrow().pause_resume_enabled())
+            .build();
+        {
+            let options = options.clone();
+            pause_resume_row.connect_active_notify(move |row| {
+                let mut opts = options.borrow_mut();
+                opts.set_pause_resume_enabled(row.is_active());
+                if let Err(err) = preferences::save_ui_options(*opts) {
+                    eprintln!("{err}");
+                }
+            });
+        }
+        experimental_group.add(&pause_resume_row);
     }
-    experimental_group.add(&pause_resume_row);
 
     let discord_row = adw::SwitchRow::builder()
         .title(gettext("Discord Rich Presence"))

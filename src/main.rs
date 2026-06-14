@@ -42,6 +42,12 @@ enum CliAction {
 }
 
 fn help_text() -> String {
+    let experimental_options = if cfg!(feature = "experimental") {
+        "  -p, --pause       Use pause behavior instead of stop\n  -s, --stop        Use stop behavior instead of pause\n"
+    } else {
+        ""
+    };
+
     format!(
         "{name} {version}
 {description}
@@ -55,9 +61,7 @@ Options:
   -a, --autoplay    Start playing automatically on launch
   -j, --jpop        Use J-POP as default station
   -k, --kpop        Use K-POP as default station
-  -p, --pause       Use pause behavior instead of stop
-      --preferences Save current startup flags as defaults
-  -s, --stop        Use stop behavior instead of pause
+{experimental_options}      --preferences Save current startup flags as defaults
       --no-discord  Disable Discord Rich Presence at runtime
   -v, --verbose     Print extra startup diagnostics
   -h, --help        Show this help and exit
@@ -73,6 +77,11 @@ fn parse_cli(default_options: ui::UiOptions) -> Result<CliAction, String> {
         default_options,
         std::env::args_os().map(|arg| arg.to_string_lossy().into_owned()),
     )
+}
+
+fn is_recognized_short_flag(short_flag: char) -> bool {
+    matches!(short_flag, 'a' | 'j' | 'k' | 'v' | 'h')
+        || (cfg!(feature = "experimental") && matches!(short_flag, 'p' | 's'))
 }
 
 fn parse_cli_args<I>(default_options: ui::UiOptions, args: I) -> Result<CliAction, String>
@@ -103,9 +112,7 @@ where
             }
             _ if arg.starts_with('-') && !arg.starts_with("--") && arg.len() > 2 => {
                 let cluster = &arg[1..];
-                let recognized_cluster = cluster.chars().all(|short_flag| {
-                    matches!(short_flag, 'a' | 'j' | 'k' | 'p' | 's' | 'v' | 'h')
-                });
+                let recognized_cluster = cluster.chars().all(is_recognized_short_flag);
 
                 if !recognized_cluster {
                     passthrough_args.push(arg);
@@ -123,11 +130,13 @@ where
                         'k' => {
                             options.station = station::Station::Kpop;
                         }
+                        #[cfg(feature = "experimental")]
                         'p' => {
-                            options.pause_resume_enabled = true;
+                            options.set_pause_resume_enabled(true);
                         }
+                        #[cfg(feature = "experimental")]
                         's' => {
-                            options.pause_resume_enabled = false;
+                            options.set_pause_resume_enabled(false);
                         }
                         'v' => {
                             verbose = true;
@@ -148,11 +157,13 @@ where
             "-k" | "--kpop" => {
                 options.station = station::Station::Kpop;
             }
+            #[cfg(feature = "experimental")]
             "-p" | "--pause" => {
-                options.pause_resume_enabled = true;
+                options.set_pause_resume_enabled(true);
             }
+            #[cfg(feature = "experimental")]
             "-s" | "--stop" => {
-                options.pause_resume_enabled = false;
+                options.set_pause_resume_enabled(false);
             }
             "--preferences" => {
                 save_preferences = true;
@@ -215,7 +226,7 @@ fn run() -> Result<(), String> {
             "Starting {APP_NAME} {APP_VERSION} with station={:?}, autoplay={}, pause_resume_enabled={}, discord_enabled={}",
             ui_options.station,
             ui_options.autoplay,
-            ui_options.pause_resume_enabled,
+            ui_options.pause_resume_enabled(),
             ui_options.discord_enabled
         );
     }
@@ -272,10 +283,21 @@ fn main() -> ExitCode {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_cli_args, CliAction};
+    use super::{help_text, parse_cli_args, CliAction};
     use crate::station::Station;
     use crate::ui::UiOptions;
 
+    fn test_options() -> UiOptions {
+        UiOptions {
+            station: Station::Jpop,
+            autoplay: false,
+            #[cfg(feature = "experimental")]
+            pause_resume_enabled: false,
+            discord_enabled: true,
+        }
+    }
+
+    #[cfg(feature = "experimental")]
     fn parse(args: &[&str], default_options: UiOptions) -> UiOptions {
         match parse_cli_args(
             default_options,
@@ -298,44 +320,32 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn pause_flag_overrides_saved_stop_behavior() {
-        let default_options = UiOptions {
-            station: Station::Jpop,
-            autoplay: false,
-            pause_resume_enabled: false,
-            discord_enabled: true,
-        };
+        let default_options = test_options();
 
         let options = parse(&["listenmoe", "--pause"], default_options);
 
-        assert!(options.pause_resume_enabled);
+        assert!(options.pause_resume_enabled());
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn last_transport_flag_wins() {
-        let default_options = UiOptions {
-            station: Station::Jpop,
-            autoplay: false,
-            pause_resume_enabled: false,
-            discord_enabled: true,
-        };
+        let default_options = test_options();
 
         let options = parse(&["listenmoe", "--stop", "--pause"], default_options);
-        assert!(options.pause_resume_enabled);
+        assert!(options.pause_resume_enabled());
 
         let options = parse(&["listenmoe", "--pause", "--stop"], default_options);
-        assert!(!options.pause_resume_enabled);
+        assert!(!options.pause_resume_enabled());
     }
 
+    #[cfg(feature = "experimental")]
     #[test]
     fn short_pause_flag_does_not_enable_preferences_save() {
-        let default_options = UiOptions {
-            station: Station::Jpop,
-            autoplay: false,
-            pause_resume_enabled: false,
-            discord_enabled: true,
-        };
+        let default_options = test_options();
 
         match parse_cli_args(default_options, ["listenmoe".to_string(), "-p".to_string()])
             .expect("parse failed")
@@ -345,7 +355,7 @@ mod tests {
                 save_preferences,
                 ..
             } => {
-                assert!(ui_options.pause_resume_enabled);
+                assert!(ui_options.pause_resume_enabled());
                 assert!(!save_preferences);
             }
             other => panic!("unexpected action: {}", action_name(&other)),
@@ -354,12 +364,7 @@ mod tests {
 
     #[test]
     fn preferences_save_is_long_flag_only() {
-        let default_options = UiOptions {
-            station: Station::Jpop,
-            autoplay: false,
-            pause_resume_enabled: false,
-            discord_enabled: true,
-        };
+        let default_options = test_options();
 
         match parse_cli_args(
             default_options,
@@ -370,6 +375,43 @@ mod tests {
             CliAction::Run {
                 save_preferences, ..
             } => assert!(save_preferences),
+            other => panic!("unexpected action: {}", action_name(&other)),
+        }
+    }
+
+    #[cfg(not(feature = "experimental"))]
+    #[test]
+    fn stable_help_omits_pause_resume_flags() {
+        let help = help_text();
+
+        assert!(!help.contains("--pause"));
+        assert!(!help.contains("--stop"));
+    }
+
+    #[cfg(feature = "experimental")]
+    #[test]
+    fn experimental_help_includes_pause_resume_flags() {
+        let help = help_text();
+
+        assert!(help.contains("--pause"));
+        assert!(help.contains("--stop"));
+    }
+
+    #[cfg(not(feature = "experimental"))]
+    #[test]
+    fn stable_pause_flag_passes_through_to_gtk_args() {
+        match parse_cli_args(
+            test_options(),
+            ["listenmoe".to_string(), "--pause".to_string()],
+        )
+        .expect("parse failed")
+        {
+            CliAction::Run { app_args, .. } => {
+                assert_eq!(
+                    app_args,
+                    vec!["listenmoe".to_string(), "--pause".to_string()]
+                );
+            }
             other => panic!("unexpected action: {}", action_name(&other)),
         }
     }

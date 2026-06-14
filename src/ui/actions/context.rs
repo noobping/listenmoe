@@ -30,6 +30,7 @@ pub(super) struct ActionCtx {
     meta: Rc<Meta>,
     ui_tx: mpsc::Sender<UiEvent>,
     current_track: Rc<RefCell<Option<(String, String)>>>,
+    #[cfg(feature = "experimental")]
     pause_resume_enabled: bool,
 }
 
@@ -49,6 +50,9 @@ impl ActionCtx {
         current_track: &Rc<RefCell<Option<(String, String)>>>,
         pause_resume_enabled: bool,
     ) -> Self {
+        #[cfg(not(feature = "experimental"))]
+        let _ = pause_resume_enabled;
+
         Self {
             window: window.clone(),
             win_title: win_title.clone(),
@@ -62,6 +66,7 @@ impl ActionCtx {
             meta: meta.clone(),
             ui_tx: ui_tx.clone(),
             current_track: current_track.clone(),
+            #[cfg(feature = "experimental")]
             pause_resume_enabled,
         }
     }
@@ -94,15 +99,22 @@ impl ActionCtx {
     }
 
     pub(super) fn pause(&self, set_playback: &dyn Fn(PlaybackStatus)) {
-        if !self.pause_resume_enabled {
+        #[cfg(not(feature = "experimental"))]
+        {
             self.stop(set_playback);
-            return;
         }
-        self.meta.pause();
-        self.radio.pause();
-        self.set_idle_ui();
-        let _ = self.ui_tx.send(UiEvent::Reset(UiResetReason::Paused));
-        set_playback(PlaybackStatus::Paused);
+        #[cfg(feature = "experimental")]
+        {
+            if !self.pause_resume_enabled {
+                self.stop(set_playback);
+                return;
+            }
+            self.meta.pause();
+            self.radio.pause();
+            self.set_idle_ui();
+            let _ = self.ui_tx.send(UiEvent::Reset(UiResetReason::Paused));
+            set_playback(PlaybackStatus::Paused);
+        }
     }
 
     pub(super) fn stop(&self, set_playback: &dyn Fn(PlaybackStatus)) {
@@ -115,11 +127,12 @@ impl ActionCtx {
 
     pub(super) fn toggle(&self) {
         if self.playback_playing.get() {
+            #[cfg(feature = "experimental")]
             if self.pause_resume_enabled {
                 activate_window_action(&self.window, "win.pause");
-            } else {
-                activate_window_action(&self.window, "win.stop");
+                return;
             }
+            activate_window_action(&self.window, "win.stop");
         } else {
             activate_window_action(&self.window, "win.play");
         }

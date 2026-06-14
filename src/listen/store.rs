@@ -14,7 +14,7 @@ use super::Result;
 pub const RETENTION_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const GAP_THRESHOLD_MS: u64 = 1_500;
 #[cfg(test)]
-const MAX_SEGMENT_BYTES: u64 = 512 * 1024 * 1024;
+const MAX_SEGMENT_BYTES: u64 = 512 * 1024;
 #[cfg(test)]
 const BYTES_PER_SAMPLE: u64 = 4;
 
@@ -422,7 +422,7 @@ mod tests {
             .append_pcm(1_000, 1, &samples(1_000, 1), 1_000)
             .expect("append old");
         store
-            .append_pcm(1_000, 1, &samples(1_000, 1), 4_500)
+            .append_pcm(1_000, 2, &samples(1_000, 2), 4_500)
             .expect("append new");
 
         assert!(store.earliest_timestamp_ms().expect("missing earliest") >= 2_500);

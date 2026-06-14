@@ -15,6 +15,7 @@ pub(super) type MetadataSetter = Rc<dyn Fn(Option<NowPlaying>)>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UiResetReason {
+    #[cfg(feature = "experimental")]
     Paused,
     Stopped,
 }

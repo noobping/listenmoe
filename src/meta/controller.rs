@@ -19,7 +19,9 @@ use super::timeline::TimelineStore;
 #[derive(Debug)]
 pub enum Control {
     Stop,
+    #[cfg(feature = "experimental")]
     Pause,
+    #[cfg(feature = "experimental")]
     Resume,
 }
 
@@ -81,7 +83,10 @@ impl Meta {
             }
         };
         if let Some(tx) = tx_opt {
+            #[cfg(feature = "experimental")]
             let _ = tx.send(Control::Resume);
+            #[cfg(not(feature = "experimental"))]
+            let _ = tx;
             return;
         }
         // stopped: actually start thread
@@ -89,6 +94,7 @@ impl Meta {
         Self::start_inner(&mut inner);
     }
 
+    #[cfg(feature = "experimental")]
     pub fn pause(&self) {
         let inner = self.inner.borrow();
         if let State::Running { tx } = &inner.state {

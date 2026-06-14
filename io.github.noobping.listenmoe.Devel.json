@@ -35,6 +35,7 @@
             "buildsystem" : "meson",
             "config-opts" : [
                 "-Dcargo_profile=debug",
+                "-Dcargo_features=experimental",
                 "--libdir=lib"
             ],
             "sources" : [

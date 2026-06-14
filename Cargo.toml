@@ -5,8 +5,11 @@ repository = "https://github.com/noobping/listenmoe"
 homepage = "https://listen.moe/"
 license = "MIT"
 authors = ["noobping <hello@noobping.dev>"]
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
+
+[features]
+experimental = []
 
 [package.metadata.winresource]
 OriginalFilename = "listenmoe.exe"

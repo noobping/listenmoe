@@ -199,6 +199,7 @@ pub(super) fn process_samples_for_viz(
     }
 }
 
+#[cfg(feature = "experimental")]
 pub(super) fn build_spectrum_snapshot(
     samples: &[f32],
     channels: u16,
@@ -214,6 +215,7 @@ pub(super) fn build_spectrum_snapshot(
         .collect()
 }
 
+#[cfg(feature = "experimental")]
 pub(super) fn apply_spectrum_snapshot(spectrum_bits: &Arc<Vec<AtomicU32>>, snapshot: &[u32]) {
     for (target, value) in spectrum_bits.iter().zip(snapshot.iter().copied()) {
         target.store(value, Ordering::Relaxed);

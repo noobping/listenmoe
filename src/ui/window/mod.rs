@@ -25,8 +25,27 @@ const APP_NAME: &str = "Listen Moe";
 pub struct UiOptions {
     pub station: Station,
     pub autoplay: bool,
+    #[cfg(feature = "experimental")]
     pub pause_resume_enabled: bool,
     pub discord_enabled: bool,
+}
+
+impl UiOptions {
+    pub fn pause_resume_enabled(&self) -> bool {
+        #[cfg(feature = "experimental")]
+        {
+            self.pause_resume_enabled
+        }
+        #[cfg(not(feature = "experimental"))]
+        {
+            false
+        }
+    }
+
+    #[cfg(feature = "experimental")]
+    pub fn set_pause_resume_enabled(&mut self, enabled: bool) {
+        self.pause_resume_enabled = enabled;
+    }
 }
 
 impl Default for UiOptions {
@@ -34,6 +53,7 @@ impl Default for UiOptions {
         Self {
             station: Station::Jpop,
             autoplay: false,
+            #[cfg(feature = "experimental")]
             pause_resume_enabled: false,
             discord_enabled: true,
         }
@@ -72,7 +92,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         css_provider,
         viz,
         viz_handle,
-    } = layout::build_window_layout(app, options.pause_resume_enabled);
+    } = layout::build_window_layout(app, options.pause_resume_enabled());
 
     let (controls, ctrl_rx) = actions::build_actions(
         &window,
@@ -88,7 +108,7 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &meta,
         &ui_tx,
         &current_track,
-        options.pause_resume_enabled,
+        options.pause_resume_enabled(),
     );
 
     #[cfg(target_os = "windows")]
@@ -165,6 +185,6 @@ mod tests {
 
     #[test]
     fn defaults_to_stop_behavior() {
-        assert!(!UiOptions::default().pause_resume_enabled);
+        assert!(!UiOptions::default().pause_resume_enabled());
     }
 }

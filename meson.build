@@ -122,8 +122,17 @@ install_data(
   install_dir: join_paths(get_option('datadir'), 'metainfo'),
 )
 
+schema_input = 'data/io.github.noobping.listenmoe.gschema.xml'
+if cargo_features.contains('experimental')
+  schema_input = 'data/io.github.noobping.listenmoe.experimental.gschema.xml'
+endif
+schema_file = configure_file(
+  input: schema_input,
+  output: 'io.github.noobping.listenmoe.gschema.xml',
+  copy: true,
+)
 install_data(
-  'data/io.github.noobping.listenmoe.gschema.xml',
+  schema_file,
   install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas'),
 )
 

@@ -6,7 +6,7 @@
 [![Flathub version](https://img.shields.io/flathub/v/io.github.noobping.listenmoe)](https://flathub.org/apps/details/io.github.noobping.listenmoe)
 [![Get it for Windows](https://img.shields.io/badge/Get%20it%20on-Windows-blue)](https://github.com/noobping/listenmoe/releases/latest/download/listenmoe.msi)
 
-Listen to J-POP and K-POP, or pause and resume the live stream. Stream and metadata provided by [LISTEN.moe](https://listen.moe).
+Listen to J-POP and K-POP. Stream and metadata provided by [LISTEN.moe](https://listen.moe).
 
 ![demo](data/demo.gif)
 
@@ -34,7 +34,7 @@ You can install ListenMoe using one of the following options:
 The application can be started with optional flags. For example:
 
 ```sh
-flatpak run io.github.noobping.listenmoe --autoplay --kpop --stop --no-discord --preferences
+flatpak run io.github.noobping.listenmoe --autoplay --kpop --no-discord --preferences
 ```
 
 Available flags:
@@ -42,13 +42,13 @@ Available flags:
 - `-a`, `--autoplay`: start playing automatically on launch
 - `-j`, `--jpop`: use J-POP as default station
 - `-k`, `--kpop`: use K-POP as default station
-- `-p`, `--pause`: use pause behavior instead of stop
 - `--preferences`: save current startup flags as defaults
 - `--no-discord`: disable Discord Rich Presence at runtime
-- `-s`, `--stop`: use stop behavior instead of pause
 - `-v`, `--verbose`: print extra startup diagnostics
 - `-h`, `--help`: show help and exit
 - `--version`: show version and exit
+
+Experimental builds compiled with `--features experimental` also expose `-p`, `--pause`, `-s`, and `--stop` for pause/resume behavior, plus the matching Preferences toggle.
 
 Keyboard shortcuts:
 
@@ -79,7 +79,7 @@ Run (debug):
 
 ```sh
 glib-compile-schemas data
-GSETTINGS_SCHEMA_DIR=data cargo run -p
+GSETTINGS_SCHEMA_DIR=data cargo run
 ```
 
 Use `cargo-edit` to update the dependencies.
