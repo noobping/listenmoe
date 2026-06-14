@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.1.1\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.2.1\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -263,6 +263,9 @@ msgstr "Het installatieprogramma is klaar om te starten."
 
 msgid "Couldn't start the installer."
 msgstr "Kon het installatieprogramma niet starten."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Pauzeren/hervatten verwijderd uit de flatpak app."
 
 msgid "Separate experimental features from stable features."
 msgstr "Experimentele functies gescheiden van stabiele functies."

@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.1.1\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.2.1\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -263,6 +263,9 @@ msgstr "Der Installer ist bereit."
 
 msgid "Couldn't start the installer."
 msgstr "Der Installer konnte nicht gestartet werden."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Pausieren/Fortsetzen wurde aus stabilen Builds entfernt."
 
 msgid "Separate experimental features from stable features."
 msgstr "Experimentelle Funktionen von stabilen Funktionen getrennt."

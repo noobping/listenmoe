@@ -265,5 +265,8 @@ msgstr ""
 msgid "Couldn't start the installer."
 msgstr ""
 
+msgid "Removed pause/resume from stable builds."
+msgstr ""
+
 msgid "Separate experimental features from stable features."
 msgstr ""
