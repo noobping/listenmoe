@@ -342,7 +342,7 @@ impl UpdaterController {
                 release: release.clone(),
                 download,
             };
-            self.present_ready(&release);
+            self.handle_ready_update(&release);
             return;
         }
 
@@ -420,7 +420,7 @@ impl UpdaterController {
             release: release.clone(),
             download,
         };
-        self.present_ready(&release);
+        self.handle_ready_update(&release);
     }
 
     fn handle_download_cancelled(&self, run_id: u64) {
@@ -595,6 +595,11 @@ impl UpdaterController {
                 gettext(platform::ready_status())
             ),
         );
+    }
+
+    fn handle_ready_update(&self, release: &SelectedRelease) {
+        self.present_ready(release);
+        self.begin_install_flow();
     }
 
     fn present_temporary_status(&self, title: String, subtitle: String) {

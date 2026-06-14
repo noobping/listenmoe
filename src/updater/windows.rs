@@ -44,6 +44,7 @@ pub(super) fn launch_update(download: &DownloadedUpdate) -> Result<(), String> {
     std::process::Command::new("msiexec")
         .arg("/i")
         .arg(&download.path)
+        .arg("/quiet")
         .arg("/norestart")
         .spawn()
         .map(|_| ())

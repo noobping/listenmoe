@@ -53,7 +53,7 @@
         </Feature>
 
         <InstallExecuteSequence>
-            <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed</Custom>
+            <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed OR WIX_UPGRADE_DETECTED</Custom>
         </InstallExecuteSequence>
     </Product>
 </Wix>
