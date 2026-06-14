@@ -18,15 +18,15 @@ ProductName = "LISTEN.moe"
 FileDescription = "J-POP and K-POP radio"
 
 [dependencies]
-rodio = { version = "0.22.1", default-features = false, features = ["playback"] }
-symphonia = { version = "0.5.5", features = ["ogg", "vorbis", "mp3"] }
+rodio = { version = "0.22.2", default-features = false, features = ["playback"] }
+symphonia = { version = "0.6.0", features = ["ogg", "vorbis", "mp3"] }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 adw = { version = "0.8.1", package = "libadwaita", features = ["v1_5"] }
-serde_json = "1.0.148"
+serde_json = "1.0.150"
 serde = { version = "1.0.228", features = ["derive"] }
 tungstenite = { version = "0.29.0", default-features = false, features = ["handshake", "rustls-tls-webpki-roots"] }
 dirs-next = "2.0.0"
-time = { version = "0.3.44", features = ["parsing"] }
+time = { version = "0.3.49", features = ["parsing"] }
 rustfft = "6.4.1"
 mpris-server =  "0.10.0"
 discord-rich-presence = "1.1.0"
@@ -43,4 +43,4 @@ sha2 = "0.11.0"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 glib-build-tools = "0.22.0"
-winresource = "0.1.28"
+winresource = "0.1.31"
