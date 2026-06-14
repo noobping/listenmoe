@@ -1,7 +1,7 @@
+use crate::locale::gettext;
 use adw::glib;
 use adw::gtk;
 use adw::prelude::*;
-use gettextrs::gettext;
 
 pub fn install_shortcuts_overlay(window: &gtk::ApplicationWindow) {
     let esc = |s: String| glib::markup_escape_text(&s).to_string();

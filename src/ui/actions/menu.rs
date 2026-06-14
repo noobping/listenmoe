@@ -1,5 +1,5 @@
+use crate::locale::gettext;
 use adw::gtk::{self, ApplicationWindow};
-use gettextrs::gettext;
 #[cfg(target_os = "windows")]
 use gtk::glib::variant::ToVariant;
 use std::{cell::Cell, rc::Rc};

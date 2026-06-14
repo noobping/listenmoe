@@ -1,6 +1,7 @@
 use crate::log::{is_verbose, now_string};
 use crate::ui::discord::Discord;
 
+use crate::locale::gettext;
 use adw::{
     glib,
     gtk::{
@@ -13,7 +14,6 @@ use adw::{
     prelude::PopoverExt,
     StyleManager, WindowTitle,
 };
-use gettextrs::gettext;
 use std::cell::Cell;
 use std::rc::Rc;
 use std::time::Instant;

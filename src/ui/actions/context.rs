@@ -1,7 +1,7 @@
+use crate::locale::gettext;
 use adw::gtk::{gdk::Display, prelude::WidgetExt, ApplicationWindow, Button};
 use adw::prelude::DisplayExt;
 use adw::WindowTitle;
-use gettextrs::gettext;
 use mpris_server::PlaybackStatus;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;

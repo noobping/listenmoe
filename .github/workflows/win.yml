@@ -11,32 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  locales:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      APP_ID: io.github.noobping.listenmoe
-    steps:
-      - uses: actions/checkout@v4
-      - name: Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gettext zip tree
-      - name: Locales
-        run: |
-          for f in po/*.po; do
-              lang=$(basename "$f" .po)
-              mkdir -p "locale/$lang/LC_MESSAGES"
-              msgfmt "$f" -o "locale/$lang/LC_MESSAGES/${APP_ID}.mo"
-          done
-      - run: zip -r locales.zip locale
-      - run: tree -a locale || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: locales
-          path: locales.zip
-
   build:
     runs-on: windows-latest
     permissions:
@@ -46,7 +20,6 @@ jobs:
       PKG_CONFIG_ALLOW_CROSS: 1
       MSYS2_PATH: C:\tools\msys64
       PKG_CONFIG_PATH: C:\tools\msys64\mingw64\lib\pkgconfig
-      GETTEXT_SYSTEM: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +38,6 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-pkgconf"
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-make"
           C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-ntldd"
-          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gettext-tools"
 
       - name: Add MSYS2 paths
         run: |
@@ -123,7 +95,6 @@ jobs:
     runs-on: windows-latest
     needs:
       - build
-      - locales
     permissions:
       contents: write
 
@@ -132,24 +103,6 @@ jobs:
         with:
           fetch-tags: true
           fetch-depth: 0
-
-      - name: Download locale artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: locales
-          path: dist
-
-      - name: Extract locales
-        shell: pwsh
-        run: |
-          $zip = Join-Path $env:GITHUB_WORKSPACE 'dist\locales.zip'
-          if (-not (Test-Path $zip)) { throw "locales.zip not found: $zip" }
-
-          if (Test-Path locale) { Remove-Item locale -Recurse -Force }
-          Expand-Archive -Path $zip -DestinationPath $env:GITHUB_WORKSPACE -Force
-
-          Write-Host "Locales extracted:"
-          Get-ChildItem -Recurse -Depth 4 locale | Select-Object FullName
 
       - name: Download build artifact
         uses: actions/download-artifact@v4

@@ -1,13 +1,13 @@
 use super::logic::{cached_download_matches_size, ReleaseAsset, ReleaseCandidate, SelectedRelease};
 use super::windows as platform;
 use super::UpdateUi;
+use crate::locale::gettext;
 use crate::log::{is_verbose, now_string};
 use adw::gio::SimpleAction;
 use adw::glib;
 use adw::gtk::ApplicationWindow;
 use adw::prelude::*;
 use adw::Application;
-use gettextrs::gettext;
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, USER_AGENT};
 use serde::Deserialize;

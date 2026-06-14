@@ -1,3 +1,4 @@
+use crate::locale::gettext;
 use adw::{
     gtk::{
         self, gio::Menu, prelude::WidgetExt, ApplicationWindow, Button, GestureClick, HeaderBar,
@@ -6,7 +7,6 @@ use adw::{
     prelude::*,
     Application, StyleManager, WindowTitle,
 };
-use gettextrs::gettext;
 #[cfg(target_os = "windows")]
 use std::f64::consts::{FRAC_PI_2, TAU};
 use std::{

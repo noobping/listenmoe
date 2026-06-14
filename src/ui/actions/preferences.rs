@@ -1,8 +1,8 @@
+use crate::locale::gettext;
 use crate::preferences;
 use crate::station::Station;
 use adw::gtk::{self, prelude::*};
 use adw::prelude::*;
-use gettextrs::gettext;
 use std::{cell::RefCell, rc::Rc};
 
 pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
