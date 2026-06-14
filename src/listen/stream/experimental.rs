@@ -11,18 +11,19 @@ use std::sync::{Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions};
 use symphonia::core::errors::Error as SymphoniaError;
+use symphonia::core::formats::probe::Hint;
 use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
-use symphonia::core::probe::Hint;
 
 use crate::http_source::HttpSource;
 use crate::log::{is_verbose, now_string};
 use crate::station::Station;
 
 use super::super::clock::PlaybackClock;
+use super::super::decode::{audio_codec_params, make_audio_decoder};
 use super::super::store::{clear_root, compute_chunk_timing, StoredPcmChunk, RETENTION_MS};
 use super::super::viz::{apply_spectrum_snapshot, build_spectrum_snapshot, FftVizState};
 use super::super::viz::{
@@ -761,11 +762,11 @@ fn open_stream(
     useragent: &str,
     format_opts: &FormatOptions,
     metadata_opts: &MetadataOptions,
-    decoder_opts: &DecoderOptions,
+    decoder_opts: &AudioDecoderOptions,
 ) -> Result<(
     Box<dyn symphonia::core::formats::FormatReader>,
     u32,
-    Box<dyn symphonia::core::codecs::Decoder>,
+    Box<dyn AudioDecoder>,
 )> {
     if is_verbose() {
         println!("[{}] Connecting to {url}…", now_string());
@@ -785,18 +786,22 @@ fn open_stream(
     let mut hint = Hint::new();
     hint.with_extension("ogg");
 
-    let probed = symphonia::default::get_probe().format(&hint, mss, format_opts, metadata_opts)?;
-    let format = probed.format;
+    let format = symphonia::default::get_probe().probe(
+        &hint,
+        mss,
+        format_opts.clone(),
+        metadata_opts.clone(),
+    )?;
 
     let (track_id, decoder) = {
         let track = format
             .tracks()
             .iter()
-            .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
+            .find(|track| audio_codec_params(track).is_some())
             .ok_or_else(|| "no supported audio tracks".to_string())?;
 
         let track_id = track.id;
-        let decoder = symphonia::default::get_codecs().make(&track.codec_params, decoder_opts)?;
+        let decoder = make_audio_decoder(track, decoder_opts)?;
         (track_id, decoder)
     };
 
@@ -819,7 +824,7 @@ fn run_direct_live_until_pause(
 
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();
-    let decoder_opts: DecoderOptions = Default::default();
+    let decoder_opts: AudioDecoderOptions = Default::default();
 
     let (mut sink, sink_source) = queue::queue(true);
     mixer.add(sink_source);
@@ -866,7 +871,7 @@ fn run_direct_live_until_pause(
         );
 
         let mut decode_state = DecodeState {
-            sample_buf: None,
+            sample_buf: Vec::new(),
             channels: 0,
             sample_rate: 0,
         };
@@ -878,7 +883,12 @@ fn run_direct_live_until_pause(
             }
 
             let packet = match format.next_packet() {
-                Ok(packet) => packet,
+                Ok(Some(packet)) => packet,
+                Ok(None) => {
+                    eprintln!("Live stream ended");
+                    live_clock.flush_now(clock);
+                    break;
+                }
                 Err(SymphoniaError::ResetRequired) => {
                     if is_verbose() {
                         println!(
@@ -890,13 +900,12 @@ fn run_direct_live_until_pause(
                     let new_track = format
                         .tracks()
                         .iter()
-                        .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
+                        .find(|track| audio_codec_params(track).is_some())
                         .ok_or_else(|| "no supported audio tracks after reset".to_string())?;
 
                     track_id = new_track.id;
-                    decoder = symphonia::default::get_codecs()
-                        .make(&new_track.codec_params, &decoder_opts)?;
-                    decode_state.sample_buf = None;
+                    decoder = make_audio_decoder(new_track, &decoder_opts)?;
+                    decode_state.reset();
                     reset_fft_state(
                         &mut fft_state.mono_ring,
                         &mut fft_state.bars_smooth,
@@ -1366,8 +1375,8 @@ fn run_buffer_relay(
 fn run_one_connection(
     format: &mut Box<dyn symphonia::core::formats::FormatReader>,
     track_id: &mut u32,
-    decoder: &mut Box<dyn symphonia::core::codecs::Decoder>,
-    decoder_opts: &DecoderOptions,
+    decoder: &mut Box<dyn AudioDecoder>,
+    decoder_opts: &AudioDecoderOptions,
     clock: &Arc<PlaybackClock>,
     stop_requested: &Arc<AtomicBool>,
     buffer_tx: &mpsc::Sender<StoreCommand>,
@@ -1379,7 +1388,7 @@ fn run_one_connection(
     spectrum_bits: &Arc<Vec<AtomicU32>>,
 ) -> Result<RunOutcome> {
     let mut decode_state = DecodeState {
-        sample_buf: None,
+        sample_buf: Vec::new(),
         channels: 0,
         sample_rate: 0,
     };
@@ -1390,7 +1399,16 @@ fn run_one_connection(
         }
 
         let packet = match format.next_packet() {
-            Ok(packet) => packet,
+            Ok(Some(packet)) => packet,
+            Ok(None) => {
+                if direct_live_enabled.load(Ordering::Relaxed)
+                    && !capture_enabled.load(Ordering::Relaxed)
+                {
+                    reset_direct_player(direct_player, direct_mixer);
+                }
+                eprintln!("Stream ended");
+                return Ok(RunOutcome::Reconnect);
+            }
             Err(SymphoniaError::ResetRequired) => {
                 if is_verbose() {
                     println!("[{}] Stream reset, reconfiguring decoder…", now_string());
@@ -1399,13 +1417,12 @@ fn run_one_connection(
                 let new_track = format
                     .tracks()
                     .iter()
-                    .find(|track| track.codec_params.codec != CODEC_TYPE_NULL)
+                    .find(|track| audio_codec_params(track).is_some())
                     .ok_or_else(|| "no supported audio tracks after reset".to_string())?;
 
                 *track_id = new_track.id;
-                *decoder =
-                    symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
-                decode_state.sample_buf = None;
+                *decoder = make_audio_decoder(new_track, decoder_opts)?;
+                decode_state.reset();
                 if direct_live_enabled.load(Ordering::Relaxed)
                     && !capture_enabled.load(Ordering::Relaxed)
                 {
@@ -1526,7 +1543,7 @@ fn run_ingest_loop(
 
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();
-    let decoder_opts: DecoderOptions = Default::default();
+    let decoder_opts: AudioDecoderOptions = Default::default();
     let mut fft_state = make_fft_state(spectrum_bits.len());
     let mut direct_player = Player::connect_new(&direct_mixer);
 

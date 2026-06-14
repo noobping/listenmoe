@@ -3,12 +3,14 @@ use std::sync::{
     atomic::{AtomicU32, Ordering},
     Arc,
 };
-use symphonia::core::audio::{AudioBufferRef, SampleBuffer};
-use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::audio::GenericAudioBufferRef;
+use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions};
 use symphonia::core::errors::Error as SymphoniaError;
+use symphonia::core::packet::Packet;
 
 use crate::log::{is_verbose, now_string};
 
+use super::decode::{audio_codec_params, make_audio_decoder};
 use super::Result;
 
 const FFT_SIZE: usize = 1024;
@@ -28,9 +30,17 @@ pub(super) struct FftVizState {
 }
 
 pub(super) struct DecodeState {
-    pub(super) sample_buf: Option<SampleBuffer<f32>>,
+    pub(super) sample_buf: Vec<f32>,
     pub(super) channels: u16,
     pub(super) sample_rate: u32,
+}
+
+impl DecodeState {
+    pub(super) fn reset(&mut self) {
+        self.sample_buf.clear();
+        self.channels = 0;
+        self.sample_rate = 0;
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -69,22 +79,22 @@ pub(super) fn make_fft_state(num_bars: usize) -> FftVizState {
 /// - PacketOutcome::SpecChanged when SR/ch changed (caller should recreate sink + reset FFT)
 /// - PacketOutcome::Reconnect on fatal decode
 pub(super) fn decode_and_process_packet(
-    packet: &symphonia::core::formats::Packet,
+    packet: &Packet,
     format: &mut Box<dyn symphonia::core::formats::FormatReader>,
     track_id: &mut u32,
-    decoder: &mut Box<dyn symphonia::core::codecs::Decoder>,
-    decoder_opts: &DecoderOptions,
+    decoder: &mut Box<dyn AudioDecoder>,
+    decoder_opts: &AudioDecoderOptions,
     bars_enabled: bool,
     spectrum_bits: &Arc<Vec<AtomicU32>>,
     decode_state: &mut DecodeState,
     fft_state: &mut FftVizState,
     viz: VizParams,
 ) -> Result<(PacketOutcome, Option<(u16, u32, Vec<f32>)>)> {
-    if packet.track_id() != *track_id {
+    if packet.track_id != *track_id {
         return Ok((PacketOutcome::Continue, None));
     }
 
-    let decoded: AudioBufferRef<'_> = match decoder.decode(packet) {
+    let decoded: GenericAudioBufferRef<'_> = match decoder.decode(packet) {
         Ok(buf) => buf,
         Err(SymphoniaError::DecodeError(_)) => return Ok((PacketOutcome::Continue, None)),
         Err(SymphoniaError::ResetRequired) => {
@@ -98,14 +108,13 @@ pub(super) fn decode_and_process_packet(
             let new_track = format
                 .tracks()
                 .iter()
-                .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+                .find(|t| audio_codec_params(t).is_some())
                 .ok_or_else(|| "no supported audio tracks after decoder reset".to_string())?;
 
             *track_id = new_track.id;
-            *decoder =
-                symphonia::default::get_codecs().make(&new_track.codec_params, decoder_opts)?;
+            *decoder = make_audio_decoder(new_track, decoder_opts)?;
 
-            decode_state.sample_buf = None;
+            decode_state.reset();
             if bars_enabled {
                 reset_fft_state(
                     &mut fft_state.mono_ring,
@@ -127,11 +136,11 @@ pub(super) fn decode_and_process_packet(
     };
 
     // Detect spec changes
-    let spec = *decoded.spec();
-    let new_channels = spec.channels.count() as u16;
-    let new_rate = spec.rate;
+    let spec = decoded.spec();
+    let new_channels = spec.channels().count() as u16;
+    let new_rate = spec.rate();
 
-    let first_time = decode_state.sample_buf.is_none();
+    let first_time = decode_state.channels == 0 || decode_state.sample_rate == 0;
     let spec_changed = !first_time
         && (new_channels != decode_state.channels || new_rate != decode_state.sample_rate);
 
@@ -139,20 +148,14 @@ pub(super) fn decode_and_process_packet(
         decode_state.channels = new_channels;
         decode_state.sample_rate = new_rate;
 
-        let duration = decoded.capacity() as u64;
-        decode_state.sample_buf = Some(SampleBuffer::<f32>::new(duration, spec));
-
         if spec_changed {
             return Ok((PacketOutcome::SpecChanged, None));
         }
     }
 
-    let buf = decode_state
-        .sample_buf
-        .as_mut()
-        .expect("sample_buf must be initialized");
-    buf.copy_interleaved_ref(decoded);
-    let samples = buf.samples().to_owned();
+    decode_state.sample_buf.clear();
+    decoded.copy_to_vec_interleaved::<f32>(&mut decode_state.sample_buf);
+    let samples = decode_state.sample_buf.clone();
 
     if bars_enabled {
         process_samples_for_viz(

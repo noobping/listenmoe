@@ -1,6 +1,7 @@
 use std::error::Error;
 
 mod clock;
+mod decode;
 #[cfg(feature = "experimental")]
 mod experimental;
 #[cfg(not(feature = "experimental"))]
