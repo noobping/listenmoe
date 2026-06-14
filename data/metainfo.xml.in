@@ -9,7 +9,6 @@
     </p>
     <ul>
       <li>Listen to J-POP and K-POP</li>
-      <li>Pause and resume the live stream</li>
       <li>Animated sound bars that react to the music</li>
       <li>Dynamic colors based on the current album or artist cover</li>
       <li>No ads</li>
@@ -80,6 +79,11 @@
   </provides>
 
   <releases>
+    <release version="1.2.1" date="2026-06-14">
+      <description>
+        <p>Removed pause/resume from stable builds.</p>
+      </description>
+    </release>
     <release version="1.2.0" date="2026-05-05">
       <description>
         <p>Separate experimental features from stable features.</p>
