@@ -15,7 +15,10 @@ pub fn show_preferences_window(parent: &gtk::ApplicationWindow) {
     window.set_transient_for(Some(parent));
     window.set_modal(true);
     window.set_hide_on_close(true);
+    #[cfg(feature = "experimental")]
     window.set_default_size(360, 450);
+    #[cfg(not(feature = "experimental"))]
+    window.set_default_size(360, 330);
 
     let page = adw::PreferencesPage::new();
     let startup_group = adw::PreferencesGroup::new();
