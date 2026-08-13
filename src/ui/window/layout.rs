@@ -85,7 +85,7 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
         .application(app)
         .title(APP_NAME)
         .icon_name(APP_ID)
-        .default_width(340)
+        .default_width(300)
         .default_height(HEADER_HEIGHT)
         .resizable(false)
         .build();
