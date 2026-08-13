@@ -830,23 +830,23 @@
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/gettext-rs/gettext-rs-0.7.7.crate
-  sha256: 5d5857dc1b7f0fee86961de833f434e29494d72af102ce5355738c0664222bdf
-  dest: cargo/vendor/gettext-rs-0.7.7
+  url: https://static.crates.io/crates/gettext-rs/gettext-rs-0.8.0.crate
+  sha256: 9df5e3fa8c077b15fdfa8ce130e2bc73d663b8aaa6d51b71421b8659980b1d80
+  dest: cargo/vendor/gettext-rs-0.8.0
 - type: inline
-  contents: '{"package": "5d5857dc1b7f0fee86961de833f434e29494d72af102ce5355738c0664222bdf",
+  contents: '{"package": "9df5e3fa8c077b15fdfa8ce130e2bc73d663b8aaa6d51b71421b8659980b1d80",
     "files": {}}'
-  dest: cargo/vendor/gettext-rs-0.7.7
+  dest: cargo/vendor/gettext-rs-0.8.0
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
-  url: https://static.crates.io/crates/gettext-sys/gettext-sys-0.26.0.crate
-  sha256: 4ea859ab0dd7e70ff823032b3e077d03d39c965d68c6c10775add60e999d8ee9
-  dest: cargo/vendor/gettext-sys-0.26.0
+  url: https://static.crates.io/crates/gettext-sys/gettext-sys-0.27.0.crate
+  sha256: 4caa7e4460b196107cc1bb2629488e8b6dbb7f34f6683ea6753c4ac22f590785
+  dest: cargo/vendor/gettext-sys-0.27.0
 - type: inline
-  contents: '{"package": "4ea859ab0dd7e70ff823032b3e077d03d39c965d68c6c10775add60e999d8ee9",
+  contents: '{"package": "4caa7e4460b196107cc1bb2629488e8b6dbb7f34f6683ea6753c4ac22f590785",
     "files": {}}'
-  dest: cargo/vendor/gettext-sys-0.26.0
+  dest: cargo/vendor/gettext-sys-0.27.0
   dest-filename: .cargo-checksum.json
 - type: archive
   archive-type: tar-gzip
