@@ -32,7 +32,7 @@ mpris-server =  "0.10.0"
 discord-rich-presence = "1.1.0"
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
-gettext-rs = { version = "0.7.7", features = ["gettext-system"] }
+gettext-rs = { version = "0.8.0", features = ["gettext-system"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libpulse-binding = "2.30.1"
