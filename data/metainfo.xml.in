@@ -54,7 +54,7 @@
   </keywords>
 
   <recommends>
-    <display_length compare="ge">340</display_length>
+    <display_length compare="ge">300</display_length>
   </recommends>
 
   <content_rating type="oars-1.1" />
