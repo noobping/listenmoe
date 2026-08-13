@@ -79,6 +79,11 @@
   </provides>
 
   <releases>
+    <release version="1.2.2" date="2026-08-14">
+      <description>
+        <p>Volume control added.</p>
+      </description>
+    </release>
     <release version="1.2.1" date="2026-06-14">
       <description>
         <p>Removed pause/resume from stable builds.</p>

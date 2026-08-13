@@ -273,3 +273,6 @@ msgstr ""
 
 msgid "Separate experimental features from stable features."
 msgstr ""
+
+msgid "Volume control added."
+msgstr ""
