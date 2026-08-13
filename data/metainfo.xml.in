@@ -64,12 +64,12 @@
   <screenshots>
     <screenshot type="default">
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/54518cfeaac935128990c50e4d4d13201dcd665e/data/screenshot2.png</image>
+        https://raw.githubusercontent.com/noobping/listenmoe/0ef21e3e2282f046989697a5a50d5e47a7ee41a6/data/screenshot2.png</image>
       <caption>Colored window when connected</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/noobping/listenmoe/fbcdd754b5f4b3ad941e7f253cf7f0cfe1663333/data/screenshot1.png</image>
+        https://raw.githubusercontent.com/noobping/listenmoe/0ef21e3e2282f046989697a5a50d5e47a7ee41a6/data/screenshot1.png</image>
       <caption>When connected and there is no album or artist image</caption>
     </screenshot>
   </screenshots>
