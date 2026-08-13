@@ -60,8 +60,6 @@ fn find_locale_dir() -> PathBuf {
 }
 
 pub fn init_i18n() {
-    setlocale(LocaleCategory::LcAll, "");
-
     let dir = find_locale_dir();
     if crate::log::is_verbose() {
         println!("Using locale dir: {}", dir.display());
@@ -72,6 +70,10 @@ pub fn init_i18n() {
     bindtextdomain(APP_ID, dir_str).expect("bindtextdomain failed");
     bind_textdomain_codeset(APP_ID, "UTF-8").expect("bind codeset failed");
     textdomain(APP_ID).expect("textdomain failed");
+}
+
+pub fn init_process_locale() {
+    let _ = unsafe { setlocale(LocaleCategory::LcAll, "") };
 }
 
 pub fn gettext(message: &str) -> String {

@@ -272,6 +272,8 @@ fn run() -> Result<(), String> {
 }
 
 fn main() -> ExitCode {
+    locale::init_process_locale();
+
     #[cfg(target_os = "windows")]
     {
         let args = std::env::args_os().collect::<Vec<_>>();

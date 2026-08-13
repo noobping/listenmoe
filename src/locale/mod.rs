@@ -6,7 +6,7 @@ mod embedded;
 mod native;
 
 #[cfg(target_os = "windows")]
-pub use embedded::{gettext, init_i18n};
+pub use embedded::{gettext, init_i18n, init_process_locale};
 
 #[cfg(not(target_os = "windows"))]
-pub use native::{gettext, init_i18n};
+pub use native::{gettext, init_i18n, init_process_locale};

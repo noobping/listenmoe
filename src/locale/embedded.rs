@@ -29,6 +29,8 @@ pub fn init_i18n() {
     }
 }
 
+pub fn init_process_locale() {}
+
 pub fn gettext(message: &str) -> String {
     translate(translations_for(active_language()), message)
 }
