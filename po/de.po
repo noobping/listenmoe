@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.2.1\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.2.2\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -272,3 +272,6 @@ msgstr "Pausieren/Fortsetzen wurde aus stabilen Builds entfernt."
 
 msgid "Separate experimental features from stable features."
 msgstr "Experimentelle Funktionen von stabilen Funktionen getrennt."
+
+msgid "Volume control added."
+msgstr "Lautstärkeregelung hinzugefügt."
