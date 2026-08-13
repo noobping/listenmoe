@@ -6,7 +6,7 @@ use std::thread;
 
 use crate::station::Station;
 
-use super::{stream, PlaybackClock, N_BARS};
+use super::{stream, PlaybackClock, PlaybackVolume, N_BARS};
 
 #[derive(Debug, Clone, Copy)]
 pub(in crate::listen) enum Control {
@@ -29,6 +29,7 @@ struct Inner {
 pub struct Listen {
     inner: RefCell<Inner>,
     clock: Arc<PlaybackClock>,
+    volume: PlaybackVolume,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 }
 
@@ -40,6 +41,7 @@ impl Listen {
                 state: State::Stopped,
             }),
             clock: Arc::new(PlaybackClock::new()),
+            volume: PlaybackVolume::default(),
             spectrum_bits: Arc::new((0..N_BARS).map(|_| AtomicU32::new(0)).collect()),
         })
     }
@@ -50,6 +52,14 @@ impl Listen {
 
     pub fn playback_clock(&self) -> Arc<PlaybackClock> {
         self.clock.clone()
+    }
+
+    pub fn volume_percent(&self) -> u8 {
+        self.volume.percent()
+    }
+
+    pub fn set_volume_percent(&self, percent: u8) {
+        self.volume.set_percent(percent);
     }
 
     pub fn get_station(&self) -> Station {
@@ -64,13 +74,23 @@ impl Listen {
         }
         inner.station = station;
         if was_playing {
-            Self::start_inner(&mut inner, self.spectrum_bits.clone(), self.clock.clone());
+            Self::start_inner(
+                &mut inner,
+                self.spectrum_bits.clone(),
+                self.clock.clone(),
+                self.volume.clone(),
+            );
         }
     }
 
     pub fn start(&self) {
         let mut inner = self.inner.borrow_mut();
-        Self::start_inner(&mut inner, self.spectrum_bits.clone(), self.clock.clone());
+        Self::start_inner(
+            &mut inner,
+            self.spectrum_bits.clone(),
+            self.clock.clone(),
+            self.volume.clone(),
+        );
     }
 
     pub fn stop(&self) {
@@ -82,6 +102,7 @@ impl Listen {
         inner: &mut Inner,
         spectrum_bits: Arc<Vec<AtomicU32>>,
         clock: Arc<PlaybackClock>,
+        volume: PlaybackVolume,
     ) {
         match &inner.state {
             State::Playing { .. } => {
@@ -94,7 +115,8 @@ impl Listen {
                 inner.state = State::Playing { tx: tx.clone() };
 
                 thread::spawn(move || {
-                    let result = stream::run_listenmoe_stream(station, rx, spectrum_bits, clock);
+                    let result =
+                        stream::run_listenmoe_stream(station, rx, spectrum_bits, clock, volume);
 
                     if let Err(err) = result {
                         eprintln!("stream error: {err}");

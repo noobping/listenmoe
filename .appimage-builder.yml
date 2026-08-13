@@ -19,7 +19,7 @@ AppDir:
     exec: usr/bin/listenmoe
 
   apt:
-    arch: amd64
+    arch: '{{APPIMAGE_APT_ARCH}}'
     sources:
       - sourceline: "deb http://deb.debian.org/debian trixie main"
         key_url: "https://ftp-master.debian.org/keys/archive-key-12.asc"
@@ -27,7 +27,8 @@ AppDir:
       - ca-certificates
       - libcurl4
       - libssl3
+      - libpulse0
 
 AppImage:
-  arch: x86_64
+  arch: '{{APPIMAGE_ARCH}}'
   update-information: guess

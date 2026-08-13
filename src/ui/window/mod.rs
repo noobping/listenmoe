@@ -5,6 +5,8 @@ mod state;
 use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
+#[cfg(target_os = "linux")]
+use crate::volume::{self, VolumeCommand};
 
 #[cfg(target_os = "windows")]
 use adw::prelude::ApplicationExt;
@@ -14,9 +16,13 @@ use std::{cell::RefCell, rc::Rc, sync::mpsc};
 
 use super::actions;
 use super::controls::NowPlaying;
+#[cfg(target_os = "linux")]
+use super::volume::VolumeUi;
 use layout::WindowLayout;
 use loops::UiUpdateLoopCtx;
 use state::{CoverFetchResult, MetadataSetter, SharedTrack};
+#[cfg(target_os = "linux")]
+use state::{SharedVolumeState, VolumeState};
 pub use state::{UiEvent, UiResetReason};
 
 const APP_NAME: &str = "Listen Moe";
@@ -79,6 +85,8 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         update_title_override,
         play_button,
         pause_button,
+        #[cfg(target_os = "linux")]
+        volume_button,
         #[cfg(target_os = "windows")]
         update_button,
         #[cfg(target_os = "windows")]
@@ -110,6 +118,30 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         &current_track,
         options.pause_resume_enabled(),
     );
+
+    #[cfg(target_os = "linux")]
+    let (volume_ui, volume_event_rx, volume_state) = {
+        let initial_percent = radio.volume_percent();
+        let volume_state: SharedVolumeState =
+            Rc::new(RefCell::new(VolumeState::new(initial_percent)));
+        let (volume_command_tx, volume_event_rx) = volume::spawn_controller();
+        let radio = radio.clone();
+        let controls = controls.clone();
+        let state = volume_state.clone();
+        let on_change: Rc<dyn Fn(u8)> = Rc::new(move |percent| {
+            let update = state.borrow_mut().apply_local_request(percent);
+            radio.set_volume_percent(update.software_percent);
+            let _ = volume_command_tx.send(VolumeCommand::SetPercent(percent));
+            if let Some(c) = controls.as_ref() {
+                c.set_volume_percent(update.display_percent);
+            }
+        });
+
+        // Do not invoke the request callback here: the first Available event
+        // must be allowed to restore the desktop's existing stream volume.
+        let volume_ui = VolumeUi::new(volume_button, initial_percent, on_change);
+        (volume_ui, volume_event_rx, volume_state)
+    };
 
     #[cfg(target_os = "windows")]
     let updater: Option<crate::updater::UpdaterController> = {
@@ -164,6 +196,16 @@ pub fn build_ui(app: &Application, options: UiOptions) {
         ctrl_rx,
         current_track,
         metadata_setter,
+        #[cfg(target_os = "linux")]
+        volume_ui,
+        #[cfg(target_os = "linux")]
+        volume_event_rx,
+        #[cfg(target_os = "linux")]
+        volume_state,
+        #[cfg(target_os = "linux")]
+        volume_radio: radio.clone(),
+        #[cfg(target_os = "linux")]
+        volume_controls: controls.clone(),
         discord_enabled: options.discord_enabled,
     });
 

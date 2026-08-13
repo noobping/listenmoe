@@ -30,7 +30,7 @@ use super::super::viz::{
     clear_spectrum, decode_and_process_packet, make_fft_state, reset_fft_state, DecodeState,
     PacketOutcome, VizParams,
 };
-use super::super::{Control, Result};
+use super::super::{Control, PlaybackVolume, Result};
 
 #[derive(Debug, Clone, Copy)]
 enum RunOutcome {
@@ -1609,14 +1609,16 @@ pub(in crate::listen) fn run_listenmoe_stream(
     rx: mpsc::Receiver<Control>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
     clock: Arc<PlaybackClock>,
+    volume: PlaybackVolume,
     root: PathBuf,
 ) -> Result<()> {
     clock.reset();
     clock.set_live_playback(true);
     let mut stream = DeviceSinkBuilder::open_default_sink()?;
+    let app_mixer = super::attach_volume_mixer(&stream, volume);
     stream.log_on_drop(false);
     let live_outcome =
-        run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, stream.mixer());
+        run_direct_live_until_pause(station, &rx, &spectrum_bits, &clock, &app_mixer);
 
     match live_outcome? {
         LiveDirectOutcome::Stop => {
@@ -1658,7 +1660,7 @@ pub(in crate::listen) fn run_listenmoe_stream(
         let clock = clock.clone();
         let stop_requested = stop_requested.clone();
         let buffer_tx = buffer_tx.clone();
-        let direct_mixer = stream.mixer().clone();
+        let direct_mixer = app_mixer.clone();
         let direct_live_enabled = direct_live_enabled.clone();
         let capture_enabled = capture_enabled.clone();
         let spectrum_bits = spectrum_bits.clone();
@@ -1727,7 +1729,7 @@ pub(in crate::listen) fn run_listenmoe_stream(
         if !paused && !source_started && !direct_live_enabled.load(Ordering::Relaxed) {
             if output.is_none() {
                 let (new_output, output_source) = queue::queue(true);
-                stream.mixer().add(output_source);
+                app_mixer.add(output_source);
                 output = Some(new_output);
             }
 

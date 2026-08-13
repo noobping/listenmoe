@@ -30,6 +30,9 @@ msgstr "General"
 msgid "Playback"
 msgstr "Playback"
 
+msgid "Volume"
+msgstr "Volume"
+
 msgid "Play or pause"
 msgstr "Play or pause"
 

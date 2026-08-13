@@ -1,6 +1,9 @@
 use crate::log::{is_verbose, now_string};
 use crate::ui::discord::Discord;
 
+#[cfg(target_os = "linux")]
+use crate::{listen::Listen, volume::VolumeEvent};
+
 use crate::locale::gettext;
 use adw::{
     glib,
@@ -23,11 +26,17 @@ use std::{
     time::Duration,
 };
 
+#[cfg(target_os = "linux")]
+use super::super::controls::MediaControls;
+#[cfg(target_os = "linux")]
+use super::super::volume::VolumeUi;
 use super::super::{
     controls::{MediaControlEvent, NowPlaying},
     cover,
     viz::VizHandle,
 };
+#[cfg(target_os = "linux")]
+use super::state::SharedVolumeState;
 use super::state::{
     CoverFetchResult, MetadataSetter, RuntimeState, SharedTitle, SharedTrack, UiEvent,
     UiResetReason,
@@ -58,6 +67,16 @@ pub(super) struct UiUpdateLoopCtx {
     pub(super) ctrl_rx: Option<mpsc::Receiver<MediaControlEvent>>,
     pub(super) current_track: SharedTrack,
     pub(super) metadata_setter: MetadataSetter,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_ui: VolumeUi,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_event_rx: mpsc::Receiver<VolumeEvent>,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_state: SharedVolumeState,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_radio: Rc<Listen>,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_controls: Option<Rc<MediaControls>>,
     pub(super) discord_enabled: bool,
 }
 
@@ -78,6 +97,16 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
         ctrl_rx,
         current_track,
         metadata_setter,
+        #[cfg(target_os = "linux")]
+        volume_ui,
+        #[cfg(target_os = "linux")]
+        volume_event_rx,
+        #[cfg(target_os = "linux")]
+        volume_state,
+        #[cfg(target_os = "linux")]
+        volume_radio,
+        #[cfg(target_os = "linux")]
+        volume_controls,
         discord_enabled,
     } = ctx;
 
@@ -93,11 +122,27 @@ pub(super) fn spawn_ui_update_loop(ctx: UiUpdateLoopCtx) {
     glib::timeout_add_local(Duration::from_millis(100), move || {
         if let Some(ctrl_rx) = &ctrl_rx {
             for event in ctrl_rx.try_iter() {
+                #[cfg(target_os = "linux")]
+                if let MediaControlEvent::SetVolume(percent) = event {
+                    volume_ui.request_percent(percent);
+                    continue;
+                }
+
                 let _ = adw::prelude::WidgetExt::activate_action(
                     &window,
                     event.action_name(),
                     None::<&glib::Variant>,
                 );
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        for event in volume_event_rx.try_iter() {
+            let update = volume_state.borrow_mut().apply_backend_event(event);
+            volume_ui.set_percent_silent(update.display_percent);
+            volume_radio.set_volume_percent(update.software_percent);
+            if let Some(controls) = volume_controls.as_ref() {
+                controls.set_volume_percent(update.display_percent);
             }
         }
 

@@ -10,12 +10,15 @@ mod stable;
 mod store;
 mod stream;
 mod viz;
+mod volume;
 
 pub use clock::PlaybackClock;
 #[cfg(feature = "experimental")]
 pub use experimental::Listen;
 #[cfg(not(feature = "experimental"))]
 pub use stable::Listen;
+
+pub(in crate::listen) use volume::PlaybackVolume;
 
 #[cfg(feature = "experimental")]
 pub(in crate::listen) use experimental::Control;

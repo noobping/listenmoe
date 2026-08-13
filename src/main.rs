@@ -13,6 +13,8 @@ mod station;
 mod ui;
 #[cfg(target_os = "windows")]
 mod updater;
+#[cfg(target_os = "linux")]
+mod volume;
 
 #[cfg(debug_assertions)]
 const APP_ID: &str = "io.github.noobping.listenmoe.Devel";
@@ -214,6 +216,12 @@ fn run() -> Result<(), String> {
             save_preferences,
         } => (ui_options, app_args, verbose, save_preferences),
     };
+
+    // Tag the playback stream before Rodio opens it so the desktop-volume
+    // controller can identify this exact process across native, AppImage, and
+    // Flatpak launches.
+    #[cfg(target_os = "linux")]
+    volume::configure_stream_identity(&app_id);
 
     log::set_verbose(verbose);
 

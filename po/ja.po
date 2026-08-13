@@ -30,6 +30,9 @@ msgstr "一般"
 msgid "Playback"
 msgstr "再生"
 
+msgid "Volume"
+msgstr "音量"
+
 msgid "Play or pause"
 msgstr "再生/一時停止"
 

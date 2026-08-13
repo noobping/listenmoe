@@ -10,6 +10,8 @@ pub enum MediaControlEvent {
     Toggle,
     Next,
     Previous,
+    #[cfg(target_os = "linux")]
+    SetVolume(u8),
 }
 
 impl MediaControlEvent {
@@ -21,6 +23,8 @@ impl MediaControlEvent {
             Self::Toggle => "win.toggle",
             Self::Next => "win.next_station",
             Self::Previous => "win.prev_station",
+            #[cfg(target_os = "linux")]
+            Self::SetVolume(_) => unreachable!("volume events are handled separately"),
         }
     }
 }
@@ -67,27 +71,24 @@ impl MediaControls {
             let _ = player.set_metadata(metadata).await;
         });
     }
+
+    #[cfg(target_os = "linux")]
+    pub fn set_volume_percent(&self, percent: u8) {
+        let player = self.player.clone();
+        glib::MainContext::default().spawn_local(async move {
+            let volume = f64::from(percent.min(100)) / 100.0;
+            let _ = player.set_volume(volume).await;
+        });
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::NowPlaying;
-
-    #[test]
-    fn now_playing_keeps_album_and_art() {
-        let now_playing = NowPlaying {
-            title: "title".into(),
-            artist: "artist".into(),
-            album: "album".into(),
-            art_url: Some("https://example.test/cover.jpg".into()),
-        };
-
-        assert_eq!(now_playing.album, "album");
-        assert_eq!(
-            now_playing.art_url.as_deref(),
-            Some("https://example.test/cover.jpg")
-        );
+#[cfg(target_os = "linux")]
+fn mpris_volume_to_percent(volume: f64) -> u8 {
+    if volume.is_nan() {
+        return 0;
     }
+
+    (volume.clamp(0.0, 1.0) * 100.0).round() as u8
 }
 
 pub fn build_controls(
@@ -132,10 +133,55 @@ pub fn build_controls(
         connect_previous => Previous,
     );
 
+    #[cfg(target_os = "linux")]
+    {
+        let tx = tx.clone();
+        player.connect_set_volume(move |_, volume| {
+            let _ = tx.send(MediaControlEvent::SetVolume(mpris_volume_to_percent(
+                volume,
+            )));
+        });
+    }
+
     let player = Rc::new(player);
     ctx.spawn_local(player.clone().run());
 
     let controls = Rc::new(MediaControls { player });
 
     Ok((controls, rx))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NowPlaying;
+
+    #[test]
+    fn now_playing_keeps_album_and_art() {
+        let now_playing = NowPlaying {
+            title: "title".into(),
+            artist: "artist".into(),
+            album: "album".into(),
+            art_url: Some("https://example.test/cover.jpg".into()),
+        };
+
+        assert_eq!(now_playing.album, "album");
+        assert_eq!(
+            now_playing.art_url.as_deref(),
+            Some("https://example.test/cover.jpg")
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn mpris_volume_is_clamped_and_rounded_to_percent() {
+        use super::mpris_volume_to_percent;
+
+        assert_eq!(mpris_volume_to_percent(-0.1), 0);
+        assert_eq!(mpris_volume_to_percent(0.0), 0);
+        assert_eq!(mpris_volume_to_percent(0.504), 50);
+        assert_eq!(mpris_volume_to_percent(0.505), 51);
+        assert_eq!(mpris_volume_to_percent(1.0), 100);
+        assert_eq!(mpris_volume_to_percent(1.5), 100);
+        assert_eq!(mpris_volume_to_percent(f64::NAN), 0);
+    }
 }

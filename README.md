@@ -10,7 +10,7 @@ Listen to J-POP and K-POP. Stream and metadata provided by [LISTEN.moe](https://
 
 ![demo](data/demo.gif)
 
-The application uses a compact, titlebar-style layout that displays the current album and artist, along with basic playback controls.
+The application uses a compact, titlebar-style layout that displays the current album and artist, along with playback and volume controls.
 
 When album or artist artwork is available, a dominant color is extracted and used to select the appropriate GNOME light or dark appearance. If no artwork is available, the default GNOME appearance is used.
 
@@ -64,7 +64,7 @@ The `po` folder contains translation files in `.po` (Portable Object) format. If
 Dependencies:
 
 ```sh
-sudo dnf install -y @development-tools cargo clang gcc gcc-c++ gettext libadwaita-devel alsa-lib-devel cairo-devel gdk-pixbuf2-devel glib2-devel libgpg-error-devel gtk4-devel pango-devel openssl-devel make mold nettle-devel pkgconf-pkg-config pkgconf
+sudo dnf install -y @development-tools cargo clang gcc gcc-c++ gettext libadwaita-devel alsa-lib-devel cairo-devel gdk-pixbuf2-devel glib2-devel libgpg-error-devel gtk4-devel pango-devel openssl-devel make mold nettle-devel pulseaudio-libs-devel pkgconf-pkg-config pkgconf
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ```
 

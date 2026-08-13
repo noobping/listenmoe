@@ -14,6 +14,8 @@ use std::{
     rc::Rc,
 };
 
+#[cfg(target_os = "linux")]
+use super::super::volume;
 use super::super::{cover, viz};
 use super::state::{SharedFlag, SharedTitle};
 use super::APP_NAME;
@@ -32,6 +34,8 @@ pub(super) struct WindowLayout {
     pub(super) update_title_override: SharedFlag,
     pub(super) play_button: Button,
     pub(super) pause_button: Button,
+    #[cfg(target_os = "linux")]
+    pub(super) volume_button: gtk::ScaleButton,
     #[cfg(target_os = "windows")]
     pub(super) update_button: Button,
     #[cfg(target_os = "windows")]
@@ -71,6 +75,9 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
     pause_button.set_action_name(Some("win.pause"));
     pause_button.set_visible(false);
 
+    #[cfg(target_os = "linux")]
+    let volume_button = volume::build_button();
+
     #[cfg(target_os = "windows")]
     let (update_button, update_progress_area, update_progress) = build_update_progress_button();
 
@@ -78,7 +85,7 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
         .application(app)
         .title(APP_NAME)
         .icon_name(APP_ID)
-        .default_width(300)
+        .default_width(340)
         .default_height(HEADER_HEIGHT)
         .resizable(false)
         .build();
@@ -99,6 +106,8 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
     buttons.append(&more_button);
     buttons.append(&play_button);
     buttons.append(&pause_button);
+    #[cfg(target_os = "linux")]
+    buttons.append(&volume_button);
     #[cfg(target_os = "windows")]
     buttons.append(&update_button);
 
@@ -176,6 +185,8 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
         update_title_override,
         play_button,
         pause_button,
+        #[cfg(target_os = "linux")]
+        volume_button,
         #[cfg(target_os = "windows")]
         update_button,
         #[cfg(target_os = "windows")]

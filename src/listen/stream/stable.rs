@@ -21,7 +21,7 @@ use super::super::viz::{
     clear_spectrum, decode_and_process_packet, make_fft_state, reset_fft_state, DecodeState,
     PacketOutcome, VizParams,
 };
-use super::super::{Control, Result};
+use super::super::{Control, PlaybackVolume, Result};
 
 const LIVE_CLOCK_FLUSH_MS: u64 = 250;
 
@@ -30,12 +30,14 @@ pub(in crate::listen) fn run_listenmoe_stream(
     rx: mpsc::Receiver<Control>,
     spectrum_bits: Arc<Vec<AtomicU32>>,
     clock: Arc<PlaybackClock>,
+    volume: PlaybackVolume,
 ) -> Result<()> {
     clock.reset();
     clock.set_live_playback(true);
     let mut stream = DeviceSinkBuilder::open_default_sink()?;
     stream.log_on_drop(false);
-    let result = run_direct_live_until_stop(station, &rx, &spectrum_bits, &clock, stream.mixer());
+    let app_mixer = super::attach_volume_mixer(&stream, volume);
+    let result = run_direct_live_until_stop(station, &rx, &spectrum_bits, &clock, &app_mixer);
     clock.set_live_playback(false);
     result
 }
