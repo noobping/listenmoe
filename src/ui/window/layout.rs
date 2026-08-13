@@ -111,9 +111,21 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
     #[cfg(target_os = "windows")]
     buttons.append(&update_button);
 
+    let close_btn = Button::from_icon_name("window-close-symbolic");
+    close_btn.set_action_name(Some("win.quit"));
+
+    let title_area = gtk::CenterBox::new();
+    title_area.set_hexpand(true);
+    title_area.set_center_widget(Some(&win_title));
+
+    let title_row = gtk::Box::new(Orientation::Horizontal, 0);
+    title_row.set_hexpand(true);
+    title_row.append(&buttons);
+    title_row.append(&title_area);
+    title_row.append(&close_btn);
+
     let header = HeaderBar::new();
-    header.pack_start(&buttons);
-    header.set_title_widget(Some(&win_title));
+    header.set_title_widget(Some(&title_row));
     header.set_show_title_buttons(false);
     header.add_css_class("cover-tint");
     header.set_height_request(HEADER_HEIGHT);
@@ -154,10 +166,6 @@ pub(super) fn build_window_layout(app: &Application, pause_resume_enabled: bool)
         });
     }
     art_popover.add_controller(close_any_click);
-
-    let close_btn = Button::from_icon_name("window-close-symbolic");
-    close_btn.set_action_name(Some("win.quit"));
-    header.pack_end(&close_btn);
 
     let overlay = gtk::Overlay::new();
     overlay.add_css_class("titlebar-tint");
