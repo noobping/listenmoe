@@ -9,6 +9,10 @@ pub struct VizHandle {
 }
 
 impl VizHandle {
+    pub(super) fn clear(&self) {
+        self.values.borrow_mut().fill(0.0);
+    }
+
     pub fn set_values(&self, new_vals: &[f32]) {
         let mut v = self.values.borrow_mut();
         if v.len() != new_vals.len() {
@@ -35,12 +39,11 @@ pub fn make_bars_visualizer(n_bars: usize, height: i32) -> (gtk::DrawingArea, Vi
     area.set_content_height(height);
     area.add_css_class("header-viz");
 
-    let area_clone = area.clone();
-    area.set_draw_func(move |_, cr, w, h| {
+    area.set_draw_func(move |area, cr, w, h| {
         let w = w as f64;
         let h = h as f64;
 
-        let (r, g, b) = widget_css_color(&area_clone.clone().upcast::<gtk::Widget>());
+        let (r, g, b) = widget_css_color(area.upcast_ref());
 
         // Vertical gradient: stronger at top/bottom, weaker in the center where text sits.
         let grad = gtk::cairo::LinearGradient::new(0.0, 0.0, 0.0, h);

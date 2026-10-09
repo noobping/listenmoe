@@ -303,8 +303,11 @@ msgstr "Songtekst toegevoegd."
 msgid "Added a song progress bar."
 msgstr "Een voortgangsbalk voor nummers toegevoegd."
 
-msgid "Long artist and song names now scroll smoothly."
-msgstr "Lange artiestennamen en songtitels schuiven nu vloeiend voorbij."
+msgid "Long artist and song names scroll smoothly."
+msgstr "Lange artiestennamen en songtitels schuiven vloeiend voorbij."
 
 msgid "Hover over the title to see the full text."
 msgstr "Houd de muis boven de titel om de volledige tekst te zien."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Scrollende tekst en achtergrondanimaties houden rekening met ‘Beweging beperken’."

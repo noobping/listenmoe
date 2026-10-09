@@ -17,10 +17,10 @@ use adw::{
         prelude::WidgetExt,
         ApplicationWindow, Picture, Popover, Stack,
     },
-    prelude::PopoverExt,
+    prelude::{ObjectExt, PopoverExt},
     StyleManager,
 };
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use std::{
@@ -37,6 +37,7 @@ use super::super::{
     controls::{MediaControlEvent, NowPlaying},
     cover,
     karaoke::KaraokeView,
+    motion,
     progress::TitlebarProgress,
     viz::VizHandle,
 };
@@ -471,10 +472,60 @@ pub(super) fn spawn_viz_loop(
     viz_handle: VizHandle,
     spectrum_bits: Arc<Vec<AtomicU32>>,
 ) {
+    let source: Rc<RefCell<Option<glib::SourceId>>> = Rc::new(RefCell::new(None));
+    let source_for_update = source.clone();
+    let update = Rc::new(move |viz: &gtk::DrawingArea| {
+        if !viz.is_mapped() || !motion::animations_enabled(&viz.settings()) {
+            if let Some(source) = source_for_update.borrow_mut().take() {
+                source.remove();
+            }
+            viz_handle.clear();
+            viz.queue_draw();
+        } else if source_for_update.borrow().is_none() {
+            *source_for_update.borrow_mut() = Some(start_viz_timer(
+                viz,
+                viz_handle.clone(),
+                spectrum_bits.clone(),
+            ));
+        }
+    });
+
+    let update_on_map = update.clone();
+    viz.connect_map(move |viz| update_on_map(viz));
+    let update_on_unmap = update.clone();
+    viz.connect_unmap(move |viz| update_on_unmap(viz));
+    update(&viz);
+
+    let settings = viz.settings();
+    let weak_viz = viz.downgrade();
+    let handler = RefCell::new(Some(motion::connect_changed(&settings, move |_| {
+        if let Some(viz) = weak_viz.upgrade() {
+            update(&viz);
+        }
+    })));
+    viz.connect_destroy(move |_| {
+        if let Some(handler) = handler.take() {
+            settings.disconnect(handler);
+        }
+        if let Some(source) = source.borrow_mut().take() {
+            source.remove();
+        }
+    });
+}
+
+fn start_viz_timer(
+    viz: &gtk::DrawingArea,
+    viz_handle: VizHandle,
+    spectrum_bits: Arc<Vec<AtomicU32>>,
+) -> glib::SourceId {
     let mut bars = vec![0.0f32; spectrum_bits.len()];
     let mut smooth = vec![0.0f32; spectrum_bits.len()];
+    let weak_viz = viz.downgrade();
 
     glib::timeout_add_local(VIZ_FRAME_INTERVAL, move || {
+        let Some(viz) = weak_viz.upgrade() else {
+            return glib::ControlFlow::Break;
+        };
         for i in 0..bars.len() {
             bars[i] = f32::from_bits(spectrum_bits[i].load(Ordering::Relaxed)).clamp(0.0, 1.0);
         }
@@ -496,7 +547,7 @@ pub(super) fn spawn_viz_loop(
         viz_handle.set_values(&smooth);
         viz.queue_draw();
         glib::ControlFlow::Continue
-    });
+    })
 }
 
 fn clear_art_ui(
@@ -565,6 +616,9 @@ fn apply_cover_bytes(
     cover::apply_color(css_provider, (r, g, b), cover_is_light);
     Ok(())
 }
+
+#[cfg(test)]
+mod motion_tests;
 
 #[cfg(test)]
 mod tests {

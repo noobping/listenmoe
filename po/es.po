@@ -303,8 +303,11 @@ msgstr "Se añadieron letras."
 msgid "Added a song progress bar."
 msgstr "Se añadió una barra de progreso de la canción."
 
-msgid "Long artist and song names now scroll smoothly."
-msgstr "Los nombres largos de artistas y canciones ahora se desplazan suavemente."
+msgid "Long artist and song names scroll smoothly."
+msgstr "Los nombres largos de artistas y canciones se desplazan suavemente."
 
 msgid "Hover over the title to see the full text."
 msgstr "Pasa el cursor sobre el título para ver el texto completo."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "El texto en movimiento y las animaciones de fondo respetan la opción de reducir el movimiento."

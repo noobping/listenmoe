@@ -1,3 +1,4 @@
+use super::motion;
 use adw::{
     glib,
     gtk::{self, graphene, pango, prelude::*, subclass::prelude::*},
@@ -123,7 +124,7 @@ impl MarqueeRow {
 
     fn should_scroll(&self) -> bool {
         self.is_visible()
-            && self.settings().is_gtk_enable_animations()
+            && motion::animations_enabled(&self.settings())
             && self.imp().label.width() > 0
             && self.imp().label.layout().is_ellipsized()
     }
@@ -208,16 +209,14 @@ mod imp {
             obj.append(&self.subtitle);
 
             let weak = obj.downgrade();
-            *self.settings_handler.borrow_mut() = Some(
-                obj.settings()
-                    .connect_gtk_enable_animations_notify(move |_| {
-                        if let Some(obj) = weak.upgrade() {
-                            obj.update_animation();
-                            obj.imp().title.queue_draw();
-                            obj.imp().subtitle.queue_draw();
-                        }
-                    }),
-            );
+            *self.settings_handler.borrow_mut() =
+                Some(motion::connect_changed(&obj.settings(), move |_| {
+                    if let Some(obj) = weak.upgrade() {
+                        obj.update_animation();
+                        obj.imp().title.queue_draw();
+                        obj.imp().subtitle.queue_draw();
+                    }
+                }));
         }
 
         fn dispose(&self) {

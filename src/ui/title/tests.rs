@@ -1,3 +1,4 @@
+use super::super::motion::REDUCED_MOTION_SETTING;
 use super::*;
 
 #[test]
@@ -106,14 +107,27 @@ fn texture_pixels(texture: &gtk::gdk::Texture) -> Vec<u8> {
     pixels
 }
 
-// Run explicitly with a GTK display (Wayland or X11) and
-// --ignored --test-threads=1. Keeping GTK in one test avoids its thread affinity
-// conflicting with the ordinary, display-independent test suite.
+// Run this test by name with a GTK display and --ignored --test-threads=1.
+// Use a separate process for each GTK test because GTK has thread affinity.
 #[test]
 #[ignore = "requires a GTK display"]
 fn gtk_title_preserves_layout_and_scroll_lifecycle() {
     adw::init().unwrap();
     let settings = gtk::Settings::default().unwrap();
+    let original_animations = settings.is_gtk_enable_animations();
+    let original_reduced_motion = settings
+        .find_property(REDUCED_MOTION_SETTING)
+        .map(|_| settings.property_value(REDUCED_MOTION_SETTING));
+    let set_reduced_motion = |reduce: bool| {
+        if let Some(original) = &original_reduced_motion {
+            let class = glib::EnumClass::with_type(original.type_()).unwrap();
+            let value = class
+                .to_value_by_nick(if reduce { "reduce" } else { "no-preference" })
+                .unwrap();
+            settings.set_property_from_value(REDUCED_MOTION_SETTING, &value);
+        }
+    };
+    set_reduced_motion(false);
     settings.set_gtk_enable_animations(false);
     let original = adw::WindowTitle::new("Listen Moe", "J-POP and K-POP radio");
     let (window, center, buttons, close) = header_window(&original);
@@ -213,10 +227,52 @@ fn gtk_title_preserves_layout_and_scroll_lifecycle() {
     assert!(!title.imp().title.should_scroll());
     assert!(title.imp().title.imp().label.layout().is_ellipsized());
     assert_eq!(geometry(), baseline);
-    save_window(&window, "reduced-motion");
+    save_window(&window, "animations-disabled");
     settings.set_gtk_enable_animations(true);
     settle_layout();
     assert!(title.imp().tick.borrow().is_some());
+
+    if original_reduced_motion.is_some() {
+        let tooltip = title.tooltip_text();
+        for (animations, reduce) in [(true, true), (false, true), (false, false), (true, false)] {
+            settings.set_gtk_enable_animations(animations);
+            set_reduced_motion(reduce);
+            let should_scroll = animations && !reduce;
+            // The notify handler must stop/start the clock immediately.
+            assert_eq!(title.imp().tick.borrow().is_some(), should_scroll);
+            settle_layout();
+            for row in [&title.imp().title, &title.imp().subtitle] {
+                assert_eq!(row.should_scroll(), should_scroll);
+                if !should_scroll {
+                    assert_eq!(row.imp().offset.get(), 0.0);
+                    assert_eq!(row.imp().started_at.get(), None);
+                    assert!(row.imp().label.layout().is_ellipsized());
+                }
+            }
+            assert_eq!(title.tooltip_text(), tooltip);
+            assert_eq!(geometry(), baseline);
+        }
+
+        set_reduced_motion(true);
+        window.set_visible(false);
+        title.set_title(long_title);
+        window.present();
+        settle_layout();
+        assert!(title.imp().tick.borrow().is_none());
+        assert_eq!(title.imp().title.imp().label.text(), long_title);
+        assert_eq!(
+            title.tooltip_text().unwrap(),
+            format!("{long_title}\n{long_subtitle}")
+        );
+        assert_eq!(geometry(), baseline);
+        save_window(&window, "reduced-motion");
+
+        set_reduced_motion(false);
+        assert!(title.imp().tick.borrow().is_some());
+        assert_eq!(title.imp().title.imp().started_at.get(), None);
+        assert_eq!(title.imp().subtitle.imp().offset.get(), 0.0);
+        settle_layout();
+    }
 
     window.set_visible(false);
     assert!(title.imp().tick.borrow().is_none());
@@ -250,4 +306,8 @@ fn gtk_title_preserves_layout_and_scroll_lifecycle() {
     row.allocate(natural_width - 1, natural_height, -1, None);
     assert!(row.should_scroll(), "one pixel of overflow must scroll");
     window.close();
+    settings.set_gtk_enable_animations(original_animations);
+    if let Some(original) = original_reduced_motion {
+        settings.set_property_from_value(REDUCED_MOTION_SETTING, &original);
+    }
 }

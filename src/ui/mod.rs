@@ -3,6 +3,7 @@ mod controls;
 mod cover;
 mod discord;
 mod karaoke;
+mod motion;
 mod progress;
 mod title;
 pub(crate) use title::ScrollingWindowTitle;

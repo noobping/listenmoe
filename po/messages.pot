@@ -304,8 +304,11 @@ msgstr ""
 msgid "Added a song progress bar."
 msgstr ""
 
-msgid "Long artist and song names now scroll smoothly."
+msgid "Long artist and song names scroll smoothly."
 msgstr ""
 
 msgid "Hover over the title to see the full text."
+msgstr ""
+
+msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr ""

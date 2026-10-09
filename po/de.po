@@ -303,8 +303,11 @@ msgstr "Songtext hinzugefügt."
 msgid "Added a song progress bar."
 msgstr "Eine Fortschrittsleiste für Songs hinzugefügt."
 
-msgid "Long artist and song names now scroll smoothly."
-msgstr "Lange Künstlernamen und Songtitel werden jetzt als flüssige Laufschrift angezeigt."
+msgid "Long artist and song names scroll smoothly."
+msgstr "Lange Künstlernamen und Songtitel werden als flüssige Laufschrift angezeigt."
 
 msgid "Hover over the title to see the full text."
 msgstr "Bewege den Mauszeiger über den Titel, um den vollständigen Text zu sehen."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Laufschrift und Hintergrundanimationen berücksichtigen die Einstellung für reduzierte Bewegung."
