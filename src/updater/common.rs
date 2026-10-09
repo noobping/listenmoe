@@ -687,8 +687,14 @@ pub(crate) fn register_window(
     Some(controller)
 }
 
-pub(crate) fn handle_special_command(_args: &[std::ffi::OsString]) -> Option<ExitCode> {
-    None
+pub(crate) fn handle_special_command(args: &[std::ffi::OsString]) -> Option<ExitCode> {
+    platform::handle_special_command(args).map(|result| match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            log_error(format!("Failed to hand off update install: {error}"));
+            ExitCode::FAILURE
+        }
+    })
 }
 
 pub(super) fn sanitize_filename(name: &str) -> String {

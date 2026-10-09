@@ -5,7 +5,7 @@ use adw::gtk::{
     prelude::{ActionMapExt, GtkApplicationExt, GtkWindowExt},
     ApplicationWindow, Button,
 };
-use adw::{Application, WindowTitle};
+use adw::Application;
 use mpris_server::PlaybackStatus;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -14,7 +14,7 @@ use std::sync::mpsc;
 use super::controls::{build_controls, MediaControlEvent, MediaControls};
 use crate::listen::Listen;
 use crate::meta::Meta;
-use crate::ui::UiEvent;
+use crate::ui::{ScrollingWindowTitle as WindowTitle, UiEvent};
 
 mod context;
 mod menu;

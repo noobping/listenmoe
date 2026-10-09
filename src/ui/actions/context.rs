@@ -1,7 +1,6 @@
 use crate::locale::gettext;
 use adw::gtk::{gdk::Display, prelude::WidgetExt, ApplicationWindow, Button};
 use adw::prelude::DisplayExt;
-use adw::WindowTitle;
 use mpris_server::PlaybackStatus;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -10,7 +9,7 @@ use std::sync::mpsc;
 use crate::listen::Listen;
 use crate::meta::Meta;
 use crate::station::Station;
-use crate::ui::{UiEvent, UiResetReason};
+use crate::ui::{ScrollingWindowTitle as WindowTitle, UiEvent, UiResetReason};
 
 use super::activate_window_action;
 

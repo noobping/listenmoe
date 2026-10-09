@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: io.github.noobping.listenmoe 1.2.3\n"
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -302,3 +302,9 @@ msgstr "Songtext hinzugefügt."
 
 msgid "Added a song progress bar."
 msgstr "Eine Fortschrittsleiste für Songs hinzugefügt."
+
+msgid "Long artist and song names now scroll smoothly."
+msgstr "Lange Künstlernamen und Songtitel werden jetzt als flüssige Laufschrift angezeigt."
+
+msgid "Hover over the title to see the full text."
+msgstr "Bewege den Mauszeiger über den Titel, um den vollständigen Text zu sehen."

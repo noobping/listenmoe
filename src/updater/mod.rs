@@ -1,5 +1,5 @@
-use crate::ui::TitlebarProgress;
-use adw::{gtk::Button, WindowTitle};
+use crate::ui::{ScrollingWindowTitle as WindowTitle, TitlebarProgress};
+use adw::gtk::Button;
 use std::{
     cell::{Cell, RefCell},
     rc::Rc,

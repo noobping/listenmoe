@@ -2,6 +2,7 @@ use crate::listen::PlaybackClock;
 use crate::log::{is_verbose, now_string};
 use crate::lyrics::{self, LyricCue, LyricsRequest, LyricsResult};
 use crate::ui::discord::Discord;
+use crate::ui::ScrollingWindowTitle as WindowTitle;
 
 #[cfg(target_os = "linux")]
 use crate::{listen::Listen, volume::VolumeEvent};
@@ -17,7 +18,7 @@ use adw::{
         ApplicationWindow, Picture, Popover, Stack,
     },
     prelude::PopoverExt,
-    StyleManager, WindowTitle,
+    StyleManager,
 };
 use std::cell::Cell;
 use std::rc::Rc;

@@ -1,11 +1,12 @@
 use crate::locale::gettext;
+use crate::ui::ScrollingWindowTitle as WindowTitle;
 use adw::{
     gtk::{
         self, gio::Menu, prelude::WidgetExt, ApplicationWindow, Button, GestureClick, HeaderBar,
         MenuButton, Orientation, Picture, Popover,
     },
     prelude::*,
-    Application, StyleManager, WindowTitle,
+    Application, StyleManager,
 };
 use std::{
     cell::{Cell, RefCell},

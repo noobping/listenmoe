@@ -79,6 +79,14 @@
   </provides>
 
   <releases>
+    <release version="1.3.0" date="2026-10-10">
+      <description>
+        <ul>
+          <li>Long artist and song names now scroll smoothly.</li>
+          <li>Hover over the title to see the full text.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.3" date="2026-08-24">
       <description>
         <ul>
