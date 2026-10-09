@@ -23,6 +23,11 @@ impl ProgressState {
 }
 
 impl TitlebarProgress {
+    #[cfg(all(test, target_os = "windows"))]
+    pub(crate) fn for_test() -> Self {
+        make_titlebar_progress().1
+    }
+
     pub(super) fn set_track_fraction(&self, fraction: Option<f64>) {
         self.set_fraction(fraction, false);
     }

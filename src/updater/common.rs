@@ -465,7 +465,9 @@ impl UpdaterController {
     }
 
     fn cancel_update(&self) {
-        match self.inner.state.borrow().clone() {
+        // Release the read borrow before a branch changes the updater state.
+        let state = self.inner.state.borrow().clone();
+        match state {
             UpdateState::Checking { .. } => {
                 *self.inner.state.borrow_mut() = UpdateState::Idle;
                 self.present_temporary_status(
@@ -1055,3 +1057,6 @@ fn download_fs_error(context: &'static str) -> impl FnOnce(std::io::Error) -> Do
 fn download_io_error(context: &'static str) -> impl FnOnce(std::io::Error) -> DownloadFailure {
     move |error| DownloadFailure::Error(format!("Failed to {context}: {error}"))
 }
+
+#[cfg(test)]
+mod tests;

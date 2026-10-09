@@ -53,6 +53,12 @@ jobs:
       - name: Build
         run: cargo build --release --target x86_64-pc-windows-gnu
 
+      - name: Test
+        run: cargo test --target x86_64-pc-windows-gnu
+
+      - name: Test experimental features
+        run: cargo test --target x86_64-pc-windows-gnu --features experimental
+
       - name: Bundle
         shell: pwsh
         run: |
