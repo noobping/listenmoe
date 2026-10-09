@@ -15,6 +15,7 @@
         ],
         "env" : {
             "CARGO_HOME" : "/run/build/listenmoe/cargo",
+            "AWS_LC_SYS_CMAKE_BUILDER" : "1",
             "LISTENMOE_APP_ID" : "io.github.noobping.listenmoe.Devel",
             "LISTENMOE_APP_NON_UNIQUE" : "1"
         }
