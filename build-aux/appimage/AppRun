@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+APPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+export APPDIR
+libs="$APPDIR/usr/lib"
+case "$(uname -m)" in
+  x86_64) loader="$libs/ld-linux-x86-64.so.2" ;;
+  aarch64) loader="$libs/ld-linux-aarch64.so.1" ;;
+  *) echo 'Unsupported architecture' >&2; exit 1 ;;
+esac
+
+export XDG_DATA_DIRS="$APPDIR/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
+export GIO_MODULE_DIR="$libs/gio/modules"
+export GDK_PIXBUF_MODULEDIR="$libs/gdk-pixbuf-loaders"
+export ALSA_CONFIG_DIR="$APPDIR/usr/share/alsa"
+export ALSA_CONFIG_PATH="${ALSA_CONFIG_PATH:-$ALSA_CONFIG_DIR/listenmoe.conf}"
+export ALSA_PLUGIN_DIR="$libs/alsa-lib"
+export FONTCONFIG_PATH="$APPDIR/etc/fonts"
+export SSL_CERT_FILE="${SSL_CERT_FILE:-$APPDIR/etc/ssl/certs/ca-certificates.crt}"
+# Newer host GPU drivers may require a newer glibc than the bundled one.
+# Cairo works on X11 and Wayland without mixing those driver libraries.
+export GSK_RENDERER="${GSK_RENDERER:-cairo}"
+
+# Loader caches contain absolute paths; regenerate after mounting/relocating.
+cache=$(mktemp -d "${TMPDIR:-/tmp}/listenmoe-pixbuf.XXXXXXXX")
+app_pid=
+cleanup() {
+  if [ -n "$app_pid" ]; then
+    kill "$app_pid" 2>/dev/null || true
+    wait "$app_pid" 2>/dev/null || true
+  fi
+  rm -rf "$cache"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+export GDK_PIXBUF_MODULE_FILE="$cache/loaders.cache"
+"$loader" --library-path "$libs" "$APPDIR/usr/bin/gdk-pixbuf-query-loaders" \
+  "$GDK_PIXBUF_MODULEDIR"/*.so > "$GDK_PIXBUF_MODULE_FILE"
+
+# Invoke the bundled loader by its actual path, also inside Firejail.
+# Do not export LD_LIBRARY_PATH: child programs must keep their host runtime.
+"$loader" --library-path "$libs" "$APPDIR/usr/bin/listenmoe" "$@" &
+app_pid=$!
+status=0
+wait "$app_pid" || status=$?
+app_pid=
+exit "$status"

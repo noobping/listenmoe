@@ -71,12 +71,29 @@ sudo dnf install -y @development-tools cargo clang gcc gcc-c++ gettext libadwait
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ```
 
-Build the AppImage:
+Build the AppImage on Ubuntu 26.04 (x86-64 or ARM64). Install the packages
+listed in `.github/workflows/linux.yml`, then run:
 
 ```sh
-./.appimage-po.sh
-appimage-builder --recipe .appimage-builder.yml
+./build-aux/appimage/build.sh
 ```
+
+The bundle includes GTK4, libadwaita, audio/image plugins, translations,
+settings schemas and glibc. Its launcher invokes the bundled loader directly;
+the AppImage uses the modern static runtime. CI checks that a window stays
+open on clean Ubuntu 22.04 and 24.04 containers without network access.
+The launcher defaults to GTK's Cairo renderer to avoid incompatibilities with
+newer host GPU drivers; an explicitly set `GSK_RENDERER` is respected.
+Audio uses the desktop's PulseAudio service (including PipeWire-Pulse), so
+output selection stays with the desktop. An explicit `ALSA_CONFIG_PATH` is
+respected for custom setups. CI checks both stations against two simulated
+outputs, including in-window station switching. Live audio playback and Wayland should
+also be checked on a real desktop before
+publishing a release.
+
+Pull requests and manual workflow runs upload test artifacts. Only a `v*` tag
+matching the version in `Cargo.toml` publishes release assets, after both
+architectures pass the smoke tests.
 
 Run (debug):
 
