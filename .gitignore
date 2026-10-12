@@ -1,6 +1,8 @@
 **/*.rs.bk
 **/mutants.out*/
 *.AppImage
+*.AppImage.zsync
+*.AppImage.sha256
 *.compiled
 *.example.po
 *.lock

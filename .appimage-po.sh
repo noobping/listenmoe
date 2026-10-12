@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 APP_ID=io.github.noobping.listenmoe
 OUTDIR="${1:-AppDir/usr/share/locale}"
 
