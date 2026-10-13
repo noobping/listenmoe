@@ -317,3 +317,15 @@ msgstr "نیشاندەر بخەرە سەر ناونیشانەکە بۆ بینی�
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "جووڵەی دەق و ئەنیمەیشنەکانی پاشبنەما شوێن ڕێکخستنی کەمکردنەوەی جووڵە دەکەون."
+
+msgid "Translate"
+msgstr "وەرگێڕان"
+
+msgid "Help translate Listen Moe"
+msgstr "لە وەرگێڕانی Listen Moe یارمەتیمان بدە"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "لە Weblate یارمەتیمان بدە تا وەرگێڕانەکانی Listen Moe باشتر بکەین."
+
+msgid "Open Weblate"
+msgstr "Weblate بکەرەوە"

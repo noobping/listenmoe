@@ -61,7 +61,7 @@ Keyboard shortcuts:
 
 ## Translations
 
-You can translate the app using [weblate](https://hosted.weblate.org/projects/listenmoe) which makes it possible to translate from your browser. Simply register and start translating.
+You can translate the app using [Weblate](https://hosted.weblate.org/projects/listenmoe/), directly from your browser. Open **About → Translate** in the app to get started. See the [translation guide](po/README.md) for details.
 
 ## Development
 

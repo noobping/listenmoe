@@ -317,3 +317,15 @@ msgstr "Cuir an pointeoir os cionn an teidil chun an téacs iomlán a fheiceáil
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Cloíonn téacs scrollaithe agus beochan cúlra leis an socrú chun gluaiseacht a laghdú."
+
+msgid "Translate"
+msgstr "Aistrigh"
+
+msgid "Help translate Listen Moe"
+msgstr "Cabhraigh le Listen Moe a aistriú"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Cabhraigh le haistriúcháin Listen Moe a fheabhsú ar Weblate."
+
+msgid "Open Weblate"
+msgstr "Oscail Weblate"

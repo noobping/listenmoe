@@ -317,3 +317,15 @@ msgstr "برای مشاهده متن کامل، نشانگر را روی عنو�
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "پیمایش متن و پویانمایی‌های پس‌زمینه از تنظیم کاهش حرکت پیروی می‌کنند."
+
+msgid "Translate"
+msgstr "ترجمه"
+
+msgid "Help translate Listen Moe"
+msgstr "کمک به ترجمهٔ Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "در Weblate به بهبود ترجمه‌های Listen Moe کمک کنید."
+
+msgid "Open Weblate"
+msgstr "گشودن Weblate"

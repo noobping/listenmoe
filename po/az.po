@@ -317,3 +317,15 @@ msgstr "Tam mətni görmək üçün kursoru başlığın üzərinə gətirin."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Sürüşən mətn və fon animasiyaları Hərəkəti Azalt-a hörmət edir."
+
+msgid "Translate"
+msgstr "Tərcümə edin"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe tərcüməsinə kömək edin"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate-də Listen Moe tərcümələrini yaxşılaşdırmağa kömək edin."
+
+msgid "Open Weblate"
+msgstr "Weblate-i açın"

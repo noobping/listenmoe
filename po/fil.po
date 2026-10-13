@@ -317,3 +317,15 @@ msgstr "Mag-hover sa pamagat upang makita ang buong teksto."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Sinusunod ng pag-scroll ng teksto at mga animation sa background ang setting na Bawasan ang paggalaw."
+
+msgid "Translate"
+msgstr "Isalin"
+
+msgid "Help translate Listen Moe"
+msgstr "Tumulong sa pagsasalin ng Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Tumulong na pagandahin ang mga salin ng Listen Moe sa Weblate."
+
+msgid "Open Weblate"
+msgstr "Buksan ang Weblate"

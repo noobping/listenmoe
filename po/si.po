@@ -317,3 +317,15 @@ msgstr "සම්පූර්ණ පෙළ බැලීමට දර්ශකය
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "අනුචලන පෙළ සහ පසුබිම් සජීවිකරණ චලනය අඩු කිරීමේ සැකසුම අනුගමනය කරයි."
+
+msgid "Translate"
+msgstr "පරිවර්තනය කරන්න"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe පරිවර්තනයට උදවු කරන්න"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate හි Listen Moe පරිවර්තන වැඩිදියුණු කිරීමට උදවු කරන්න."
+
+msgid "Open Weblate"
+msgstr "Weblate විවෘත කරන්න"

@@ -317,3 +317,15 @@ msgstr "Sɛeddi taɣerdayt ɣef uzwel akken ad twaliḍ aḍris ummid."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Aḍris yettembiwilen d usmussu n ugilal ṭṭafaṛen aɣewwar n usenqes n umbiwel."
+
+msgid "Translate"
+msgstr "Suqel"
+
+msgid "Help translate Listen Moe"
+msgstr "Ɛawen deg tsuqilt n Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Ɛawen-aɣ ad nesnerni tisuqilin n Listen Moe deg Weblate."
+
+msgid "Open Weblate"
+msgstr "Ldi Weblate"

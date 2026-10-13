@@ -317,3 +317,15 @@ msgstr "Τοποθετήστε το δείκτη του ποντικιού πά�
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Το κυλιόμενο κείμενο και οι κινήσεις φόντου ακολουθούν τη ρύθμιση μείωσης κίνησης."
+
+msgid "Translate"
+msgstr "Μετάφραση"
+
+msgid "Help translate Listen Moe"
+msgstr "Βοηθήστε στη μετάφραση του Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Βοηθήστε στη βελτίωση των μεταφράσεων του Listen Moe στο Weblate."
+
+msgid "Open Weblate"
+msgstr "Άνοιγμα Weblate"

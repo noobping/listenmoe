@@ -317,3 +317,15 @@ msgstr "Täisteksti nägemiseks hõljutage kursorit pealkirja kohal."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Keriv tekst ja taustaanimatsioonid järgivad liikumise vähendamise sätet."
+
+msgid "Translate"
+msgstr "Tõlgi"
+
+msgid "Help translate Listen Moe"
+msgstr "Aita tõlkida rakendust Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Aita Weblates täiustada rakenduse Listen Moe tõlkeid."
+
+msgid "Open Weblate"
+msgstr "Ava Weblate"

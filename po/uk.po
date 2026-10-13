@@ -317,3 +317,15 @@ msgstr "Наведіть курсор на назву, щоб перегляну
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Прокручування тексту та фонові анімації враховують налаштування зменшення руху."
+
+msgid "Translate"
+msgstr "Перекласти"
+
+msgid "Help translate Listen Moe"
+msgstr "Допомогти з перекладом Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Допоможіть удосконалити переклади Listen Moe у Weblate."
+
+msgid "Open Weblate"
+msgstr "Відкрити Weblate"

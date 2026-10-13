@@ -317,3 +317,15 @@ msgstr "पूरा पाठ देखने के लिए शीर्ष�
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "स्क्रॉल होने वाला पाठ और पृष्ठभूमि के एनिमेशन गति कम करने की सेटिंग का पालन करते हैं।"
+
+msgid "Translate"
+msgstr "अनुवाद करें"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe के अनुवाद में मदद करें"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate पर Listen Moe के अनुवाद बेहतर बनाने में मदद करें।"
+
+msgid "Open Weblate"
+msgstr "Weblate खोलें"

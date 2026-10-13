@@ -317,3 +317,15 @@ msgstr "முழு உரையைக் காணத் தலைப்பி
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "உருளும் உரையும் பின்னணி அசைவூட்டங்களும் இயக்கத்தைக் குறைக்கும் அமைப்பைப் பின்பற்றுகின்றன."
+
+msgid "Translate"
+msgstr "மொழிபெயர்ப்பு"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe-ஐ மொழிபெயர்க்க உதவுங்கள்"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate-இல் Listen Moe மொழிபெயர்ப்புகளை மேம்படுத்த உதவுங்கள்."
+
+msgid "Open Weblate"
+msgstr "Weblate-ஐத் திற"

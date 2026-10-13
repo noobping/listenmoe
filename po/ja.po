@@ -311,3 +311,15 @@ msgstr "タイトルにマウスポインターを合わせると、全文が表
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "テキストのスクロールと背景のアニメーションは、動きを減らす設定に従います。"
+
+msgid "Translate"
+msgstr "翻訳"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe の翻訳に協力"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate で Listen Moe の翻訳の改善にご協力ください。"
+
+msgid "Open Weblate"
+msgstr "Weblate を開く"

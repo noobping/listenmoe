@@ -317,3 +317,15 @@ msgstr "Hover over the title to see the full text."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Scrolling text and background animations respect Reduce Motion."
+
+msgid "Translate"
+msgstr "Translate"
+
+msgid "Help translate Listen Moe"
+msgstr "Help translate Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Help improve Listen Moe translations on Weblate."
+
+msgid "Open Weblate"
+msgstr "Open Weblate"

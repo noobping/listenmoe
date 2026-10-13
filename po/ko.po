@@ -317,3 +317,15 @@ msgstr "전체 내용을 보려면 제목 위로 마우스를 가져가세요."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "스크롤되는 텍스트와 배경 애니메이션은 동작 줄이기 설정을 따릅니다."
+
+msgid "Translate"
+msgstr "번역"
+
+msgid "Help translate Listen Moe"
+msgstr "Listen Moe 번역 돕기"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Weblate에서 Listen Moe의 번역을 개선해 주세요."
+
+msgid "Open Weblate"
+msgstr "Weblate 열기"

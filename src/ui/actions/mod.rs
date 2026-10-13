@@ -183,6 +183,7 @@ fn show_about_dialog(window: &ApplicationWindow) {
         .license_type(gtk::License::MitX11)
         .comments(comments)
         .build();
+    about.add_link(&gettext("Translate"), crate::translation_help::TRANSLATION_URL);
     about.present(Some(window));
 }
 

@@ -317,3 +317,15 @@ msgstr "Arahkan kursor ke judul untuk melihat teks lengkapnya."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Teks bergulir dan animasi latar belakang mengikuti pengaturan Kurangi gerakan."
+
+msgid "Translate"
+msgstr "Terjemahkan"
+
+msgid "Help translate Listen Moe"
+msgstr "Bantu menerjemahkan Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Bantu menyempurnakan terjemahan Listen Moe di Weblate."
+
+msgid "Open Weblate"
+msgstr "Buka Weblate"

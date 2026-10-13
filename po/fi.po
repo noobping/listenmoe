@@ -317,3 +317,15 @@ msgstr "Vie osoitin otsikon päälle nähdäksesi koko tekstin."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Vierivä teksti ja tausta-animaatiot noudattavat liikkeen vähentämisasetusta."
+
+msgid "Translate"
+msgstr "Käännä"
+
+msgid "Help translate Listen Moe"
+msgstr "Auta kääntämään Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Auta parantamaan Listen Moen käännöksiä Weblatessa."
+
+msgid "Open Weblate"
+msgstr "Avaa Weblate"

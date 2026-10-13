@@ -317,3 +317,15 @@ msgstr "Hold markøren over titlen for at se hele teksten."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Rullende tekst og baggrundsanimationer følger indstillingen for reduceret bevægelse."
+
+msgid "Translate"
+msgstr "Oversæt"
+
+msgid "Help translate Listen Moe"
+msgstr "Hjælp med at oversætte Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Hjælp med at forbedre oversættelserne af Listen Moe på Weblate."
+
+msgid "Open Weblate"
+msgstr "Åbn Weblate"

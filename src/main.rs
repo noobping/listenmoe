@@ -11,6 +11,7 @@ mod lyrics;
 mod meta;
 mod preferences;
 mod station;
+mod translation_help;
 mod ui;
 #[cfg(target_os = "windows")]
 mod updater;
@@ -266,7 +267,11 @@ fn run() -> Result<(), String> {
         .application_id(app_id.as_str())
         .flags(app_flags)
         .build();
-    app.connect_activate(move |app| ui::build_ui(app, ui_options)); // Build the UI when the application is activated.
+    app.connect_startup(translation_help::register_app_actions);
+    app.connect_activate(move |app| {
+        ui::build_ui(app, ui_options);
+        translation_help::show_notification_once(app);
+    });
     app.run_with_args(&app_args); // Run the application. This function does not return until the last window is closed.
 
     Ok(())

@@ -317,3 +317,15 @@ msgstr "Jarri erakuslea izenburuaren gainean testu osoa ikusteko."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Testuaren korritzeak eta atzeko planoko animazioek mugimendua murrizteko ezarpena errespetatzen dute."
+
+msgid "Translate"
+msgstr "Itzuli"
+
+msgid "Help translate Listen Moe"
+msgstr "Lagundu Listen Moe itzultzen"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Lagundu Weblate-n Listen Moe-en itzulpenak hobetzen."
+
+msgid "Open Weblate"
+msgstr "Ireki Weblate"

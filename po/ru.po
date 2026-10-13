@@ -317,3 +317,15 @@ msgstr "Наведите курсор на заголовок, чтобы уви
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Прокрутка текста и фоновая анимация учитывают функцию «Уменьшение движения»."
+
+msgid "Translate"
+msgstr "Перевод"
+
+msgid "Help translate Listen Moe"
+msgstr "Помогите перевести Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Помогите улучшить переводы Listen Moe на Weblate."
+
+msgid "Open Weblate"
+msgstr "Открыть Weblate"

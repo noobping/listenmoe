@@ -317,3 +317,15 @@ msgstr "Chcete-li zobrazit celý text, umístěte ukazatel myši na název."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Posouvání textu a animace pozadí respektují nastavení omezení pohybu."
+
+msgid "Translate"
+msgstr "Přeložit"
+
+msgid "Help translate Listen Moe"
+msgstr "Pomozte přeložit Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Pomozte zlepšit překlady aplikace Listen Moe na Weblate."
+
+msgid "Open Weblate"
+msgstr "Otevřít Weblate"

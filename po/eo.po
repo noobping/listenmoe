@@ -317,3 +317,15 @@ msgstr "Ŝvebigu la montrilon super la titolo por vidi la tutan tekston."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Ruliĝanta teksto kaj fonaj animacioj respektas la agordon por redukti movadon."
+
+msgid "Translate"
+msgstr "Traduki"
+
+msgid "Help translate Listen Moe"
+msgstr "Helpu traduki Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Helpu plibonigi la tradukojn de Listen Moe ĉe Weblate."
+
+msgid "Open Weblate"
+msgstr "Malfermi Weblate"

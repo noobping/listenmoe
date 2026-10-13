@@ -312,3 +312,15 @@ msgstr ""
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr ""
+
+msgid "Translate"
+msgstr ""
+
+msgid "Help translate Listen Moe"
+msgstr ""
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr ""
+
+msgid "Open Weblate"
+msgstr ""

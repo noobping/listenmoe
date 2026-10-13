@@ -317,3 +317,15 @@ msgstr "Vendos kursorin mbi titull për të parë tekstin e plotë."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Lëvizja e tekstit dhe animacionet e sfondit respektojnë Reduktimin e Lëvizjes."
+
+msgid "Translate"
+msgstr "Përkthe"
+
+msgid "Help translate Listen Moe"
+msgstr "Ndihmoni në përkthimin e Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Ndihmoni në përmirësimin e përkthimeve të Listen Moe në Weblate."
+
+msgid "Open Weblate"
+msgstr "Hap Weblate"

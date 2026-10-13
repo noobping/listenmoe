@@ -317,3 +317,15 @@ msgstr "Ամբողջ տեքստը տեսնելու համար ցուցիչը պ�
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Շարժվող տեքստը և ֆոնային անիմացիաները հաշվի են առնում շարժումը նվազեցնելու կարգավորումը։"
+
+msgid "Translate"
+msgstr "Թարգմանել"
+
+msgid "Help translate Listen Moe"
+msgstr "Օգնեք թարգմանել Listen Moe-ը"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Օգնեք բարելավել Listen Moe-ի թարգմանությունները Weblate-ում։"
+
+msgid "Open Weblate"
+msgstr "Բացել Weblate-ը"

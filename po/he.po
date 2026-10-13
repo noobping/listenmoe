@@ -317,3 +317,15 @@ msgstr "העבר את העכבר מעל הכותרת כדי לראות את הט
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "גלילת טקסט והנפשות רקע פועלות בהתאם להגדרת הפחתת התנועה."
+
+msgid "Translate"
+msgstr "תרגום"
+
+msgid "Help translate Listen Moe"
+msgstr "סיוע בתרגום Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "עזרו לשפר את התרגומים של Listen Moe ב־Weblate."
+
+msgid "Open Weblate"
+msgstr "פתיחת Weblate"

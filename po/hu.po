@@ -317,3 +317,15 @@ msgstr "A teljes szöveg megtekintéséhez vigye az egérmutatót a cím fölé.
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "A görgető szöveg és a háttéranimációk tiszteletben tartják a Mozgáscsökkentés funkciót."
+
+msgid "Translate"
+msgstr "Fordítás"
+
+msgid "Help translate Listen Moe"
+msgstr "Segítsen a Listen Moe fordításában"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Segítsen javítani a Listen Moe fordításait a Weblate-en."
+
+msgid "Open Weblate"
+msgstr "Weblate megnyitása"

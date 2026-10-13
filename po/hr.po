@@ -317,3 +317,15 @@ msgstr "Zadržite pokazivač iznad naslova da biste vidjeli cijeli tekst."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Pomicanje teksta i pozadinske animacije poštuju postavku smanjenja kretanja."
+
+msgid "Translate"
+msgstr "Prevedi"
+
+msgid "Help translate Listen Moe"
+msgstr "Pomozite prevesti Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Pomozite poboljšati prijevode aplikacije Listen Moe na Weblateu."
+
+msgid "Open Weblate"
+msgstr "Otvori Weblate"

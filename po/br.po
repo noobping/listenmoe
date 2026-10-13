@@ -317,3 +317,15 @@ msgstr "Lakait ar reti a-us d’an titl evit gwelet an destenn a-bezh."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "An destenn o riklañ hag ar buheziñ en drekleur a zouj d’an arventenn da vihanaat ar fiñv."
+
+msgid "Translate"
+msgstr "Treiñ"
+
+msgid "Help translate Listen Moe"
+msgstr "Skoazellañ da dreiñ Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Sikourit da wellaat troidigezhioù Listen Moe war Weblate."
+
+msgid "Open Weblate"
+msgstr "Digeriñ Weblate"

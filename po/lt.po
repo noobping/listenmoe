@@ -317,3 +317,15 @@ msgstr "Užveskite pelės žymeklį virš pavadinimo, kad pamatytumėte visą te
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Slenkantis tekstas ir fono animacijos paiso judesio mažinimo nuostatos."
+
+msgid "Translate"
+msgstr "Versti"
+
+msgid "Help translate Listen Moe"
+msgstr "Padėkite versti „Listen Moe“"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Padėkite tobulinti „Listen Moe“ vertimus platformoje „Weblate“."
+
+msgid "Open Weblate"
+msgstr "Atverti „Weblate“"

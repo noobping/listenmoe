@@ -317,3 +317,15 @@ msgstr "Gorra an kursor a-ugh an titel rag gweles an tekst leun."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Tekst ow skrol ha beweghyansow kilva a ober herwyd an dewis Lehe Movyans."
+
+msgid "Translate"
+msgstr "Treylya"
+
+msgid "Help translate Listen Moe"
+msgstr "Gweres dhe dreylya Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Gweresewgh dhe wellhe treylyans Listen Moe war Weblate."
+
+msgid "Open Weblate"
+msgstr "Ygeri Weblate"

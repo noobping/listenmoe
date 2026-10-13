@@ -4,7 +4,7 @@ use adw::gtk::gio::{self, prelude::*};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const SHARED_SCHEMA_ID: &str = "io.github.noobping.listenmoe";
 const KEY_STATION: &str = "default-station";
@@ -14,6 +14,7 @@ const KEY_PAUSE_RESUME_ENABLED: &str = "pause-resume-enabled";
 #[cfg(feature = "experimental")]
 const LEGACY_KEY_STOP_INSTEAD_PAUSE: &str = "stop-instead-pause";
 const KEY_DISCORD_ENABLED: &str = "discord-enabled";
+const KEY_TRANSLATION_HELP_NOTIFICATION_SENT: &str = "translation-help-notification-sent";
 const FALLBACK_CONFIG_FILE: &str = "preferences.json";
 
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -25,6 +26,7 @@ struct StoredUiOptions {
     #[cfg(feature = "experimental")]
     stop_instead_pause: bool,
     discord_enabled: bool,
+    translation_help_notification_sent: bool,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]
@@ -41,6 +43,8 @@ struct StoredUiOptionsOnDisk {
     stop_instead_pause: Option<bool>,
     #[serde(default)]
     discord_enabled: Option<bool>,
+    #[serde(default)]
+    translation_help_notification_sent: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -69,6 +73,7 @@ impl From<UiOptions> for StoredUiOptions {
             #[cfg(feature = "experimental")]
             stop_instead_pause: !options.pause_resume_enabled(),
             discord_enabled: options.discord_enabled,
+            translation_help_notification_sent: false,
         }
     }
 }
@@ -170,6 +175,7 @@ impl Default for StoredUiOptionsOnDisk {
             #[cfg(feature = "experimental")]
             stop_instead_pause: Some(!UiOptions::default().pause_resume_enabled()),
             discord_enabled: Some(UiOptions::default().discord_enabled),
+            translation_help_notification_sent: Some(false),
         }
     }
 }
@@ -266,16 +272,48 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
         return Ok(());
     }
 
-    let path = fallback_config_path()
-        .ok_or_else(|| "Could not resolve config directory for preferences".to_string())?;
+    save_fallback_ui_options(&required_fallback_config_path()?, options)
+}
+
+fn required_fallback_config_path() -> Result<PathBuf, String> {
+    fallback_config_path()
+        .ok_or_else(|| "Could not resolve config directory for preferences".to_string())
+}
+
+fn read_fallback_preferences(path: &Path) -> Result<StoredUiOptionsOnDisk, String> {
+    match fs::read_to_string(path) {
+        Ok(raw) => serde_json::from_str(&raw).map_err(|err| {
+            format!(
+                "Failed to read fallback preferences '{}': {err}",
+                path.display()
+            )
+        }),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(StoredUiOptionsOnDisk::default()),
+        Err(err) => Err(format!(
+            "Failed to read fallback preferences '{}': {err}",
+            path.display()
+        )),
+    }
+}
+
+fn save_fallback_ui_options(path: &Path, options: UiOptions) -> Result<(), String> {
+    let previous = read_fallback_preferences(path)?;
+    let mut stored = StoredUiOptions::from(options);
+    // Changing playback preferences must not cause the invitation to reappear.
+    stored.translation_help_notification_sent =
+        previous.translation_help_notification_sent.unwrap_or(false);
+    write_fallback_preferences(path, &stored)
+}
+
+fn write_fallback_preferences(path: &Path, stored: &StoredUiOptions) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
             .map_err(|err| format!("Failed to create preferences directory: {err}"))?;
     }
 
-    let serialized = serde_json::to_string_pretty(&StoredUiOptions::from(options))
+    let serialized = serde_json::to_string_pretty(stored)
         .map_err(|err| format!("Failed to serialize preferences: {err}"))?;
-    fs::write(&path, serialized).map_err(|err| {
+    fs::write(path, serialized).map_err(|err| {
         format!(
             "Failed to write fallback preferences file '{}': {err}",
             path.display()
@@ -283,6 +321,44 @@ pub fn save_ui_options(options: UiOptions) -> Result<(), String> {
     })?;
 
     Ok(())
+}
+
+fn translation_notification_settings() -> Option<gio::Settings> {
+    // An older system schema can coexist with a new development build.
+    settings().filter(|settings| {
+        settings
+            .settings_schema()
+            .is_some_and(|schema| schema.has_key(KEY_TRANSLATION_HELP_NOTIFICATION_SENT))
+    })
+}
+
+pub fn translation_help_notification_sent() -> Result<bool, String> {
+    if let Some(settings) = translation_notification_settings() {
+        return Ok(settings.boolean(KEY_TRANSLATION_HELP_NOTIFICATION_SENT));
+    }
+    Ok(
+        read_fallback_preferences(&required_fallback_config_path()?)?
+            .translation_help_notification_sent
+            .unwrap_or(false),
+    )
+}
+
+pub fn mark_translation_help_notification_sent() -> Result<(), String> {
+    if let Some(settings) = translation_notification_settings() {
+        settings
+            .set_boolean(KEY_TRANSLATION_HELP_NOTIFICATION_SENT, true)
+            .map_err(|err| err.to_string())?;
+        gio::Settings::sync();
+        return Ok(());
+    }
+    mark_fallback_translation_help_notification_sent(&required_fallback_config_path()?)
+}
+
+fn mark_fallback_translation_help_notification_sent(path: &Path) -> Result<(), String> {
+    let previous = read_fallback_preferences(path)?;
+    let mut stored = StoredUiOptions::from(previous.into_ui_options());
+    stored.translation_help_notification_sent = true;
+    write_fallback_preferences(path, &stored)
 }
 
 #[cfg(test)]
@@ -301,6 +377,42 @@ mod tests {
             pause_resume_enabled: true,
             discord_enabled: false,
         }
+    }
+
+    #[test]
+    fn translation_invitation_state_survives_preferences_changes() {
+        let directory = std::env::temp_dir().join(format!(
+            "listenmoe-preferences-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("preferences.json");
+        // Existing installations have no invitation field.
+        std::fs::write(
+            &path,
+            r#"{"station":"kpop","autoplay":true,"discord_enabled":false}"#,
+        )
+        .unwrap();
+        let before = super::read_fallback_preferences(&path).unwrap();
+        assert!(!before.translation_help_notification_sent.unwrap_or(false));
+
+        super::mark_fallback_translation_help_notification_sent(&path).unwrap();
+        let after = super::read_fallback_preferences(&path).unwrap();
+        assert_eq!(after.translation_help_notification_sent, Some(true));
+        let options = after.into_ui_options();
+        assert!(matches!(options.station, Station::Kpop));
+        assert!(options.autoplay);
+        assert!(!options.discord_enabled);
+
+        super::save_fallback_ui_options(&path, test_options()).unwrap();
+        let updated = super::read_fallback_preferences(&path).unwrap();
+        assert_eq!(updated.translation_help_notification_sent, Some(true));
+        assert!(!updated.into_ui_options().autoplay);
+        std::fs::remove_dir_all(directory).unwrap();
     }
 
     #[cfg(feature = "experimental")]

@@ -16,5 +16,10 @@
       <summary>Discord Rich Presence enabled</summary>
       <description>Enable Discord Rich Presence integration at runtime.</description>
     </key>
+    <key name="translation-help-notification-sent" type="b">
+      <default>false</default>
+      <summary>Translation invitation sent</summary>
+      <description>Whether the one-time invitation to translate on Weblate has been sent.</description>
+    </key>
   </schema>
 </schemalist>

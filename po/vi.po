@@ -317,3 +317,15 @@ msgstr "Di chuột qua tiêu đề để xem toàn văn."
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Văn bản cuộn và hoạt ảnh nền tuân theo cài đặt Giảm chuyển động."
+
+msgid "Translate"
+msgstr "Dịch"
+
+msgid "Help translate Listen Moe"
+msgstr "Giúp dịch Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Giúp cải thiện các bản dịch Listen Moe trên Weblate."
+
+msgid "Open Weblate"
+msgstr "Mở Weblate"

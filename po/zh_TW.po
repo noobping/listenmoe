@@ -317,3 +317,15 @@ msgstr "將滑鼠懸停在標題上即可查看全文。"
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "捲動文字與背景動畫遵循「減少動態效果」設定。"
+
+msgid "Translate"
+msgstr "翻譯"
+
+msgid "Help translate Listen Moe"
+msgstr "協助翻譯 Listen Moe"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "協助改善 Weblate 上的 Listen Moe 翻譯。"
+
+msgid "Open Weblate"
+msgstr "開啟 Weblate"

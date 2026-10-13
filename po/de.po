@@ -311,3 +311,15 @@ msgstr "Bewege den Mauszeiger über den Titel, um den vollständigen Text zu seh
 
 msgid "Scrolling text and background animations respect Reduce Motion."
 msgstr "Laufschrift und Hintergrundanimationen berücksichtigen die Einstellung für reduzierte Bewegung."
+
+msgid "Translate"
+msgstr "Übersetzen"
+
+msgid "Help translate Listen Moe"
+msgstr "Helfen Sie mit, Listen Moe zu übersetzen"
+
+msgid "Help improve Listen Moe translations on Weblate."
+msgstr "Helfen Sie, die Übersetzungen von Listen Moe auf Weblate zu verbessern."
+
+msgid "Open Weblate"
+msgstr "Weblate öffnen"
