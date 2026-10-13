@@ -2,9 +2,22 @@ name: Linux
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "data/**"
+      - "po/**"
+      - "Cargo.toml"
+      - "build.rs"
+      - "build-aux/appimage/**"
+      - ".appimage-po.sh"
+      - ".github/workflows/linux.yml"
   push:
     tags:
       - "v*"
+
+permissions:
+  contents: read
 
 concurrency:
   group: linux-${{ github.ref }}
@@ -12,127 +25,98 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            appimage_arch: x86_64
-            apt_arch: amd64
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            appimage_arch: aarch64
-            apt_arch: arm64
-
+          - os: ubuntu-26.04
+            arch: x86_64
+          - os: ubuntu-26.04-arm
+            arch: aarch64
     runs-on: ${{ matrix.os }}
-
-    permissions:
-      contents: write
-
     env:
-      APP_ID: io.github.noobping.listenmoe
-      PKG_CONFIG_ALLOW_CROSS: 1
       CARGO_TERM_COLOR: always
-      BIN_NAME: listenmoe
-      APPIMAGE_APT_ARCH: ${{ matrix.apt_arch }}
-      APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-          fetch-depth: 0
-
-      - name: Version
-        id: tag
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            echo "TAG_NAME=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
-          else
-            latest_tag=$(git describe --tags --abbrev=0)
-            echo "TAG_NAME=$latest_tag" >> "$GITHUB_ENV"
-          fi
-
+      - uses: actions/checkout@v4
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential \
-            cargo \
-            clang \
-            gcc \
-            gettext \
-            libadwaita-1-dev \
-            libasound2-dev \
-            libasound2-dev \
-            libcairo2-dev \
-            libgdk-pixbuf2.0-dev \
-            libglib2.0-dev \
-            libgpg-error-dev \
-            libgtk-4-dev \
-            libpango1.0-dev \
-            libpulse-dev \
-            librust-gtk4-dev \
-            librust-libadwaita-dev \
-            libssl-dev \
-            make \
-            mold \
-            nettle-dev \
-            pkg-config \
-            pkgconf
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Locales
+          sudo apt-get install -y build-essential curl ca-certificates python3 pkg-config gettext \
+            libadwaita-1-dev libasound2-dev libasound2-plugins libpulse-dev \
+            libgdk-pixbuf2.0-bin libgtk-4-dev libssl-dev libdconf1 \
+            dconf-gsettings-backend librsvg2-common desktop-file-utils \
+            squashfs-tools zsync file shared-mime-info
+          rustup update stable --no-self-update
+          rustup default stable
+      - name: Version
+        shell: bash
         run: |
-          for f in po/*.po; do
-            lang=$(basename "$f" .po)
-            mkdir -p "AppDir/usr/share/locale/$lang/LC_MESSAGES"
-            msgfmt "$f" -o "AppDir/usr/share/locale/$lang/LC_MESSAGES/$APP_ID.mo"
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            [[ "$GITHUB_REF_NAME" == "v$version" ]] || {
+              echo 'Release tag must match Cargo.toml' >&2
+              exit 1
+            }
+            echo "APPIMAGE_VERSION=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+          else
+            echo "APPIMAGE_VERSION=v$version-test.${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          fi
+      - name: Build AppImage
+        run: ./build-aux/appimage/build.sh
+      - name: Check static runtime and desktop entry
+        shell: bash
+        run: |
+          image="listenmoe-$APPIMAGE_VERSION-${{ matrix.arch }}.AppImage"
+          file "$image"
+          if readelf -l "$image" | grep -q INTERP; then
+            echo 'AppImage runtime unexpectedly needs a host ELF interpreter' >&2
+            exit 1
+          fi
+          desktop-file-validate AppDir/*.desktop
+      - name: Upload AppImage for validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: listenmoe-AppImage-${{ matrix.arch }}
+          path: |
+            *.AppImage
+            *.AppImage.zsync
+            *.AppImage.sha256
+          if-no-files-found: error
+      - name: Test window on clean Ubuntu 22.04 and 24.04
+        timeout-minutes: 8
+        shell: bash
+        run: |
+          for distro in 22.04 24.04; do
+            docker build -t "listenmoe-smoke:$distro" - <<EOF
+          FROM ubuntu:$distro
+          RUN apt-get update && apt-get install -y --no-install-recommends \
+            xvfb xauth x11-utils xdotool dbus-daemon fonts-dejavu-core pulseaudio pulseaudio-utils python3 \
+            && rm -rf /var/lib/apt/lists/*
+          EOF
+            docker run --rm --network none \
+              -v "$PWD:/project:ro" "listenmoe-smoke:$distro" \
+              timeout 180s xvfb-run -a dbus-run-session -- bash -x /project/build-aux/appimage/smoke-test.sh \
+              "/project/listenmoe-$APPIMAGE_VERSION-${{ matrix.arch }}.AppImage"
           done
 
-      - name: Build AppImage
-        shell: bash
-        run: |
-          set -euo pipefail
 
-          if [[ "${{ matrix.appimage_arch }}" == "x86_64" ]]; then
-            docker run --rm \
-              -e APPIMAGE_APT_ARCH \
-              -e APPIMAGE_ARCH \
-              -v "${PWD}:/project" -w /project \
-              appimagecrafters/appimage-builder:latest \
-              appimage-builder --skip-test --recipe .appimage-builder.yml
-          else
-            sudo apt-get update
-            sudo apt-get install -y python3 python3-pip python3-venv patchelf
-
-            python3 -m pip install --user --upgrade pip
-            python3 -m pip install --user appimage-builder
-
-            export PATH="$HOME/.local/bin:$PATH"
-            appimage-builder --skip-test --recipe .appimage-builder.yml
-          fi
-
-      - name: Collect AppImage
-        if: ${{ env.TAG_NAME != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          appimage="$(ls -1 *.AppImage | head -n 1)"
-          out="${BIN_NAME}-${TAG_NAME}-${{ matrix.appimage_arch }}.AppImage"
-          mv "$appimage" "$out"
-          echo "APPIMAGE_FILE=$out" >> "$GITHUB_ENV"
-
-      - name: Release
-        if: ${{ env.TAG_NAME != '' }}
-        uses: softprops/action-gh-release@v2
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          files: ${{ env.APPIMAGE_FILE }}
-          overwrite_files: true
+          pattern: listenmoe-AppImage-*
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            *.AppImage
+            *.AppImage.zsync
+            *.AppImage.sha256
+          overwrite_files: false

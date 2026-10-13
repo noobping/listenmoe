@@ -72,11 +72,11 @@ sudo dnf install -y @development-tools cargo clang gcc gcc-c++ gettext libadwait
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ```
 
-Build the AppImage:
+Build the AppImage on Ubuntu 26.04 (x86-64 or ARM64). Install the packages
+listed in `.github/workflows/linux.yml`, then run:
 
 ```sh
-./.appimage-po.sh
-appimage-builder --recipe .appimage-builder.yml
+./build-aux/appimage/build.sh
 ```
 
 Run (debug):
