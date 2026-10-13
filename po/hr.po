@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: hr\n"
+"Language: hr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Reproduciraj %s"
+
+msgid "About"
+msgstr "O programu"
+
+msgid "Connecting..."
+msgstr "Povezivanje..."
+
+msgid "Main Menu"
+msgstr "Glavni izbornik"
+
+msgid "Quit"
+msgstr "Zatvori"
+
+msgid "Keyboard Shortcuts"
+msgstr "Tipkovni prečaci"
+
+msgid "General"
+msgstr "Općenito"
+
+msgid "Playback"
+msgstr "Reprodukcija"
+
+msgid "Volume"
+msgstr "Glasnoća"
+
+msgid "Play or pause"
+msgstr "Reproduciraj ili pauziraj"
+
+msgid "Stop playback"
+msgstr "Zaustavi reprodukciju"
+
+msgid "Copy current track"
+msgstr "Kopiraj trenutačnu pjesmu"
+
+msgid "Stations"
+msgstr "Postaje"
+
+msgid "Play J-POP"
+msgstr "Reproduciraj J-POP"
+
+msgid "Play K-POP"
+msgstr "Reproduciraj K-POP"
+
+msgid "Previous station"
+msgstr "Prethodna postaja"
+
+msgid "Next station"
+msgstr "Sljedeća postaja"
+
+msgid "Window"
+msgstr "Prozor"
+
+msgid "Open preferences"
+msgstr "Otvori postavke"
+
+msgid "Show shortcuts"
+msgstr "Prikaži prečace"
+
+msgid "Preferences"
+msgstr "Postavke"
+
+msgid "Startup Defaults"
+msgstr "Zadane postavke pri pokretanju"
+
+msgid "Experimental Features"
+msgstr "Eksperimentalne značajke"
+
+msgid "Default station"
+msgstr "Zadana postaja"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Automatska reprodukcija"
+
+msgid "Start playing automatically on launch"
+msgstr "Automatski započni reprodukciju pri pokretanju"
+
+msgid "Enable pause and resume"
+msgstr "Omogući pauziranje i nastavak"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Koristi pauziranje i nastavak za glavni gumb reprodukcije"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Omogući Discord Rich Presence tijekom rada"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Vrijeme je da se odreknete drugih radija. Stream i metapodatke pruža LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP i K-POP radio"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Slušajte J-POP i K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Pauzirajte i nastavite prijenos uživo"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Animirani zvučni stupci koji reagiraju na glazbu"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Dinamične boje na temelju omota trenutačnog albuma ili slike izvođača"
+
+msgid "No ads"
+msgstr "Nema reklama"
+
+msgid "Initial release."
+msgstr "Početno izdanje."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Kada je spojen i nema slike albuma ili izvođača"
+
+msgid "Colored window when connected"
+msgstr "Prozor u boji kada je spojen"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Ovo izdanje usredotočeno je na vizualne elemente i lokalizaciju."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Fino podešeno otkrivanje tamnog/svijetlog načina rada tako da se svijetle boje više ne miješaju s tamnim."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Uglađeni prijevodi i poboljšan način njihove primjene."
+
+msgid "Removed gaps between sound bars."
+msgstr "Uklonjeni razmaci između zvučnih stupaca."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Logika strujanja sada bolje rješava probleme veze i promjene strujanja."
+
+msgid "Clarified the application description."
+msgstr "Pojašnjen je opis aplikacije."
+
+msgid "Translated image captions"
+msgstr "Prevedeni opisi slika"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Ažurirane snimke zaslona za korištenje razumnije veličine prozora"
+
+msgid "Updated application icon"
+msgstr "Ažurirana ikona aplikacije"
+
+msgid "Display the application icon in media controls."
+msgstr "Prikaz ikone aplikacije u kontrolama medija."
+
+msgid "Optional Discord activity sharing"
+msgstr "Izborno dijeljenje aktivnosti na Discordu"
+
+msgid "Added Discord activity sharing."
+msgstr "Dodano dijeljenje aktivnosti na Discordu."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Ponovno povezivanje s Discordom umjesto onemogućivanja ove značajke."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Dodane zastavice za kontrolu ponašanja pauziranja, automatsku reprodukciju ili onemogućavanje integracije Discorda."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Riješen je problem pri kojem se pauzirana reprodukcija nastavila tijekom prekida mreže."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Dodane postavke i tipkovnički prečaci."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Promijenjeno ponašanje pauziranja, nastavka i promjene postaja."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Dodane su opcije pokretanja za ponašanje pauziranja/nastavljanja ili zaustavljanja, pri čemu je reprodukcija/zaustavljanje sada zadana."
+
+msgid "Check for updates"
+msgstr "Provjeri ažuriranja"
+
+msgid "Cancel update"
+msgstr "Otkaži ažuriranje"
+
+msgid "Couldn't check for updates"
+msgstr "Nije moguće provjeriti ima li ažuriranja"
+
+msgid "Try again later."
+msgstr "Pokušajte ponovno kasnije."
+
+msgid "Already up to date"
+msgstr "Već ažuriran"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Imate najnoviju verziju Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "U metapodacima izdanja nedostaje važeći sažetak SHA-256."
+
+msgid "Couldn't download the update"
+msgstr "Nije moguće preuzeti ažuriranje"
+
+msgid "Update canceled"
+msgstr "Ažuriranje otkazano"
+
+msgid "The update was canceled."
+msgstr "Ažuriranje je otkazano."
+
+msgid "The update check was canceled."
+msgstr "Provjera ažuriranja je otkazana."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Preuzeti instalacijski program neće biti instaliran."
+
+msgid "Installing update"
+msgstr "Instaliranje ažuriranja"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe će se zatvoriti."
+
+msgid "Couldn't install the update"
+msgstr "Nije moguće instalirati ažuriranje"
+
+msgid "Checking for updates"
+msgstr "Provjera ažuriranja"
+
+msgid "Downloading update"
+msgstr "Preuzimanje ažuriranja"
+
+msgid "Update ready"
+msgstr "Ažuriranje spremno"
+
+msgid "Version"
+msgstr "Verzija"
+
+msgid "Downloaded"
+msgstr "Preuzeto"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Traži se noviji instalacijski program za Windows na GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Dostupna je novija verzija za Windows."
+
+msgid "The installer is ready to run."
+msgstr "Instalater je spreman za pokretanje."
+
+msgid "Couldn't start the installer."
+msgstr "Nije moguće pokrenuti instalacijski program."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Uklonjena pauza/nastavak iz stabilnih verzija."
+
+msgid "Separate experimental features from stable features."
+msgstr "Eksperimentalne značajke odvojene su od stabilnih."
+
+msgid "Volume control added."
+msgstr "Dodana kontrola glasnoće."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Prikaži karaoke"
+
+msgid "Finding lyrics…"
+msgstr "Traženje stihova…"
+
+msgid "Just a moment"
+msgstr "Samo trenutak"
+
+msgid "No synchronized lyrics"
+msgstr "Nema sinkroniziranih tekstova"
+
+msgid "This song can still be your tiny concert."
+msgstr "Ova pjesma još uvijek može biti vaš mali koncert."
+
+msgid "Couldn't load lyrics"
+msgstr "Nije moguće učitati stihove"
+
+msgid "Try again in a moment."
+msgstr "Pokušajte ponovo za trenutak."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Tekstove pjesama pruža LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Dodani tekstovi."
+
+msgid "Added a song progress bar."
+msgstr "Dodana traka napretka pjesme."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Dugi nazivi izvođača i pjesama glatko se pomiču."
+
+msgid "Hover over the title to see the full text."
+msgstr "Zadržite pokazivač iznad naslova da biste vidjeli cijeli tekst."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Pomicanje teksta i pozadinske animacije poštuju postavku smanjenja kretanja."

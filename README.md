@@ -1,9 +1,10 @@
 # The world's cutest radio
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Windows Build](https://github.com/noobping/listenmoe/actions/workflows/win.yml/badge.svg)](https://github.com/noobping/listenmoe/actions/workflows/win.yml)
+[![Translation status](https://hosted.weblate.org/widgets/listenmoe/-/svg-badge.svg)](https://hosted.weblate.org/engage/listenmoe/)
 [![Linux Build](https://github.com/noobping/listenmoe/actions/workflows/linux.yml/badge.svg)](https://github.com/noobping/listenmoe/actions/workflows/linux.yml)
 [![Flathub version](https://img.shields.io/flathub/v/io.github.noobping.listenmoe)](https://flathub.org/apps/details/io.github.noobping.listenmoe)
+[![Windows Build](https://github.com/noobping/listenmoe/actions/workflows/win.yml/badge.svg)](https://github.com/noobping/listenmoe/actions/workflows/win.yml)
 [![Get it for Windows](https://img.shields.io/badge/Get%20it%20on-Windows-blue)](https://github.com/noobping/listenmoe/releases/latest/download/listenmoe.msi)
 
 Listen to J-POP and K-POP. Stream and metadata provided by [LISTEN.moe](https://listen.moe).
@@ -60,7 +61,7 @@ Keyboard shortcuts:
 
 ## Translations
 
-The `po` folder contains translation files in `.po` (Portable Object) format. If you spot a typo, unclear wording, or have a better translation, contributions are welcome.
+You can translate the app using [weblate](https://hosted.weblate.org/projects/listenmoe) which makes it possible to translate from your browser. Simply register and start translating.
 
 ## Development
 

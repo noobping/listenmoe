@@ -1,24 +1,33 @@
 use std::{collections::HashMap, env, sync::OnceLock};
 
-const DE_PO: &str = include_str!("../../po/de.po");
-const ES_PO: &str = include_str!("../../po/es.po");
-const JA_PO: &str = include_str!("../../po/ja.po");
-const NL_PO: &str = include_str!("../../po/nl.po");
-
-static ACTIVE_LANGUAGE: OnceLock<Language> = OnceLock::new();
-static DE_TRANSLATIONS: OnceLock<HashMap<String, String>> = OnceLock::new();
-static ES_TRANSLATIONS: OnceLock<HashMap<String, String>> = OnceLock::new();
-static JA_TRANSLATIONS: OnceLock<HashMap<String, String>> = OnceLock::new();
-static NL_TRANSLATIONS: OnceLock<HashMap<String, String>> = OnceLock::new();
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum Language {
-    English,
-    German,
-    Spanish,
-    Japanese,
-    Dutch,
+// Keep this list in sync with po/LINGUAS; the catalog coverage test checks it.
+struct Catalog {
+    locale: &'static str,
+    source: &'static str,
+    translations: OnceLock<HashMap<String, String>>,
 }
+
+macro_rules! catalogs {
+    ($($locale:literal),+ $(,)?) => {
+        static CATALOGS: [Catalog; [$($locale),+].len()] = [
+            $(Catalog {
+                locale: $locale,
+                source: include_str!(concat!("../../po/", $locale, ".po")),
+                translations: OnceLock::new(),
+            }),+
+        ];
+    };
+}
+
+catalogs!(
+    "ar", "az", "be", "bg", "bn", "br", "ca", "ckb", "cs", "da", "de", "el", "en", "en_GB", "eo",
+    "es", "et", "eu", "fa", "fi", "fil", "fr", "ga", "gl", "he", "hi", "hr", "hu", "hy", "ia",
+    "id", "it", "ja", "kab", "ko", "kw", "lt", "nb", "nl", "oc", "pa", "pl", "pt", "pt_BR", "ro",
+    "ru", "si", "sk", "sq", "sv", "ta", "tr", "uk", "vi", "zh_CN", "zh_TW",
+);
+
+type Language = &'static str;
+static ACTIVE_LANGUAGE: OnceLock<Language> = OnceLock::new();
 
 pub fn init_i18n() {
     let language = active_language();
@@ -54,7 +63,7 @@ fn active_language() -> Language {
 fn detect_language() -> Language {
     detect_environment_language()
         .or_else(detect_platform_language)
-        .unwrap_or(Language::English)
+        .unwrap_or("en")
 }
 
 fn detect_environment_language() -> Option<Language> {
@@ -74,8 +83,21 @@ fn detect_environment_language() -> Option<Language> {
 
 #[cfg(target_os = "windows")]
 fn detect_platform_language() -> Option<Language> {
-    let lang_id = unsafe { get_user_default_ui_language() };
-    language_from_windows_lang_id(lang_id)
+    // Resolve the UI language ID through Windows so regional/script variants
+    // survive (notably pt-BR, en-GB, and Traditional Chinese).
+    let mut name = [0u16; 85]; // LOCALE_NAME_MAX_LENGTH, including the terminator.
+    let length = unsafe {
+        locale_id_to_name(
+            u32::from(get_user_default_ui_language()),
+            name.as_mut_ptr(),
+            name.len() as i32,
+            0,
+        )
+    };
+    if length <= 1 {
+        return None;
+    }
+    language_from_locale(&String::from_utf16_lossy(&name[..length as usize - 1]))
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -88,57 +110,57 @@ fn detect_platform_language() -> Option<Language> {
 unsafe extern "system" {
     #[link_name = "GetUserDefaultUILanguage"]
     fn get_user_default_ui_language() -> u16;
+    #[link_name = "LCIDToLocaleName"]
+    fn locale_id_to_name(locale: u32, name: *mut u16, length: i32, flags: u32) -> i32;
 }
 
 fn language_from_locale(locale: &str) -> Option<Language> {
-    let locale = locale.trim();
-    if locale.eq_ignore_ascii_case("c") || locale.eq_ignore_ascii_case("posix") {
-        return Some(Language::English);
-    }
-
     let normalized = locale
-        .split('.')
+        .trim()
+        .split(['.', '@'])
         .next()
-        .unwrap_or(locale)
-        .split('@')
-        .next()
-        .unwrap_or(locale)
+        .unwrap_or("")
+        .replace('-', "_")
         .to_ascii_lowercase();
-    let language = normalized
-        .split(['_', '-'])
-        .next()
-        .unwrap_or(normalized.as_str());
-
+    let parts: Vec<_> = normalized.split('_').collect();
+    let language = parts[0];
     match language {
-        "c" | "posix" => Some(Language::English),
-        "de" => Some(Language::German),
-        "en" => Some(Language::English),
-        "es" => Some(Language::Spanish),
-        "ja" => Some(Language::Japanese),
-        "nl" => Some(Language::Dutch),
-        _ => None,
+        "c" | "posix" => return Some("en"),
+        "zh" => {
+            // Explicit script takes precedence over territory, e.g. zh-Hans-HK.
+            return Some(if parts.contains(&"hans") {
+                "zh_CN"
+            } else if parts
+                .iter()
+                .any(|part| ["hant", "tw", "hk", "mo"].contains(part))
+            {
+                "zh_TW"
+            } else {
+                "zh_CN"
+            });
+        }
+        "tl" => return Some("fil"),
+        "iw" => return Some("he"),
+        "no" => return Some("nb"),
+        _ => {}
     }
-}
 
-fn language_from_windows_lang_id(lang_id: u16) -> Option<Language> {
-    match lang_id & 0x03ff {
-        0x07 => Some(Language::German),
-        0x09 => Some(Language::English),
-        0x0a => Some(Language::Spanish),
-        0x11 => Some(Language::Japanese),
-        0x13 => Some(Language::Dutch),
-        _ => None,
-    }
+    CATALOGS
+        .iter()
+        .find(|catalog| catalog.locale.eq_ignore_ascii_case(&normalized))
+        .or_else(|| CATALOGS.iter().find(|catalog| catalog.locale == language))
+        .map(|catalog| catalog.locale)
 }
 
 fn translations_for(language: Language) -> Option<&'static HashMap<String, String>> {
-    match language {
-        Language::English => None,
-        Language::German => Some(DE_TRANSLATIONS.get_or_init(|| parse_po(DE_PO))),
-        Language::Spanish => Some(ES_TRANSLATIONS.get_or_init(|| parse_po(ES_PO))),
-        Language::Japanese => Some(JA_TRANSLATIONS.get_or_init(|| parse_po(JA_PO))),
-        Language::Dutch => Some(NL_TRANSLATIONS.get_or_init(|| parse_po(NL_PO))),
-    }
+    CATALOGS
+        .iter()
+        .find(|catalog| catalog.locale == language)
+        .map(|catalog| {
+            catalog
+                .translations
+                .get_or_init(|| parse_po(catalog.source))
+        })
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -324,36 +346,90 @@ msgstr ""
 
     #[test]
     fn detects_language_from_locale_strings() {
-        assert_eq!(language_from_locale("nl_NL.UTF-8"), Some(Language::Dutch));
-        assert_eq!(language_from_locale("de-DE"), Some(Language::German));
-        assert_eq!(language_from_locale("es_ES"), Some(Language::Spanish));
-        assert_eq!(language_from_locale("ja_JP"), Some(Language::Japanese));
-        assert_eq!(language_from_locale("C"), Some(Language::English));
-        assert_eq!(language_from_locale("C.UTF-8"), Some(Language::English));
-        assert_eq!(language_from_locale("POSIX"), Some(Language::English));
-        assert_eq!(language_from_locale("POSIX.UTF-8"), Some(Language::English));
-        assert_eq!(language_from_locale("fr_FR.UTF-8"), None);
+        for (locale, expected) in [
+            ("nl_NL.UTF-8", "nl"),
+            ("de-DE", "de"),
+            ("es_ES", "es"),
+            ("ja_JP", "ja"),
+            ("fr_FR.UTF-8", "fr"),
+            ("C", "en"),
+            ("C.UTF-8", "en"),
+            ("POSIX", "en"),
+            ("POSIX.UTF-8", "en"),
+            (" en-GB ", "en_GB"),
+            ("en_AU", "en"),
+            ("pt-BR", "pt_BR"),
+            ("pt_PT.UTF-8", "pt"),
+            ("ca_ES@valencia", "ca"),
+            ("nb-NO", "nb"),
+            ("no_NO", "nb"),
+            ("fil-PH", "fil"),
+            ("tl_PH", "fil"),
+            ("iw_IL", "he"),
+            ("ckb_IQ", "ckb"),
+            ("zh-CN", "zh_CN"),
+            ("zh-SG", "zh_CN"),
+            ("zh-Hans", "zh_CN"),
+            ("zh-Hans-HK", "zh_CN"),
+            ("zh-Hant", "zh_TW"),
+            ("zh-TW", "zh_TW"),
+            ("zh_HK.UTF-8", "zh_TW"),
+            ("zh-MO", "zh_TW"),
+        ] {
+            assert_eq!(language_from_locale(locale), Some(expected), "{locale}");
+        }
+        assert_eq!(language_from_locale("zz_ZZ"), None);
+        assert_eq!(language_from_locale(""), None);
     }
 
     #[test]
-    fn maps_windows_primary_language_ids() {
+    fn all_packaged_catalogs_are_embedded_and_complete() {
+        let locales: Vec<_> = include_str!("../../po/LINGUAS")
+            .split_whitespace()
+            .collect();
+        let expected = parse_po(include_str!("../../po/en.po"));
+        assert_eq!(CATALOGS.len(), locales.len());
+        for locale in locales {
+            assert_eq!(language_from_locale(locale), Some(locale));
+            let translations = translations_for(locale).expect("catalog must be embedded");
+            assert_eq!(translations.len(), expected.len(), "{locale}");
+            for message in expected.keys() {
+                let translation = translations.get(message).expect("missing message");
+                assert!(!translation.trim().is_empty(), "{locale}: {message}");
+                assert_eq!(
+                    message.matches("%s").count(),
+                    translation.matches("%s").count(),
+                    "{locale}: {message}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn uses_regional_catalogs_and_preserves_fallback() {
         assert_eq!(
-            language_from_windows_lang_id(0x0407),
-            Some(Language::German)
+            translate(translations_for("pt_BR"), "Downloaded"),
+            "Baixado"
         );
         assert_eq!(
-            language_from_windows_lang_id(0x0409),
-            Some(Language::English)
+            translate(translations_for("pt"), "Downloaded"),
+            "Transferido"
         );
         assert_eq!(
-            language_from_windows_lang_id(0x0c0a),
-            Some(Language::Spanish)
+            translate(translations_for("en_GB"), "Update canceled"),
+            "Update cancelled"
         );
         assert_eq!(
-            language_from_windows_lang_id(0x0411),
-            Some(Language::Japanese)
+            translate(translations_for("zh_CN"), "Preferences"),
+            "偏好设置"
         );
-        assert_eq!(language_from_windows_lang_id(0x0413), Some(Language::Dutch));
-        assert_eq!(language_from_windows_lang_id(0x040c), None);
+        assert_eq!(
+            translate(translations_for("zh_TW"), "Preferences"),
+            "偏好設定"
+        );
+        assert_eq!(
+            translate(translations_for("fr"), "Unknown message"),
+            "Unknown message"
+        );
     }
 }

@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: pa\n"
+"Language: pa\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "%s ਚਲਾਓ"
+
+msgid "About"
+msgstr "ਇਸ ਬਾਰੇ"
+
+msgid "Connecting..."
+msgstr "ਕਨੈਕਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ..."
+
+msgid "Main Menu"
+msgstr "ਮੁੱਖ ਮੇਨੂ"
+
+msgid "Quit"
+msgstr "ਬਾਹਰ ਜਾਓ"
+
+msgid "Keyboard Shortcuts"
+msgstr "ਕੀਬੋਰਡ ਸ਼ਾਰਟਕੱਟ"
+
+msgid "General"
+msgstr "ਆਮ"
+
+msgid "Playback"
+msgstr "ਪਲੇਬੈਕ"
+
+msgid "Volume"
+msgstr "ਆਵਾਜ਼ ਦਾ ਪੱਧਰ"
+
+msgid "Play or pause"
+msgstr "ਚਲਾਓ ਜਾਂ ਵਿਰਾਮ ਦਿਓ"
+
+msgid "Stop playback"
+msgstr "ਪਲੇਬੈਕ ਬੰਦ ਕਰੋ"
+
+msgid "Copy current track"
+msgstr "ਮੌਜੂਦਾ ਗੀਤ ਕਾਪੀ ਕਰੋ"
+
+msgid "Stations"
+msgstr "ਸਟੇਸ਼ਨ"
+
+msgid "Play J-POP"
+msgstr "J-POP ਚਲਾਓ"
+
+msgid "Play K-POP"
+msgstr "K-POP ਚਲਾਓ"
+
+msgid "Previous station"
+msgstr "ਪਿਛਲਾ ਸਟੇਸ਼ਨ"
+
+msgid "Next station"
+msgstr "ਅਗਲਾ ਸਟੇਸ਼ਨ"
+
+msgid "Window"
+msgstr "ਵਿੰਡੋ"
+
+msgid "Open preferences"
+msgstr "ਤਰਜੀਹਾਂ ਖੋਲ੍ਹੋ"
+
+msgid "Show shortcuts"
+msgstr "ਸ਼ਾਰਟਕੱਟ ਵਿਖਾਓ"
+
+msgid "Preferences"
+msgstr "ਤਰਜੀਹਾਂ"
+
+msgid "Startup Defaults"
+msgstr "ਸ਼ੁਰੂਆਤੀ ਡਿਫਾਲਟ"
+
+msgid "Experimental Features"
+msgstr "ਤਜਰਬੇ ਵਾਲੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ"
+
+msgid "Default station"
+msgstr "ਡਿਫਾਲਟ ਸਟੇਸ਼ਨ"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "ਆਪਣੇ-ਆਪ ਚਲਾਓ"
+
+msgid "Start playing automatically on launch"
+msgstr "ਐਪ ਖੁੱਲ੍ਹਣ ਵੇਲੇ ਆਪਣੇ-ਆਪ ਚਲਾਉਣਾ ਸ਼ੁਰੂ ਕਰੋ"
+
+msgid "Enable pause and resume"
+msgstr "ਵਿਰਾਮ ਅਤੇ ਮੁੜ ਚਲਾਉਣਾ ਚਾਲੂ ਕਰੋ"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "ਮੁੱਖ ਪਲੇਬੈਕ ਬਟਨ ਲਈ ਵਿਰਾਮ ਅਤੇ ਮੁੜ ਚਲਾਉਣਾ ਵਰਤੋ"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "ਐਪ ਚੱਲਣ ਵੇਲੇ Discord Rich Presence ਚਾਲੂ ਕਰੋ"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "ਹੁਣ ਹੋਰ ਰੇਡੀਓ ਛੱਡਣ ਦਾ ਸਮਾਂ ਹੈ। ਸਟ੍ਰੀਮ ਅਤੇ ਮੈਟਾਡੇਟਾ LISTEN.moe ਵੱਲੋਂ ਦਿੱਤੇ ਜਾਂਦੇ ਹਨ।"
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP ਅਤੇ K-POP ਰੇਡੀਓ"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "J-POP ਅਤੇ K-POP ਸੁਣੋ"
+
+msgid "Pause and resume the live stream"
+msgstr "ਲਾਈਵ ਸਟ੍ਰੀਮ ਨੂੰ ਰੋਕੋ ਅਤੇ ਮੁੜ-ਚਾਲੂ ਕਰੋ"
+
+msgid "Animated sound bars that react to the music"
+msgstr "ਐਨੀਮੇਟਡ ਸਾਊਂਡ ਬਾਰ ਜੋ ਸੰਗੀਤ 'ਤੇ ਪ੍ਰਤੀਕਿਰਿਆ ਕਰਦੇ ਹਨ"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "ਮੌਜੂਦਾ ਐਲਬਮ ਦੇ ਕਵਰ ਜਾਂ ਕਲਾਕਾਰ ਦੀ ਤਸਵੀਰ ਅਨੁਸਾਰ ਬਦਲਦੇ ਰੰਗ"
+
+msgid "No ads"
+msgstr "ਕੋਈ ਵਿਗਿਆਪਨ ਨਹੀਂ"
+
+msgid "Initial release."
+msgstr "ਸ਼ੁਰੂਆਤੀ ਰੀਲੀਜ਼।"
+
+msgid "When connected and there is no album or artist image"
+msgstr "ਜਦੋਂ ਕਨੈਕਟ ਕੀਤਾ ਜਾਂਦਾ ਹੈ ਅਤੇ ਕੋਈ ਐਲਬਮ ਜਾਂ ਕਲਾਕਾਰ ਚਿੱਤਰ ਨਹੀਂ ਹੁੰਦਾ ਹੈ"
+
+msgid "Colored window when connected"
+msgstr "ਕਨੈਕਟ ਹੋਣ 'ਤੇ ਰੰਗੀਨ ਵਿੰਡੋ"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "ਇਹ ਰੀਲੀਜ਼ ਵਿਜ਼ੂਅਲ ਅਤੇ ਸਥਾਨੀਕਰਨ 'ਤੇ ਕੇਂਦਰਿਤ ਹੈ।"
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "ਫਾਈਨ-ਟਿਊਨਡ ਡਾਰਕ/ਲਾਈਟ ਮੋਡ ਖੋਜ ਤਾਂ ਕਿ ਹਲਕੇ ਰੰਗਾਂ ਨੂੰ ਹੁਣ ਗੂੜ੍ਹੇ ਰੰਗਾਂ ਲਈ ਗਲਤ ਨਾ ਸਮਝਿਆ ਜਾਵੇ।"
+
+msgid "Polished translations and improved how they are applied."
+msgstr "ਪਾਲਿਸ਼ ਕੀਤੇ ਅਨੁਵਾਦ ਅਤੇ ਉਹਨਾਂ ਨੂੰ ਲਾਗੂ ਕਰਨ ਦੇ ਤਰੀਕੇ ਵਿੱਚ ਸੁਧਾਰ ਕੀਤਾ ਗਿਆ ਹੈ।"
+
+msgid "Removed gaps between sound bars."
+msgstr "ਧੁਨੀ ਪੱਟੀ ਦੇ ਵਿਚਕਾਰ ਦੂਰੀ ਨੂੰ ਹਟਾਇਆ."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "ਸਟ੍ਰੀਮਿੰਗ ਤਰਕ ਹੁਣ ਕੁਨੈਕਸ਼ਨ ਸਮੱਸਿਆਵਾਂ ਅਤੇ ਸਟ੍ਰੀਮ ਤਬਦੀਲੀਆਂ ਨੂੰ ਬਿਹਤਰ ਢੰਗ ਨਾਲ ਸੰਭਾਲਦਾ ਹੈ।"
+
+msgid "Clarified the application description."
+msgstr "ਐਪਲੀਕੇਸ਼ਨ ਦੇ ਵੇਰਵੇ ਨੂੰ ਸਪੱਸ਼ਟ ਕੀਤਾ."
+
+msgid "Translated image captions"
+msgstr "ਅਨੁਵਾਦਿਤ ਚਿੱਤਰ ਸੁਰਖੀਆਂ"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "ਇੱਕ ਹੋਰ ਵਾਜਬ ਵਿੰਡੋ ਆਕਾਰ ਦੀ ਵਰਤੋਂ ਕਰਨ ਲਈ ਅੱਪਡੇਟ ਕੀਤੇ ਸਕ੍ਰੀਨਸ਼ਾਟ"
+
+msgid "Updated application icon"
+msgstr "ਅੱਪਡੇਟ ਕੀਤਾ ਐਪਲੀਕੇਸ਼ਨ ਆਈਕਨ"
+
+msgid "Display the application icon in media controls."
+msgstr "ਮੀਡੀਆ ਨਿਯੰਤਰਣ ਵਿੱਚ ਐਪਲੀਕੇਸ਼ਨ ਆਈਕਨ ਪ੍ਰਦਰਸ਼ਿਤ ਕਰੋ।"
+
+msgid "Optional Discord activity sharing"
+msgstr "Discord ਉੱਤੇ ਸਰਗਰਮੀ ਸਾਂਝੀ ਕਰਨ ਦਾ ਵਿਕਲਪ"
+
+msgid "Added Discord activity sharing."
+msgstr "Discord ਉੱਤੇ ਸਰਗਰਮੀ ਸਾਂਝੀ ਕਰਨ ਦੀ ਸਹੂਲਤ ਜੋੜੀ ਗਈ।"
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਬੰਦ ਕਰਨ ਦੀ ਥਾਂ Discord ਨਾਲ ਮੁੜ ਕਨੈਕਟ ਹੁੰਦਾ ਹੈ।"
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "ਵਿਰਾਮ, ਆਪਣੇ-ਆਪ ਚਲਾਉਣ ਜਾਂ Discord ਏਕੀਕਰਨ ਬੰਦ ਕਰਨ ਲਈ ਚੋਣਾਂ ਜੋੜੀਆਂ ਗਈਆਂ।"
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "ਇੱਕ ਮੁੱਦਾ ਹੱਲ ਕੀਤਾ ਗਿਆ ਜਿੱਥੇ ਇੱਕ ਨੈੱਟਵਰਕ ਵਿਘਨ ਦੇ ਦੌਰਾਨ ਰੁਕਿਆ ਪਲੇਬੈਕ ਮੁੜ ਸ਼ੁਰੂ ਹੋਇਆ।"
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "ਤਰਜੀਹਾਂ ਅਤੇ ਕੀਬੋਰਡ ਸ਼ਾਰਟਕੱਟ ਸ਼ਾਮਲ ਕੀਤੇ ਗਏ।"
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "ਵਿਰਾਮ, ਮੁੜ ਸ਼ੁਰੂ, ਅਤੇ ਸਟੇਸ਼ਨ ਬਦਲਣ ਦਾ ਵਿਵਹਾਰ ਬਦਲਿਆ ਗਿਆ ਹੈ।"
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "ਪਲੇ/ਸਟਾਪ ਹੁਣ ਡਿਫੌਲਟ ਦੇ ਨਾਲ, ਵਿਰਾਮ/ਰੀਜ਼ਿਊਮ ਜਾਂ ਸਟਾਪ ਵਿਵਹਾਰ ਲਈ ਸ਼ੁਰੂਆਤੀ ਵਿਕਲਪ ਸ਼ਾਮਲ ਕੀਤੇ ਗਏ ਹਨ।"
+
+msgid "Check for updates"
+msgstr "ਅੱਪਡੇਟ ਲਈ ਚੈੱਕ ਕਰੋ"
+
+msgid "Cancel update"
+msgstr "ਅੱਪਡੇਟ ਰੱਦ ਕਰੋ"
+
+msgid "Couldn't check for updates"
+msgstr "ਅੱਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕੀ"
+
+msgid "Try again later."
+msgstr "ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+
+msgid "Already up to date"
+msgstr "ਪਹਿਲਾਂ ਹੀ ਅੱਪ ਟੂ ਡੇਟ"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "ਤੁਹਾਡੇ ਕੋਲ Listen Moe ਦਾ ਨਵੀਨਤਮ ਸੰਸਕਰਣ ਹੈ।"
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "ਰੀਲੀਜ਼ ਮੈਟਾਡੇਟਾ ਵਿੱਚ ਇੱਕ ਵੈਧ SHA-256 ਡਾਇਜੈਸਟ ਮੌਜੂਦ ਨਹੀਂ ਹੈ।"
+
+msgid "Couldn't download the update"
+msgstr "ਅੱਪਡੇਟ ਨੂੰ ਡਾਊਨਲੋਡ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ"
+
+msgid "Update canceled"
+msgstr "ਅੱਪਡੇਟ ਰੱਦ ਕੀਤਾ ਗਿਆ"
+
+msgid "The update was canceled."
+msgstr "ਅੱਪਡੇਟ ਰੱਦ ਕਰ ਦਿੱਤਾ ਗਿਆ ਸੀ।"
+
+msgid "The update check was canceled."
+msgstr "ਅੱਪਡੇਟ ਜਾਂਚ ਨੂੰ ਰੱਦ ਕਰ ਦਿੱਤਾ ਗਿਆ ਸੀ।"
+
+msgid "The downloaded installer will not be installed."
+msgstr "ਡਾਊਨਲੋਡ ਕੀਤਾ ਇੰਸਟਾਲਰ ਇੰਸਟਾਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ।"
+
+msgid "Installing update"
+msgstr "ਅੱਪਡੇਟ ਸਥਾਪਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe ਬੰਦ ਹੋ ਜਾਵੇਗਾ।"
+
+msgid "Couldn't install the update"
+msgstr "ਅੱਪਡੇਟ ਨੂੰ ਸਥਾਪਤ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ"
+
+msgid "Checking for updates"
+msgstr "ਅੱਪਡੇਟ ਲਈ ਜਾਂਚ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ"
+
+msgid "Downloading update"
+msgstr "ਅੱਪਡੇਟ ਡਾਊਨਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
+
+msgid "Update ready"
+msgstr "ਅੱਪਡੇਟ ਤਿਆਰ ਹੈ"
+
+msgid "Version"
+msgstr "ਸੰਸਕਰਣ"
+
+msgid "Downloaded"
+msgstr "ਡਾਊਨਲੋਡ ਕੀਤਾ"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "GitHub Releases ਉੱਤੇ Windows ਲਈ ਨਵਾਂ ਇੰਸਟਾਲਰ ਲੱਭਿਆ ਜਾ ਰਿਹਾ ਹੈ।"
+
+msgid "A newer Windows release is available."
+msgstr "Windows ਲਈ ਐਪ ਦਾ ਹੋਰ ਨਵਾਂ ਸੰਸਕਰਣ ਉਪਲਬਧ ਹੈ।"
+
+msgid "The installer is ready to run."
+msgstr "ਇੰਸਟਾਲਰ ਚੱਲਣ ਲਈ ਤਿਆਰ ਹੈ।"
+
+msgid "Couldn't start the installer."
+msgstr "ਇੰਸਟੌਲਰ ਸ਼ੁਰੂ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।"
+
+msgid "Removed pause/resume from stable builds."
+msgstr "ਸਥਿਰ ਬਿਲਡਾਂ ਤੋਂ ਵਿਰਾਮ/ਰੀਜ਼ਿਊਮ ਹਟਾਇਆ ਗਿਆ।"
+
+msgid "Separate experimental features from stable features."
+msgstr "ਤਜਰਬੇ ਵਾਲੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਥਿਰ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਤੋਂ ਵੱਖ ਕੀਤਾ ਗਿਆ।"
+
+msgid "Volume control added."
+msgstr "ਵਾਲੀਅਮ ਕੰਟਰੋਲ ਜੋੜਿਆ ਗਿਆ।"
+
+msgid "Karaoke"
+msgstr "ਕਰਾਓਕੇ"
+
+msgid "Show karaoke"
+msgstr "ਕਰਾਓਕੇ ਦਿਖਾਓ"
+
+msgid "Finding lyrics…"
+msgstr "ਬੋਲ ਲੱਭੇ ਜਾ ਰਹੇ ਹਨ..."
+
+msgid "Just a moment"
+msgstr "ਬਸ ਇੱਕ ਪਲ"
+
+msgid "No synchronized lyrics"
+msgstr "ਕੋਈ ਸਮਕਾਲੀ ਬੋਲ ਨਹੀਂ"
+
+msgid "This song can still be your tiny concert."
+msgstr "ਇਹ ਗੀਤ ਹਾਲੇ ਵੀ ਤੁਹਾਡਾ ਨਿੱਕਾ ਜਿਹਾ ਸੰਗੀਤ ਸਮਾਰੋਹ ਬਣ ਸਕਦਾ ਹੈ।"
+
+msgid "Couldn't load lyrics"
+msgstr "ਬੋਲ ਲੋਡ ਨਹੀਂ ਕੀਤੇ ਜਾ ਸਕੇ"
+
+msgid "Try again in a moment."
+msgstr "ਇੱਕ ਪਲ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+
+msgid "Lyrics by LRCLIB"
+msgstr "LRCLIB ਦੁਆਰਾ ਬੋਲ"
+
+msgid "Added lyrics."
+msgstr "ਬੋਲ ਸ਼ਾਮਲ ਕੀਤੇ ਗਏ।"
+
+msgid "Added a song progress bar."
+msgstr "ਇੱਕ ਗੀਤ ਪ੍ਰਗਤੀ ਪੱਟੀ ਸ਼ਾਮਲ ਕੀਤੀ ਗਈ।"
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "ਕਲਾਕਾਰਾਂ ਅਤੇ ਗੀਤਾਂ ਦੇ ਲੰਬੇ ਨਾਂ ਸੁਚਾਰੂ ਢੰਗ ਨਾਲ ਸਕ੍ਰੋਲ ਹੁੰਦੇ ਹਨ।"
+
+msgid "Hover over the title to see the full text."
+msgstr "ਪੂਰਾ ਟੈਕਸਟ ਦੇਖਣ ਲਈ ਸਿਰਲੇਖ ਉੱਤੇ ਹੋਵਰ ਕਰੋ।"
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "ਸਕ੍ਰੋਲ ਹੋਣ ਵਾਲੀ ਲਿਖਤ ਅਤੇ ਪਿਛੋਕੜ ਦੇ ਐਨੀਮੇਸ਼ਨ ਹਿਲਜੁਲ ਘਟਾਉਣ ਦੀ ਸੈਟਿੰਗ ਮੰਨਦੇ ਹਨ।"

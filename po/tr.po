@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: tr\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "%s çal"
+
+msgid "About"
+msgstr "Hakkında"
+
+msgid "Connecting..."
+msgstr "Bağlanılıyor..."
+
+msgid "Main Menu"
+msgstr "Ana menü"
+
+msgid "Quit"
+msgstr "Çık"
+
+msgid "Keyboard Shortcuts"
+msgstr "Klavye kısayolları"
+
+msgid "General"
+msgstr "Genel"
+
+msgid "Playback"
+msgstr "Çalma"
+
+msgid "Volume"
+msgstr "Ses düzeyi"
+
+msgid "Play or pause"
+msgstr "Çal veya duraklat"
+
+msgid "Stop playback"
+msgstr "Çalmayı durdur"
+
+msgid "Copy current track"
+msgstr "Geçerli parçayı kopyala"
+
+msgid "Stations"
+msgstr "İstasyonlar"
+
+msgid "Play J-POP"
+msgstr "J-POP çal"
+
+msgid "Play K-POP"
+msgstr "K-POP çal"
+
+msgid "Previous station"
+msgstr "Önceki istasyon"
+
+msgid "Next station"
+msgstr "Sonraki istasyon"
+
+msgid "Window"
+msgstr "Pencere"
+
+msgid "Open preferences"
+msgstr "Tercihleri aç"
+
+msgid "Show shortcuts"
+msgstr "Kısayolları göster"
+
+msgid "Preferences"
+msgstr "Tercihler"
+
+msgid "Startup Defaults"
+msgstr "Başlangıç varsayılanları"
+
+msgid "Experimental Features"
+msgstr "Deneysel özellikler"
+
+msgid "Default station"
+msgstr "Varsayılan istasyon"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Otomatik çalma"
+
+msgid "Start playing automatically on launch"
+msgstr "Açılışta otomatik olarak çalmaya başla"
+
+msgid "Enable pause and resume"
+msgstr "Duraklatmayı ve sürdürmeyi etkinleştir"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Ana çalma düğmesinde duraklatmayı ve sürdürmeyi kullan"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Çalışma sırasında Discord Rich Presence özelliğini etkinleştir"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Diğer radyoları bırakmanın zamanı geldi. Akış ve meta veriler LISTEN.moe tarafından sağlanmıştır."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP ve K-POP radyo"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "J-POP ve K-POP'u dinleyin"
+
+msgid "Pause and resume the live stream"
+msgstr "Canlı yayını duraklatın ve devam ettirin"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Müziğe tepki veren animasyonlu ses çubukları"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Geçerli albüm kapağına veya sanatçı görseline göre dinamik renkler"
+
+msgid "No ads"
+msgstr "Reklam yok"
+
+msgid "Initial release."
+msgstr "İlk sürüm."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Bağlantı kurulduğunda albüm veya sanatçı görseli yoksa"
+
+msgid "Colored window when connected"
+msgstr "Bağlandığında renkli pencere"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Bu sürüm görsellere ve yerelleştirmeye odaklanıyor."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Açık renklerin artık koyu renklerle karıştırılmaması için ince ayarlı karanlık/açık mod algılaması."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Çeviriler cilalandı ve uygulanma şekli iyileştirildi."
+
+msgid "Removed gaps between sound bars."
+msgstr "Ses çubukları arasındaki boşluklar kaldırıldı."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Akış mantığı artık bağlantı sorunlarını ve akış değişikliklerini daha iyi ele alıyor."
+
+msgid "Clarified the application description."
+msgstr "Uygulama açıklaması netleştirildi."
+
+msgid "Translated image captions"
+msgstr "Çevrilmiş resim altyazıları"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Daha makul bir pencere boyutu kullanmak için ekran görüntüleri güncellendi"
+
+msgid "Updated application icon"
+msgstr "Güncellenen uygulama simgesi"
+
+msgid "Display the application icon in media controls."
+msgstr "Uygulama simgesini medya kontrollerinde görüntüleyin."
+
+msgid "Optional Discord activity sharing"
+msgstr "İsteğe bağlı Discord etkinlik paylaşımı"
+
+msgid "Added Discord activity sharing."
+msgstr "Discord etkinlik paylaşımı eklendi."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Bu özelliği devre dışı bırakmak yerine Discord’a yeniden bağlanır."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Duraklatma davranışını, otomatik oynatmayı kontrol etmek veya Discord entegrasyonunu devre dışı bırakmak için bayraklar eklendi."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Ağ kesintisi sırasında duraklatılan oynatmanın devam etmesine neden olan sorun düzeltildi."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Tercihler ve klavye kısayolları eklendi."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Duraklatma, devam ettirme ve istasyon değiştirme davranışı değiştirildi."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Duraklatma/devam ettirme veya durdurma davranışı için başlatma seçenekleri eklendi; oynat/durdur artık varsayılan seçenektir."
+
+msgid "Check for updates"
+msgstr "Güncellemeleri denetle"
+
+msgid "Cancel update"
+msgstr "Güncellemeyi iptal et"
+
+msgid "Couldn't check for updates"
+msgstr "Güncellemeler kontrol edilemedi"
+
+msgid "Try again later."
+msgstr "Daha sonra tekrar deneyin."
+
+msgid "Already up to date"
+msgstr "Zaten güncel"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Listen Moe'nun en son sürümüne sahipsiniz."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Sürüm meta verilerinde geçerli bir SHA-256 özeti eksik."
+
+msgid "Couldn't download the update"
+msgstr "Güncelleme indirilemedi"
+
+msgid "Update canceled"
+msgstr "Güncelleme iptal edildi"
+
+msgid "The update was canceled."
+msgstr "Güncelleme iptal edildi."
+
+msgid "The update check was canceled."
+msgstr "Güncelleme kontrolü iptal edildi."
+
+msgid "The downloaded installer will not be installed."
+msgstr "İndirilen yükleyici kurulmayacaktır."
+
+msgid "Installing update"
+msgstr "Güncelleme yükleniyor"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe kapanacak."
+
+msgid "Couldn't install the update"
+msgstr "Güncelleme yüklenemedi"
+
+msgid "Checking for updates"
+msgstr "Güncellemeler kontrol ediliyor"
+
+msgid "Downloading update"
+msgstr "Güncelleme indiriliyor"
+
+msgid "Update ready"
+msgstr "Güncelleme hazır"
+
+msgid "Version"
+msgstr "Sürüm"
+
+msgid "Downloaded"
+msgstr "İndirildi"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "GitHub Releases üzerinde Windows için daha yeni bir yükleyici aranıyor."
+
+msgid "A newer Windows release is available."
+msgstr "Uygulamanın Windows için daha yeni bir sürümü var."
+
+msgid "The installer is ready to run."
+msgstr "Yükleyici çalışmaya hazır."
+
+msgid "Couldn't start the installer."
+msgstr "Yükleyici başlatılamadı."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Kararlı yapılardan duraklatma/devam ettirme kaldırıldı."
+
+msgid "Separate experimental features from stable features."
+msgstr "Deneysel özellikler kararlı özelliklerden ayrıldı."
+
+msgid "Volume control added."
+msgstr "Ses kontrolü eklendi."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Karaokeyi göster"
+
+msgid "Finding lyrics…"
+msgstr "Şarkı sözleri aranıyor…"
+
+msgid "Just a moment"
+msgstr "Sadece bir dakika"
+
+msgid "No synchronized lyrics"
+msgstr "Senkronize şarkı sözü yok"
+
+msgid "This song can still be your tiny concert."
+msgstr "Bu şarkı hâlâ sizin küçük konseriniz olabilir."
+
+msgid "Couldn't load lyrics"
+msgstr "Şarkı sözleri yüklenemedi"
+
+msgid "Try again in a moment."
+msgstr "Birazdan tekrar deneyin."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Şarkı sözleri LRCLIB tarafından sağlanır"
+
+msgid "Added lyrics."
+msgstr "Şarkı sözleri eklendi."
+
+msgid "Added a song progress bar."
+msgstr "Bir şarkı ilerleme çubuğu eklendi."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Uzun sanatçı ve şarkı adları sorunsuz bir şekilde kaydırılıyor."
+
+msgid "Hover over the title to see the full text."
+msgstr "Tam metni görmek için başlığın üzerine gelin."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Kayan metin ve arka plan animasyonları Hareketi Azaltmaya uygundur."

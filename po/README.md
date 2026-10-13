@@ -3,6 +3,12 @@
 
 This folder contains translation files in `.po` (Portable Object) format. If you spot a typo, unclear wording, or have a better translation, contributions are welcome.
 
+Filenames use gettext locale names: `en_GB` for British English, `pt_BR` for Brazilian Portuguese, `nb` for Norwegian Bokmål, and `zh_CN`/`zh_TW` for Simplified/Traditional Chinese. These correspond to Flathub's `en-GB`, `pt-BR`, `nb-NO`, `zh-Hans`, and `zh-Hant` options. `fil` is Filipino.
+
+Meson builds and installs all catalogs listed in `LINGUAS` and merges translations into the desktop and AppStream files. The release Flatpak and AppImage builds already discover `po/*.po`. Windows embeds the same catalogs in `src/locale/embedded.rs`; update that list and `LINGUAS` when adding a language. Its tests check coverage, placeholders, regional variants, and fallback behavior.
+
+To validate a catalog, run `msgfmt --check po/<locale>.po -o /tmp/listenmoe.mo`. To use translations with `cargo run`, compile them first with `sh .appimage-po.sh data/locale`.
+
 ## What to edit
 
 Each `.po` file contains entries like:

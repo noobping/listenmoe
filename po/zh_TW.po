@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: zh_TW\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "播放 %s"
+
+msgid "About"
+msgstr "關於"
+
+msgid "Connecting..."
+msgstr "正在連線..."
+
+msgid "Main Menu"
+msgstr "主選單"
+
+msgid "Quit"
+msgstr "結束"
+
+msgid "Keyboard Shortcuts"
+msgstr "鍵盤快捷鍵"
+
+msgid "General"
+msgstr "一般"
+
+msgid "Playback"
+msgstr "播放"
+
+msgid "Volume"
+msgstr "音量"
+
+msgid "Play or pause"
+msgstr "播放或暫停"
+
+msgid "Stop playback"
+msgstr "停止播放"
+
+msgid "Copy current track"
+msgstr "複製目前曲目"
+
+msgid "Stations"
+msgstr "電台"
+
+msgid "Play J-POP"
+msgstr "播放 J-POP"
+
+msgid "Play K-POP"
+msgstr "播放 K-POP"
+
+msgid "Previous station"
+msgstr "上一個電台"
+
+msgid "Next station"
+msgstr "下一個電台"
+
+msgid "Window"
+msgstr "視窗"
+
+msgid "Open preferences"
+msgstr "開啟偏好設定"
+
+msgid "Show shortcuts"
+msgstr "顯示快捷鍵"
+
+msgid "Preferences"
+msgstr "偏好設定"
+
+msgid "Startup Defaults"
+msgstr "啟動預設設定"
+
+msgid "Experimental Features"
+msgstr "實驗性功能"
+
+msgid "Default station"
+msgstr "預設電台"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "自動播放"
+
+msgid "Start playing automatically on launch"
+msgstr "啟動時自動開始播放"
+
+msgid "Enable pause and resume"
+msgstr "啟用暫停與繼續播放"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "主播放按鈕使用暫停與繼續播放功能"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "應用程式執行時啟用 Discord Rich Presence"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "是時候換個電台了。音訊串流與中繼資料由 LISTEN.moe 提供。"
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP 和 K-POP 電台"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "聆聽 J-POP 和 K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "暫停和恢復直播"
+
+msgid "Animated sound bars that react to the music"
+msgstr "隨音樂變化的動態音訊長條"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "根據目前專輯封面或藝人圖片變化的動態配色"
+
+msgid "No ads"
+msgstr "無廣告"
+
+msgid "Initial release."
+msgstr "初次發布。"
+
+msgid "When connected and there is no album or artist image"
+msgstr "已連線但沒有專輯或藝人圖片時"
+
+msgid "Colored window when connected"
+msgstr "連線時的彩色視窗"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "此版本著重於視覺效果和本地化。"
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "微調暗/亮模式偵測，使淺色不再被誤認為是深色。"
+
+msgid "Polished translations and improved how they are applied."
+msgstr "潤飾翻譯並改進其應用方式。"
+
+msgid "Removed gaps between sound bars."
+msgstr "移除了音訊長條之間的間隙。"
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "改善了串流邏輯，能更妥善處理連線問題與串流切換。"
+
+msgid "Clarified the application description."
+msgstr "改善了應用程式的說明，使其更清楚。"
+
+msgid "Translated image captions"
+msgstr "翻譯了圖片說明"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "更新了螢幕截圖以使用更合理的視窗大小"
+
+msgid "Updated application icon"
+msgstr "更新了應用程式圖示"
+
+msgid "Display the application icon in media controls."
+msgstr "在媒體控制項中顯示應用程式圖示。"
+
+msgid "Optional Discord activity sharing"
+msgstr "可選擇在 Discord 上分享收聽動態"
+
+msgid "Added Discord activity sharing."
+msgstr "新增了在 Discord 上分享收聽動態的功能。"
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "重新連線到 Discord，而不是停用此功能。"
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "新增了控制暫停行為、自動播放或停用 Discord 整合的命令列選項。"
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "修正了網路中斷期間恢復暫停播放的問題。"
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "新增了偏好設定與鍵盤快捷鍵。"
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "更改了暫停、恢復和電台切換行為。"
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "新增了暫停/恢復或停止行為的啟動選項，播放/停止現在是預設值。"
+
+msgid "Check for updates"
+msgstr "檢查更新"
+
+msgid "Cancel update"
+msgstr "取消更新"
+
+msgid "Couldn't check for updates"
+msgstr "無法檢查更新"
+
+msgid "Try again later."
+msgstr "稍後再試。"
+
+msgid "Already up to date"
+msgstr "已是最新版本"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "您擁有最新版本的 Listen Moe。"
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "版本中繼資料缺少有效的 SHA-256 摘要。"
+
+msgid "Couldn't download the update"
+msgstr "無法下載更新"
+
+msgid "Update canceled"
+msgstr "更新已取消"
+
+msgid "The update was canceled."
+msgstr "更新被取消。"
+
+msgid "The update check was canceled."
+msgstr "更新檢查被取消。"
+
+msgid "The downloaded installer will not be installed."
+msgstr "下載的安裝程式將不會被安裝。"
+
+msgid "Installing update"
+msgstr "正在安裝更新"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe 即將關閉。"
+
+msgid "Couldn't install the update"
+msgstr "無法安裝更新"
+
+msgid "Checking for updates"
+msgstr "正在檢查更新"
+
+msgid "Downloading update"
+msgstr "正在下載更新"
+
+msgid "Update ready"
+msgstr "更新準備就緒"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "Downloaded"
+msgstr "已下載"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "在 GitHub Releases 上尋找更新的 Windows 安裝程式。"
+
+msgid "A newer Windows release is available."
+msgstr "有更新的 Windows 版可用。"
+
+msgid "The installer is ready to run."
+msgstr "安裝程式已準備好執行。"
+
+msgid "Couldn't start the installer."
+msgstr "無法啟動安裝程式。"
+
+msgid "Removed pause/resume from stable builds."
+msgstr "從穩定版本中刪除了暫停/恢復。"
+
+msgid "Separate experimental features from stable features."
+msgstr "將實驗功能與穩定功能分開。"
+
+msgid "Volume control added."
+msgstr "新增了音量控制。"
+
+msgid "Karaoke"
+msgstr "卡拉 OK"
+
+msgid "Show karaoke"
+msgstr "顯示卡拉 OK"
+
+msgid "Finding lyrics…"
+msgstr "正在尋找歌詞…"
+
+msgid "Just a moment"
+msgstr "稍等一下"
+
+msgid "No synchronized lyrics"
+msgstr "沒有同步歌詞"
+
+msgid "This song can still be your tiny concert."
+msgstr "這首歌仍然可以成為你的小型音樂會。"
+
+msgid "Couldn't load lyrics"
+msgstr "無法載入歌詞"
+
+msgid "Try again in a moment."
+msgstr "稍後再試一次。"
+
+msgid "Lyrics by LRCLIB"
+msgstr "歌詞由 LRCLIB 提供"
+
+msgid "Added lyrics."
+msgstr "新增了歌詞。"
+
+msgid "Added a song progress bar."
+msgstr "新增了歌曲進度條。"
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "較長的藝人名稱與歌曲標題會平滑捲動。"
+
+msgid "Hover over the title to see the full text."
+msgstr "將滑鼠懸停在標題上即可查看全文。"
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "捲動文字與背景動畫遵循「減少動態效果」設定。"

@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: ckb\n"
+"Language: ckb\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "پەخشکردنی %s"
+
+msgid "About"
+msgstr "دەربارە"
+
+msgid "Connecting..."
+msgstr "پەیوەندی دەبەسترێت..."
+
+msgid "Main Menu"
+msgstr "پێڕستی سەرەکی"
+
+msgid "Quit"
+msgstr "دەرچوون"
+
+msgid "Keyboard Shortcuts"
+msgstr "کورتەڕێکانی تەختەکلیل"
+
+msgid "General"
+msgstr "گشتی"
+
+msgid "Playback"
+msgstr "پەخشکردن"
+
+msgid "Volume"
+msgstr "ئاستی دەنگ"
+
+msgid "Play or pause"
+msgstr "پەخشکردن یان وەستانی کاتی"
+
+msgid "Stop playback"
+msgstr "وەستاندنی پەخشکردن"
+
+msgid "Copy current track"
+msgstr "لەبەرگرتنەوەی گۆرانیی ئێستا"
+
+msgid "Stations"
+msgstr "وێستگەکان"
+
+msgid "Play J-POP"
+msgstr "پەخشکردنی J-POP"
+
+msgid "Play K-POP"
+msgstr "پەخشکردنی K-POP"
+
+msgid "Previous station"
+msgstr "وێستگەی پێشوو"
+
+msgid "Next station"
+msgstr "وێستگەی داهاتوو"
+
+msgid "Window"
+msgstr "پەنجەرە"
+
+msgid "Open preferences"
+msgstr "کردنەوەی هەڵبژاردەکان"
+
+msgid "Show shortcuts"
+msgstr "پیشاندانی کورتەڕێکان"
+
+msgid "Preferences"
+msgstr "هەڵبژاردەکان"
+
+msgid "Startup Defaults"
+msgstr "ڕێکخستنە بنەڕەتییەکانی دەستپێکردن"
+
+msgid "Experimental Features"
+msgstr "تایبەتمەندییە تاقیکارییەکان"
+
+msgid "Default station"
+msgstr "وێستگەی بنەڕەتی"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "پەخشکردنی خۆکار"
+
+msgid "Start playing automatically on launch"
+msgstr "دەستپێکردنی خۆکاری پەخشکردن لە کاتی کردنەوە"
+
+msgid "Enable pause and resume"
+msgstr "چالاککردنی وەستانی کاتی و بەردەوامبوون"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "بەکارهێنانی وەستانی کاتی و بەردەوامبوون بۆ دوگمەی سەرەکیی پەخشکردن"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "چالاککردنی Discord Rich Presence لە کاتی کارکردن"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "کاتی ئەوەیە ڕادیۆکانی تر بەجێ بهێڵیت. پەخش و مێتاداتا لەلایەن LISTEN.moe دابین دەکرێن."
+
+msgid "J-POP and K-POP radio"
+msgstr "ڕادیۆی J-POP و K-POP"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "گوێ لە گۆرانییەکانی J-POP و K-POP بگرن"
+
+msgid "Pause and resume the live stream"
+msgstr "وەستان و دەستپێکردنەوەی لایڤ ستریمەکە"
+
+msgid "Animated sound bars that react to the music"
+msgstr "باری دەنگی ئەنیمەیشن کە کاردانەوەیان دەبێت بەرامبەر بە مۆسیقاکە"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "ڕەنگە گۆڕاوەکان بە پشتبەستن بە بەرگی ئەلبووم یان وێنەی هونەرمەندی ئێستا"
+
+msgid "No ads"
+msgstr "بێ ڕیکلام"
+
+msgid "Initial release."
+msgstr "بڵاوکردنەوەی سەرەتایی."
+
+msgid "When connected and there is no album or artist image"
+msgstr "کاتێک پەیوەندی بەستراوە و وێنەی ئەلبووم یان هونەرمەند نییە"
+
+msgid "Colored window when connected"
+msgstr "پەنجەرەی ڕەنگاوڕەنگ کاتێک بەستراوەتەوە"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "ئەم بڵاوکراوە گرنگی بە بینین و خۆجێیکردن دەدات."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "دۆزینەوەی دۆخی تاریک/ڕووناکی ورد کراوەتەوە بۆ ئەوەی ڕەنگی ڕووناکی چیتر بە هەڵە بە ڕەنگی تاریک نەزانرێت."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "وەرگێڕانەکان و شێوازی بەکارهێنانیان باشتر کراون."
+
+msgid "Removed gaps between sound bars."
+msgstr "لابردنی بۆشایی نێوان دەنگ بارەکان."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "ئێستا لۆژیکی ستریمینگ باشتر مامەڵە لەگەڵ کێشەکانی پەیوەندی و گۆڕانکارییەکانی ستریم دەکات."
+
+msgid "Clarified the application description."
+msgstr "وەسفی بەرنامەکە ڕوونتر کرایەوە."
+
+msgid "Translated image captions"
+msgstr "سەردێڕی وێنەی وەرگێڕدراو"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "نوێکردنەوەی وێنەی شاشە بۆ بەکارهێنانی قەبارەی پەنجەرەیەکی گونجاوتر"
+
+msgid "Updated application icon"
+msgstr "ئایکۆنی بەرنامە نوێکراوەتەوە"
+
+msgid "Display the application icon in media controls."
+msgstr "ئایکۆنی بەرنامەکە لە کۆنتڕۆڵەکانی میدیادا پیشان بدە."
+
+msgid "Optional Discord activity sharing"
+msgstr "هاوبەشکردنی چالاکی لە Discord بە هەڵبژاردە"
+
+msgid "Added Discord activity sharing."
+msgstr "هاوبەشکردنی چالاکییەکانی Discord زیادکرا."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "دووبارە پەیوەندی بە Discord بکە لەبری ئەوەی ئەم تایبەتمەندییە لەکاربخەیت."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "هەڵبژاردە زیادکراون بۆ کۆنترۆڵکردنی وەستانی کاتی، پەخشکردنی خۆکار، یان ناچالاککردنی یەکخستنی Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "کێشەیەک چارەسەر کرا کە لە کاتی پچڕانی تۆڕەکەدا پەخشکردنی وەستاو دەستی پێکردەوە."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "زیادکردنی هەڵبژاردن و کورتە ڕێگاکانی کیبۆرد."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "گۆڕینی هەڵسوکەوتی وەستان و دەستپێکردنەوە و گۆڕینی وێستگە."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "هەڵبژاردەکانی دەستپێکردن بۆ وەستانی کاتی/بەردەوامبوون یان وەستاندن زیادکران؛ پەخشکردن/وەستاندن ئێستا بنەڕەتە."
+
+msgid "Check for updates"
+msgstr "پشکنین بۆ نوێکردنەوەکان"
+
+msgid "Cancel update"
+msgstr "هەڵوەشاندنەوەی نوێکردنەوە"
+
+msgid "Couldn't check for updates"
+msgstr "نەتوانرا پشکنین بۆ نوێکارییەکان بکرێت"
+
+msgid "Try again later."
+msgstr "دواتر هەوڵبدەرەوە."
+
+msgid "Already up to date"
+msgstr "پێشتر نوێ کراوەتەوە"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "نوێترین وەشانی Listen Moeتان هەیە."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "مێتاداتای بڵاوکردنەوەکە دایجستێکی دروستی SHA-256ی نەماوە."
+
+msgid "Couldn't download the update"
+msgstr "نەتوانرا نوێکارییەکە دابەزێنرێت"
+
+msgid "Update canceled"
+msgstr "نوێکردنەوەکە هەڵوەشایەوە"
+
+msgid "The update was canceled."
+msgstr "نوێکردنەوەکە هەڵوەشایەوە."
+
+msgid "The update check was canceled."
+msgstr "پشکنینی نوێکردنەوەکە هەڵوەشایەوە."
+
+msgid "The downloaded installer will not be installed."
+msgstr "ئینستۆلەری دابەزێنراو دامەزراو نابێت."
+
+msgid "Installing update"
+msgstr "دامەزراندنی نوێکردنەوە"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe دادەخرێت."
+
+msgid "Couldn't install the update"
+msgstr "نەتوانرا نوێکارییەکە دابمەزرێنرێت"
+
+msgid "Checking for updates"
+msgstr "پشکنین بۆ نوێکارییەکان"
+
+msgid "Downloading update"
+msgstr "نوێکردنەوە دادەبەزێنرێت"
+
+msgid "Update ready"
+msgstr "نوێکردنەوە ئامادەیە"
+
+msgid "Version"
+msgstr "وەشان"
+
+msgid "Downloaded"
+msgstr "دابەزێنراوە"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "گەڕان بەدوای دامەزرێنەرێکی نوێتر بۆ Windows لە GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "وەشانێکی نوێتری بەرنامەکە بۆ Windows بەردەستە."
+
+msgid "The installer is ready to run."
+msgstr "دامەزرێنەرەکە ئامادەیە بۆ کارکردن."
+
+msgid "Couldn't start the installer."
+msgstr "نەتوانرا دامەزرێنەرەکە دەستپێبکات."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "وەستانی کاتی/بەردەوامبوون لە وەشانە جێگیرەکان لابرا."
+
+msgid "Separate experimental features from stable features."
+msgstr "تایبەتمەندییە تاقیکارییەکان لە تایبەتمەندییە جێگیرەکان جیا بکەرەوە."
+
+msgid "Volume control added."
+msgstr "کۆنترۆڵی دەنگی زیادکرا."
+
+msgid "Karaoke"
+msgstr "کارایۆکە"
+
+msgid "Show karaoke"
+msgstr "کارایۆکی پیشان بدە"
+
+msgid "Finding lyrics…"
+msgstr "گەڕان بەدوای وشەکانی گۆرانی…"
+
+msgid "Just a moment"
+msgstr "تەنها ساتێک"
+
+msgid "No synchronized lyrics"
+msgstr "وشەی هاوکاتکراوی گۆرانی بەردەست نییە"
+
+msgid "This song can still be your tiny concert."
+msgstr "ئەم گۆرانییە هێشتا دەتوانێت کۆنسێرتێکی بچووکی تۆ بێت."
+
+msgid "Couldn't load lyrics"
+msgstr "نەتوانرا وشەکانی گۆرانی بار بکرێن"
+
+msgid "Try again in a moment."
+msgstr "لە ساتێکدا هەوڵبدەرەوە."
+
+msgid "Lyrics by LRCLIB"
+msgstr "وشەکانی گۆرانی لەلایەن LRCLIB"
+
+msgid "Added lyrics."
+msgstr "وشەکانی گۆرانی زیادکران."
+
+msgid "Added a song progress bar."
+msgstr "هێڵی پێشکەوتنی گۆرانی زیادکرا."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "ناوی درێژی هونەرمەند و گۆرانییەکان بە ئاسانی دەڕۆن."
+
+msgid "Hover over the title to see the full text."
+msgstr "نیشاندەر بخەرە سەر ناونیشانەکە بۆ بینینی تەواوی دەقەکە."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "جووڵەی دەق و ئەنیمەیشنەکانی پاشبنەما شوێن ڕێکخستنی کەمکردنەوەی جووڵە دەکەون."

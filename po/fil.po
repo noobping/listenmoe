@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: fil\n"
+"Language: fil\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "I-play ang %s"
+
+msgid "About"
+msgstr "Tungkol sa app"
+
+msgid "Connecting..."
+msgstr "Kumokonekta..."
+
+msgid "Main Menu"
+msgstr "Pangunahing menu"
+
+msgid "Quit"
+msgstr "Lumabas"
+
+msgid "Keyboard Shortcuts"
+msgstr "Mga shortcut sa keyboard"
+
+msgid "General"
+msgstr "Pangkalahatan"
+
+msgid "Playback"
+msgstr "Pag-play"
+
+msgid "Volume"
+msgstr "Lakas ng tunog"
+
+msgid "Play or pause"
+msgstr "I-play o i-pause"
+
+msgid "Stop playback"
+msgstr "Ihinto ang pag-play"
+
+msgid "Copy current track"
+msgstr "Kopyahin ang kasalukuyang kanta"
+
+msgid "Stations"
+msgstr "Mga istasyon"
+
+msgid "Play J-POP"
+msgstr "I-play ang J-POP"
+
+msgid "Play K-POP"
+msgstr "I-play ang K-POP"
+
+msgid "Previous station"
+msgstr "Nakaraang istasyon"
+
+msgid "Next station"
+msgstr "Susunod na istasyon"
+
+msgid "Window"
+msgstr "Window"
+
+msgid "Open preferences"
+msgstr "Buksan ang mga kagustuhan"
+
+msgid "Show shortcuts"
+msgstr "Ipakita ang mga shortcut"
+
+msgid "Preferences"
+msgstr "Mga kagustuhan"
+
+msgid "Startup Defaults"
+msgstr "Mga default sa pagsisimula"
+
+msgid "Experimental Features"
+msgstr "Mga eksperimental na tampok"
+
+msgid "Default station"
+msgstr "Default na istasyon"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Awtomatikong pag-play"
+
+msgid "Start playing automatically on launch"
+msgstr "Awtomatikong magsimulang mag-play sa pagbukas"
+
+msgid "Enable pause and resume"
+msgstr "Paganahin ang pag-pause at pagpapatuloy"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Gamitin ang pag-pause at pagpapatuloy para sa pangunahing button ng pag-play"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Paganahin ang Discord Rich Presence habang tumatakbo ang app"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Oras na para lumipat mula sa ibang radyo. Ang stream at metadata ay ibinibigay ng LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP at K-POP na radyo"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Makinig sa J-POP at K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "I-pause at ipagpatuloy ang live stream"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Mga animated na sound bar na tumutugon sa musika"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Mga kulay na nagbabago batay sa pabalat ng album o larawan ng kasalukuyang artist"
+
+msgid "No ads"
+msgstr "Walang mga ad"
+
+msgid "Initial release."
+msgstr "Paunang paglabas."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Kapag nakakonekta at walang larawan ng album o artist"
+
+msgid "Colored window when connected"
+msgstr "May kulay na window kapag nakakonekta"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Nakatuon ang release na ito sa mga visual at localization."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Fine-tuned dark/light mode detection para hindi na mapagkakamalan na dark ang mga light color."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Mga pinakintab na pagsasalin at pinahusay kung paano inilalapat ang mga ito."
+
+msgid "Removed gaps between sound bars."
+msgstr "Inalis ang mga puwang sa pagitan ng mga sound bar."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Mas mahusay na ngayong pinangangasiwaan ng logic ng streaming ang mga isyu sa koneksyon at mga pagbabago sa stream."
+
+msgid "Clarified the application description."
+msgstr "Nilinaw ang paglalarawan ng aplikasyon."
+
+msgid "Translated image captions"
+msgstr "Mga isinaling caption ng larawan"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Na-update ang mga screenshot upang gumamit ng mas makatwirang laki ng window"
+
+msgid "Updated application icon"
+msgstr "Na-update na icon ng application"
+
+msgid "Display the application icon in media controls."
+msgstr "Ipakita ang icon ng application sa mga kontrol ng media."
+
+msgid "Optional Discord activity sharing"
+msgstr "Opsyonal na pagbabahagi ng aktibidad ng Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "Idinagdag ang pagbabahagi ng aktibidad ng Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Muling kumokonekta sa Discord sa halip na i-disable ang tampok na ito."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Nagdagdag ng mga flag para kontrolin ang pag-uugali ng pag-pause, pag-autoplay, o pag-disable ng Discord integration."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Inayos ang isang isyu kung saan nagpatuloy ang naka-pause na pag-playback sa panahon ng pagkagambala sa network."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Nagdagdag ng mga kagustuhan at mga keyboard shortcut."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Binago ang pag-pause, resume, at pag-uugali ng paglipat ng istasyon."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Nagdagdag ng mga opsyon sa pagsisimula para sa pag-pause/pagpatuloy o paghinto ng gawi, na may default na play/stop ngayon."
+
+msgid "Check for updates"
+msgstr "Tingnan ang mga update"
+
+msgid "Cancel update"
+msgstr "Kanselahin ang pag-update"
+
+msgid "Couldn't check for updates"
+msgstr "Hindi masuri ang mga update"
+
+msgid "Try again later."
+msgstr "Subukan ulit mamaya."
+
+msgid "Already up to date"
+msgstr "Napapanahon na"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Mayroon kang pinakabagong bersyon ng Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Ang release metadata ay walang wastong SHA-256 digest."
+
+msgid "Couldn't download the update"
+msgstr "Hindi ma-download ang update"
+
+msgid "Update canceled"
+msgstr "Kinansela ang pag-update"
+
+msgid "The update was canceled."
+msgstr "Kinansela ang update."
+
+msgid "The update check was canceled."
+msgstr "Kinansela ang pagsusuri sa pag-update."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Hindi mai-install ang na-download na installer."
+
+msgid "Installing update"
+msgstr "Pag-install ng update"
+
+msgid "Listen Moe will close."
+msgstr "Magsasara ang Listen Moe."
+
+msgid "Couldn't install the update"
+msgstr "Hindi ma-install ang update"
+
+msgid "Checking for updates"
+msgstr "Sinusuri ang mga update"
+
+msgid "Downloading update"
+msgstr "Nagda-download ng update"
+
+msgid "Update ready"
+msgstr "Handa na ang update"
+
+msgid "Version"
+msgstr "Bersyon"
+
+msgid "Downloaded"
+msgstr "Na-download"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Naghahanap ng mas bagong installer para sa Windows sa GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "May mas bagong bersyon ng app para sa Windows."
+
+msgid "The installer is ready to run."
+msgstr "Handa nang tumakbo ang installer."
+
+msgid "Couldn't start the installer."
+msgstr "Hindi masimulan ang installer."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Inalis ang pause/resume mula sa mga stable na build."
+
+msgid "Separate experimental features from stable features."
+msgstr "Inihiwalay ang mga eksperimental na tampok sa mga matatag na tampok."
+
+msgid "Volume control added."
+msgstr "Idinagdag ang kontrol ng volume."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Ipakita ang karaoke"
+
+msgid "Finding lyrics…"
+msgstr "Naghahanap ng lyrics..."
+
+msgid "Just a moment"
+msgstr "Sandali lang"
+
+msgid "No synchronized lyrics"
+msgstr "Walang naka-synchronize na lyrics"
+
+msgid "This song can still be your tiny concert."
+msgstr "Ang kantang ito ay maaari pa ring maging iyong munting konsiyerto."
+
+msgid "Couldn't load lyrics"
+msgstr "Hindi ma-load ang lyrics"
+
+msgid "Try again in a moment."
+msgstr "Subukan muli sa isang sandali."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Mga liriko mula sa LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Nagdagdag ng lyrics."
+
+msgid "Added a song progress bar."
+msgstr "Nagdagdag ng progress bar ng kanta."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Ang mahabang pangalan ng artist at kanta ay maayos na nag-scroll."
+
+msgid "Hover over the title to see the full text."
+msgstr "Mag-hover sa pamagat upang makita ang buong teksto."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Sinusunod ng pag-scroll ng teksto at mga animation sa background ang setting na Bawasan ang paggalaw."

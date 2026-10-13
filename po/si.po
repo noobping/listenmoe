@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: si\n"
+"Language: si\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "%s වාදනය කරන්න"
+
+msgid "About"
+msgstr "පිළිබඳව"
+
+msgid "Connecting..."
+msgstr "සම්බන්ධ වෙමින්..."
+
+msgid "Main Menu"
+msgstr "ප්‍රධාන මෙනුව"
+
+msgid "Quit"
+msgstr "පිටවන්න"
+
+msgid "Keyboard Shortcuts"
+msgstr "යතුරුපුවරු කෙටිමං"
+
+msgid "General"
+msgstr "පොදු"
+
+msgid "Playback"
+msgstr "වාදනය"
+
+msgid "Volume"
+msgstr "ශබ්ද මට්ටම"
+
+msgid "Play or pause"
+msgstr "වාදනය කරන්න හෝ විරාම කරන්න"
+
+msgid "Stop playback"
+msgstr "වාදනය නවත්වන්න"
+
+msgid "Copy current track"
+msgstr "වත්මන් ගීතය පිටපත් කරන්න"
+
+msgid "Stations"
+msgstr "ගුවන්විදුලි නාලිකා"
+
+msgid "Play J-POP"
+msgstr "J-POP වාදනය කරන්න"
+
+msgid "Play K-POP"
+msgstr "K-POP වාදනය කරන්න"
+
+msgid "Previous station"
+msgstr "පෙර නාලිකාව"
+
+msgid "Next station"
+msgstr "ඊළඟ නාලිකාව"
+
+msgid "Window"
+msgstr "කවුළුව"
+
+msgid "Open preferences"
+msgstr "මනාප විවෘත කරන්න"
+
+msgid "Show shortcuts"
+msgstr "කෙටිමං පෙන්වන්න"
+
+msgid "Preferences"
+msgstr "මනාප"
+
+msgid "Startup Defaults"
+msgstr "ආරම්භක පෙරනිමි"
+
+msgid "Experimental Features"
+msgstr "පර්යේෂණාත්මක විශේෂාංග"
+
+msgid "Default station"
+msgstr "පෙරනිමි නාලිකාව"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "ස්වයංක්‍රීය වාදනය"
+
+msgid "Start playing automatically on launch"
+msgstr "යෙදුම ආරම්භයේදී ස්වයංක්‍රීයව වාදනය අරඹන්න"
+
+msgid "Enable pause and resume"
+msgstr "විරාමය සහ යළි ඇරඹීම සක්‍රීය කරන්න"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "ප්‍රධාන වාදන බොත්තම සඳහා විරාමය සහ යළි ඇරඹීම භාවිත කරන්න"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "යෙදුම ක්‍රියාත්මක වන විට Discord Rich Presence සක්‍රීය කරන්න"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "අනෙකුත් ගුවන්විදුලි යන්ත්‍ර ඉවත් කිරීමට කාලයයි. LISTEN.moe විසින් සපයන ලද ප්‍රවාහය සහ පාර-දත්ත."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP සහ K-POP රේඩියෝව"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "J-POP සහ K-POP සවන් දෙන්න"
+
+msgid "Pause and resume the live stream"
+msgstr "සජීවී ප්‍රවාහය විරාම කර නැවත ආරම්භ කරන්න"
+
+msgid "Animated sound bars that react to the music"
+msgstr "සංගීතයට ප්‍රතිචාර දක්වන සජීවිකරණ ශබ්ද තීරු"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "වත්මන් ඇල්බම කවරය හෝ කලාකරු රූපය අනුව වෙනස් වන වර්ණ"
+
+msgid "No ads"
+msgstr "දැන්වීම් නැත"
+
+msgid "Initial release."
+msgstr "මුල් නිකුතුව."
+
+msgid "When connected and there is no album or artist image"
+msgstr "සම්බන්ධ වූ විට සහ ඇල්බමයක් හෝ කලාකරු රූපයක් නොමැත"
+
+msgid "Colored window when connected"
+msgstr "සම්බන්ධ වූ විට වර්ණ කවුළුව"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "මෙම නිකුතුව දෘශ්‍ය සහ ප්‍රාදේශීයකරණය කෙරෙහි අවධානය යොමු කරයි."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "සියුම්ව සුසර කරන ලද අඳුරු/ආලෝක මාදිලි හඳුනාගැනීම නිසා සැහැල්ලු වර්ණ තවදුරටත් අඳුරු ඒවා ලෙස වරදවා වටහා නොගනී."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "ඔප දැමූ පරිවර්තන සහ ඒවා යෙදෙන ආකාරය වැඩිදියුණු කරන ලදී."
+
+msgid "Removed gaps between sound bars."
+msgstr "ශබ්ද තීරු අතර ඇති හිඩැස් ඉවත් කර ඇත."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "ප්‍රවාහ තර්කනය දැන් සම්බන්ධතා ගැටළු සහ ප්‍රවාහ වෙනස්වීම් වඩා හොඳින් හසුරුවයි."
+
+msgid "Clarified the application description."
+msgstr "යෙදුම් විස්තරය පැහැදිලි කර ඇත."
+
+msgid "Translated image captions"
+msgstr "පරිවර්තනය කළ රූප සිරස්තල"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "වඩාත් සාධාරණ කවුළු ප්‍රමාණය භාවිතා කිරීමට තිරපිටපත් යාවත්කාලීන කරන ලදී"
+
+msgid "Updated application icon"
+msgstr "යාවත්කාලීන කළ යෙදුම් නිරූපකය"
+
+msgid "Display the application icon in media controls."
+msgstr "මාධ්‍ය පාලනවල යෙදුම් නිරූපකය සංදර්ශන කරන්න."
+
+msgid "Optional Discord activity sharing"
+msgstr "Discord හි ක්‍රියාකාරකම් බෙදාගැනීමේ විකල්පය"
+
+msgid "Added Discord activity sharing."
+msgstr "Discord ක්‍රියාකාරකම් බෙදාගැනීම එක් කරන ලදී."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "මෙම විශේෂාංගය අක්‍රිය කිරීම වෙනුවට Discord වෙත නැවත සම්බන්ධ වේ."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "විරාමය, ස්වයංක්‍රීය වාදනය හෝ Discord සම්බන්ධතාව අක්‍රිය කිරීම පාලනය කිරීමට විකල්ප එක් කෙරිණි."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "ජාල බාධාවකදී විරාම කළ පසුධාවනය නැවත ආරම්භ වූ ගැටලුවක් විසඳා ඇත."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "මනාප සහ යතුරුපුවරු කෙටිමං එකතු කරන ලදී."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "විරාමය, නැවත ආරම්භ කිරීම සහ ස්ථාන මාරු කිරීමේ හැසිරීම වෙනස් කරන ලදී."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "විරාමය/යළි ඇරඹීම හෝ නැවැත්වීම සඳහා ආරම්භක විකල්ප එක් කෙරිණි; වාදනය/නැවැත්වීම දැන් පෙරනිමියයි."
+
+msgid "Check for updates"
+msgstr "යාවත්කාලීන සඳහා පරීක්ෂා කරන්න"
+
+msgid "Cancel update"
+msgstr "යාවත්කාලීන අවලංගු කරන්න"
+
+msgid "Couldn't check for updates"
+msgstr "යාවත්කාලීන සඳහා පරීක්ෂා කළ නොහැකි විය"
+
+msgid "Try again later."
+msgstr "පසුව නැවත උත්සාහ කරන්න."
+
+msgid "Already up to date"
+msgstr "දැනටමත් යාවත්කාලීනයි"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "ඔබට Listen Moe හි නවතම අනුවාදය තිබේ."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "නිකුතුවේ පාරදත්තවල වලංගු SHA-256 හැෂ් අගයක් නොමැත."
+
+msgid "Couldn't download the update"
+msgstr "යාවත්කාලීනය බාගැනීමට නොහැකි විය"
+
+msgid "Update canceled"
+msgstr "යාවත්කාලීනය අවලංගු කරන ලදී"
+
+msgid "The update was canceled."
+msgstr "යාවත්කාලීන කිරීම අවලංගු කරන ලදී."
+
+msgid "The update check was canceled."
+msgstr "යාවත්කාලීන පරීක්ෂාව අවලංගු කරන ලදී."
+
+msgid "The downloaded installer will not be installed."
+msgstr "බාගත කළ ස්ථාපකය ස්ථාපනය නොකෙරේ."
+
+msgid "Installing update"
+msgstr "යාවත්කාලීන ස්ථාපනය කිරීම"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe වැසෙනු ඇත."
+
+msgid "Couldn't install the update"
+msgstr "යාවත්කාලීන ස්ථාපනය කළ නොහැකි විය"
+
+msgid "Checking for updates"
+msgstr "යාවත්කාලීන සඳහා පරීක්ෂා කරමින්"
+
+msgid "Downloading update"
+msgstr "යාවත්කාලීන බාගත කරමින්"
+
+msgid "Update ready"
+msgstr "යාවත්කාලීන කිරීමට සූදානම්"
+
+msgid "Version"
+msgstr "අනුවාදය"
+
+msgid "Downloaded"
+msgstr "බාගත කර ඇත"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "GitHub Releases හි Windows සඳහා නව ස්ථාපකයක් සොයමින්."
+
+msgid "A newer Windows release is available."
+msgstr "Windows සඳහා යෙදුමේ නව අනුවාදයක් තිබේ."
+
+msgid "The installer is ready to run."
+msgstr "ස්ථාපකය ක්රියාත්මක කිරීමට සූදානම්."
+
+msgid "Couldn't start the installer."
+msgstr "ස්ථාපකය ආරම්භ කිරීමට නොහැකි විය."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "ස්ථාවර ගොඩනැගීම් වලින් විරාමය/නැවත ආරම්භය ඉවත් කරන ලදී."
+
+msgid "Separate experimental features from stable features."
+msgstr "පර්යේෂණාත්මක විශේෂාංග ස්ථාවර විශේෂාංගවලින් වෙන් කෙරිණි."
+
+msgid "Volume control added."
+msgstr "ශබ්ද පාලනය එකතු කරන ලදී."
+
+msgid "Karaoke"
+msgstr "කැරෝකේ"
+
+msgid "Show karaoke"
+msgstr "කැරෝකී පෙන්වන්න"
+
+msgid "Finding lyrics…"
+msgstr "ගී පද සොයා ගනිමින්..."
+
+msgid "Just a moment"
+msgstr "මොහොතක්"
+
+msgid "No synchronized lyrics"
+msgstr "සමමුහුර්ත ගී පද නොමැත"
+
+msgid "This song can still be your tiny concert."
+msgstr "මෙම ගීතය තවමත් ඔබේ කුඩා ප්‍රසංගය විය හැක."
+
+msgid "Couldn't load lyrics"
+msgstr "ගී පද පූරණය කළ නොහැකි විය"
+
+msgid "Try again in a moment."
+msgstr "මොහොතකින් නැවත උත්සාහ කරන්න."
+
+msgid "Lyrics by LRCLIB"
+msgstr "ගී පද සපයන්නේ LRCLIB විසිනි"
+
+msgid "Added lyrics."
+msgstr "පද එකතු කළා."
+
+msgid "Added a song progress bar."
+msgstr "ගීත ප්‍රගති තීරුවක් එක් කරන ලදී."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "කලාකරුවන්ගේ සහ ගීතවල දිගු නම් සුමටව අනුචලනය වේ."
+
+msgid "Hover over the title to see the full text."
+msgstr "සම්පූර්ණ පෙළ බැලීමට දර්ශකය මාතෘකාව මත තබන්න."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "අනුචලන පෙළ සහ පසුබිම් සජීවිකරණ චලනය අඩු කිරීමේ සැකසුම අනුගමනය කරයි."

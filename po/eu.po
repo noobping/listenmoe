@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: eu\n"
+"Language: eu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Erreproduzitu %s"
+
+msgid "About"
+msgstr "Honi buruz"
+
+msgid "Connecting..."
+msgstr "Konektatzen..."
+
+msgid "Main Menu"
+msgstr "Menu nagusia"
+
+msgid "Quit"
+msgstr "Irten"
+
+msgid "Keyboard Shortcuts"
+msgstr "Teklatuko lasterbideak"
+
+msgid "General"
+msgstr "Orokorra"
+
+msgid "Playback"
+msgstr "Erreprodukzioa"
+
+msgid "Volume"
+msgstr "Bolumena"
+
+msgid "Play or pause"
+msgstr "Erreproduzitu edo pausatu"
+
+msgid "Stop playback"
+msgstr "Gelditu erreprodukzioa"
+
+msgid "Copy current track"
+msgstr "Kopiatu uneko abestia"
+
+msgid "Stations"
+msgstr "Irratiak"
+
+msgid "Play J-POP"
+msgstr "Erreproduzitu J-POP"
+
+msgid "Play K-POP"
+msgstr "Erreproduzitu K-POP"
+
+msgid "Previous station"
+msgstr "Aurreko irratia"
+
+msgid "Next station"
+msgstr "Hurrengo irratia"
+
+msgid "Window"
+msgstr "Leihoa"
+
+msgid "Open preferences"
+msgstr "Ireki hobespenak"
+
+msgid "Show shortcuts"
+msgstr "Erakutsi lasterbideak"
+
+msgid "Preferences"
+msgstr "Hobespenak"
+
+msgid "Startup Defaults"
+msgstr "Abioko lehenespenak"
+
+msgid "Experimental Features"
+msgstr "Eginbide esperimentalak"
+
+msgid "Default station"
+msgstr "Irrati lehenetsia"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Erreprodukzio automatikoa"
+
+msgid "Start playing automatically on launch"
+msgstr "Hasi automatikoki erreproduzitzen abiatzean"
+
+msgid "Enable pause and resume"
+msgstr "Gaitu pausatzea eta berrekin egitea"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Erabili pausatzea eta berrekin egitea erreprodukzio-botoi nagusian"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Gaitu Discord Rich Presence exekuzioan"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Beste irratiak baztertzeko garaia da. LISTEN.moe-k emandako korrontea eta metadatuak."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP eta K-POP irratia"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Entzun J-POP eta K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Pausatu eta berrekin zuzeneko igorpenari"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Musikaren aurrean erreakzionatzen duten soinu barra animatuak"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Uneko albumaren azalean edo artistaren irudian oinarritutako kolore dinamikoak"
+
+msgid "No ads"
+msgstr "Iragarkirik ez"
+
+msgid "Initial release."
+msgstr "Hasierako kaleratzea."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Konektatuta dagoenean eta album edo artistaren irudirik ez dagoenean"
+
+msgid "Colored window when connected"
+msgstr "Koloretako leihoa konektatuta dagoenean"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Bertsio honek itxura eta lokalizazioa ditu ardatz."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Modu ilun/argiaren detekzio zehatza, kolore argiak jada ilunekin nahas ez daitezen."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Itzulpenak leundu eta nola aplikatzen diren hobetu."
+
+msgid "Removed gaps between sound bars."
+msgstr "Soinu-barren arteko hutsuneak kendu ditu."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Streaming-logikak hobeto kudeatzen ditu konexio-arazoak eta korronte-aldaketak."
+
+msgid "Clarified the application description."
+msgstr "Aplikazioaren deskribapena argitu da."
+
+msgid "Translated image captions"
+msgstr "Itzulitako irudi-oinak"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Pantaila-argazkiak eguneratuak leiho-tamaina arrazoizkoagoa erabiltzeko"
+
+msgid "Updated application icon"
+msgstr "Aplikazioaren ikono eguneratua"
+
+msgid "Display the application icon in media controls."
+msgstr "Bistaratu aplikazioaren ikonoa multimedia-kontroletan."
+
+msgid "Optional Discord activity sharing"
+msgstr "Discord jarduerak partekatzea aukerakoa"
+
+msgid "Added Discord activity sharing."
+msgstr "Discord jarduera partekatzea gehitu da."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Berriro konektatzen da Discord-era eginbidea desgaitu beharrean."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Pausatzeko portaera, erreprodukzio automatikoa edo Discord integrazioa desgaitzeko banderak gehitu dira."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Arazo bat konpondu da, non etendako erreprodukzioa berriro hasten zen sarearen eten batean."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Hobespenak eta teklatuko lasterbideak gehitu dira."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Pausatzeko, berrekiteko eta irratiz aldatzeko portaera aldatu da."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Pausatu/berrekin edo gelditu portaeretarako abioko aukerak gehitu dira; erreproduzitu/gelditu da orain lehenetsia."
+
+msgid "Check for updates"
+msgstr "Egiaztatu eguneratzeak"
+
+msgid "Cancel update"
+msgstr "Utzi eguneratzea"
+
+msgid "Couldn't check for updates"
+msgstr "Ezin izan dira egiaztatu eguneratzeak"
+
+msgid "Try again later."
+msgstr "Saiatu berriro geroago."
+
+msgid "Already up to date"
+msgstr "Dagoeneko eguneratuta"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Listen Moe-ren azken bertsioa duzu."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Argitalpenaren metadatuetan baliozko SHA-256 laburpen bat falta da."
+
+msgid "Couldn't download the update"
+msgstr "Ezin izan da eguneratzea deskargatu"
+
+msgid "Update canceled"
+msgstr "Eguneraketa bertan behera utzi da"
+
+msgid "The update was canceled."
+msgstr "Eguneraketa bertan behera utzi da."
+
+msgid "The update check was canceled."
+msgstr "Eguneratze-egiaztapena bertan behera utzi da."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Deskargatutako instalatzailea ez da instalatuko."
+
+msgid "Installing update"
+msgstr "Eguneraketa instalatzen"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe itxi egingo da."
+
+msgid "Couldn't install the update"
+msgstr "Ezin izan da eguneratzea instalatu"
+
+msgid "Checking for updates"
+msgstr "Eguneratzeak bilatzen"
+
+msgid "Downloading update"
+msgstr "Eguneraketa deskargatzen"
+
+msgid "Update ready"
+msgstr "Eguneratzea prest"
+
+msgid "Version"
+msgstr "Bertsioa"
+
+msgid "Downloaded"
+msgstr "Deskargatuta"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Windows-erako instalatzaile berriagoa bilatzen GitHub Releases-en."
+
+msgid "A newer Windows release is available."
+msgstr "Aplikazioaren Windows-erako bertsio berriagoa dago eskuragarri."
+
+msgid "The installer is ready to run."
+msgstr "Instalatzailea exekutatzeko prest dago."
+
+msgid "Couldn't start the installer."
+msgstr "Ezin izan da instalatzailea abiarazi."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Pausatu/berrekin kendu da bertsio egonkorretatik."
+
+msgid "Separate experimental features from stable features."
+msgstr "Eginbide esperimentalak egonkorretatik bereizi dira."
+
+msgid "Volume control added."
+msgstr "Bolumen kontrola gehitu da."
+
+msgid "Karaoke"
+msgstr "Karaokea"
+
+msgid "Show karaoke"
+msgstr "Erakutsi karaokea"
+
+msgid "Finding lyrics…"
+msgstr "Letra bilatzen..."
+
+msgid "Just a moment"
+msgstr "Momentu bat besterik ez"
+
+msgid "No synchronized lyrics"
+msgstr "Ez dago letra sinkronizaturik"
+
+msgid "This song can still be your tiny concert."
+msgstr "Abesti hau zure kontzertu txikia izan daiteke oraindik."
+
+msgid "Couldn't load lyrics"
+msgstr "Ezin izan da letra kargatu"
+
+msgid "Try again in a moment."
+msgstr "Saiatu berriro une batean."
+
+msgid "Lyrics by LRCLIB"
+msgstr "LRCLIB-en letra"
+
+msgid "Added lyrics."
+msgstr "Abestien letrak gehitu dira."
+
+msgid "Added a song progress bar."
+msgstr "Abestiaren aurrerapen-barra gehitu da."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Artista eta abestien izen luzeak arin mugitzen dira."
+
+msgid "Hover over the title to see the full text."
+msgstr "Jarri erakuslea izenburuaren gainean testu osoa ikusteko."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Testuaren korritzeak eta atzeko planoko animazioek mugimendua murrizteko ezarpena errespetatzen dute."

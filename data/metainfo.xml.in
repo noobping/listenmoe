@@ -20,14 +20,17 @@
     <name>noobping</name>
   </developer>
 
+  <translation type="gettext">io.github.noobping.listenmoe</translation>
+
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
 
   <icon type="stock">io.github.noobping.listenmoe</icon>
 
-  <url type="homepage">https://github.com/noobping/listenmoe</url>
-  <url type="bugtracker">https://github.com/noobping/listenmoe/issues</url>
-  <url type="vcs-browser">https://github.com/noobping/listenmoe</url>
+  <url type="homepage" translate="no">https://github.com/noobping/listenmoe</url>
+  <url type="bugtracker" translate="no">https://github.com/noobping/listenmoe/issues</url>
+  <url type="translate" translate="no">https://hosted.weblate.org/projects/listenmoe</url>
+  <url type="vcs-browser" translate="no">https://github.com/noobping/listenmoe</url>
 
   <branding>
     <color type="primary" scheme_preference="light">#DC8ADD</color>

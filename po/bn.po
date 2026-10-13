@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: bn\n"
+"Language: bn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "%s চালান"
+
+msgid "About"
+msgstr "পরিচিতি"
+
+msgid "Connecting..."
+msgstr "সংযোগ করা হচ্ছে..."
+
+msgid "Main Menu"
+msgstr "প্রধান মেনু"
+
+msgid "Quit"
+msgstr "প্রস্থান"
+
+msgid "Keyboard Shortcuts"
+msgstr "কীবোর্ড শর্টকাট"
+
+msgid "General"
+msgstr "সাধারণ"
+
+msgid "Playback"
+msgstr "প্লেব্যাক"
+
+msgid "Volume"
+msgstr "শব্দের মাত্রা"
+
+msgid "Play or pause"
+msgstr "চালান বা বিরতি দিন"
+
+msgid "Stop playback"
+msgstr "প্লেব্যাক বন্ধ করুন"
+
+msgid "Copy current track"
+msgstr "বর্তমান গান কপি করুন"
+
+msgid "Stations"
+msgstr "স্টেশন"
+
+msgid "Play J-POP"
+msgstr "J-POP চালান"
+
+msgid "Play K-POP"
+msgstr "K-POP চালান"
+
+msgid "Previous station"
+msgstr "আগের স্টেশন"
+
+msgid "Next station"
+msgstr "পরের স্টেশন"
+
+msgid "Window"
+msgstr "উইন্ডো"
+
+msgid "Open preferences"
+msgstr "পছন্দসমূহ খুলুন"
+
+msgid "Show shortcuts"
+msgstr "শর্টকাট দেখান"
+
+msgid "Preferences"
+msgstr "পছন্দসমূহ"
+
+msgid "Startup Defaults"
+msgstr "শুরুর ডিফল্ট সেটিংস"
+
+msgid "Experimental Features"
+msgstr "পরীক্ষামূলক বৈশিষ্ট্য"
+
+msgid "Default station"
+msgstr "ডিফল্ট স্টেশন"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "স্বয়ংক্রিয় প্লেব্যাক"
+
+msgid "Start playing automatically on launch"
+msgstr "অ্যাপ খোলার সময় স্বয়ংক্রিয়ভাবে চালানো শুরু করুন"
+
+msgid "Enable pause and resume"
+msgstr "বিরতি ও পুনরায় চালানো সক্রিয় করুন"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "প্রধান প্লেব্যাক বোতামে বিরতি ও পুনরায় চালানো ব্যবহার করুন"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "অ্যাপ চলার সময় Discord Rich Presence সক্রিয় করুন"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "এবার অন্য রেডিও ছেড়ে আসার সময়। স্ট্রিম ও মেটাডেটা সরবরাহ করে LISTEN.moe।"
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP এবং K-POP রেডিও"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "J-POP এবং K-POP শুনুন"
+
+msgid "Pause and resume the live stream"
+msgstr "বিরাম দিন এবং লাইভ স্ট্রিম পুনরায় শুরু করুন"
+
+msgid "Animated sound bars that react to the music"
+msgstr "অ্যানিমেটেড সাউন্ড বার যা সঙ্গীতে প্রতিক্রিয়া দেখায়"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "বর্তমান অ্যালবামের প্রচ্ছদ বা শিল্পীর ছবির ভিত্তিতে পরিবর্তনশীল রং"
+
+msgid "No ads"
+msgstr "কোন বিজ্ঞাপন নেই"
+
+msgid "Initial release."
+msgstr "প্রথম প্রকাশ।"
+
+msgid "When connected and there is no album or artist image"
+msgstr "যখন সংযুক্ত থাকে এবং কোনো অ্যালবাম বা শিল্পীর ছবি থাকে না"
+
+msgid "Colored window when connected"
+msgstr "সংযুক্ত করা হলে রঙিন উইন্ডো"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "এই সংস্করণে দৃশ্যমান রূপ ও স্থানীয়করণে গুরুত্ব দেওয়া হয়েছে।"
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "ফাইন-টিউনড ডার্ক/লাইট মোড সনাক্তকরণ যাতে হালকা রঙগুলিকে আর অন্ধকারের জন্য ভুল না হয়।"
+
+msgid "Polished translations and improved how they are applied."
+msgstr "অনুবাদ ও তার প্রয়োগের পদ্ধতি উন্নত করা হয়েছে।"
+
+msgid "Removed gaps between sound bars."
+msgstr "সাউন্ড বারের মধ্যে ফাঁক সরানো হয়েছে।"
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "স্ট্রিমিং লজিক এখন সংযোগ সমস্যা এবং স্ট্রিম পরিবর্তনগুলিকে আরও ভালভাবে পরিচালনা করে।"
+
+msgid "Clarified the application description."
+msgstr "অ্যাপের বিবরণ আরও স্পষ্ট করা হয়েছে।"
+
+msgid "Translated image captions"
+msgstr "অনুবাদিত ছবির ক্যাপশন"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "আরও যুক্তিসঙ্গত উইন্ডোর আকার ব্যবহার করতে স্ক্রিনশট আপডেট করা হয়েছে"
+
+msgid "Updated application icon"
+msgstr "আপডেট করা অ্যাপ্লিকেশন আইকন"
+
+msgid "Display the application icon in media controls."
+msgstr "মিডিয়া নিয়ন্ত্রণে অ্যাপ্লিকেশন আইকন প্রদর্শন করুন।"
+
+msgid "Optional Discord activity sharing"
+msgstr "Discord-এ কার্যকলাপ শেয়ার করার ঐচ্ছিক সুবিধা"
+
+msgid "Added Discord activity sharing."
+msgstr "Discord-এ কার্যকলাপ শেয়ার করার সুবিধা যোগ করা হয়েছে।"
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "এই বৈশিষ্ট্য বন্ধ করার বদলে Discord-এ আবার সংযোগ করা হয়।"
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "বিরতি, স্বয়ংক্রিয় প্লেব্যাক বা Discord সংযোগ বন্ধ করার জন্য বিকল্প যোগ করা হয়েছে।"
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "একটি সমস্যা সমাধান করা হয়েছে যেখানে একটি নেটওয়ার্ক ব্যাঘাতের সময় বিরতি দেওয়া প্লেব্যাক পুনরায় শুরু হয়েছে৷"
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "পছন্দ এবং কীবোর্ড শর্টকাট যোগ করা হয়েছে।"
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "বিরতি, পুনরায় চালানো ও স্টেশন বদলানোর আচরণ পরিবর্তন করা হয়েছে।"
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "এখন ডিফল্ট প্লে/স্টপ সহ, বিরতি/পুনরায় শুরু বা স্টপ আচরণের জন্য স্টার্টআপ বিকল্পগুলি যুক্ত করা হয়েছে।"
+
+msgid "Check for updates"
+msgstr "আপডেটের জন্য চেক করুন"
+
+msgid "Cancel update"
+msgstr "আপডেট বাতিল করুন"
+
+msgid "Couldn't check for updates"
+msgstr "আপডেটের জন্য চেক করা যায়নি"
+
+msgid "Try again later."
+msgstr "পরে আবার চেষ্টা করুন."
+
+msgid "Already up to date"
+msgstr "ইতিমধ্যে আপ টু ডেট"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "আপনার কাছে Listen Moe এর সর্বশেষ সংস্করণ আছে।"
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "রিলিজ মেটাডেটাতে একটি বৈধ SHA-256 ডাইজেস্ট নেই।"
+
+msgid "Couldn't download the update"
+msgstr "আপডেটটি ডাউনলোড করা যায়নি"
+
+msgid "Update canceled"
+msgstr "আপডেট বাতিল করা হয়েছে"
+
+msgid "The update was canceled."
+msgstr "আপডেট বাতিল করা হয়েছে."
+
+msgid "The update check was canceled."
+msgstr "আপডেট চেক বাতিল করা হয়েছে."
+
+msgid "The downloaded installer will not be installed."
+msgstr "ডাউনলোড করা ইনস্টলার ইনস্টল করা হবে না।"
+
+msgid "Installing update"
+msgstr "আপডেট ইনস্টল করা হচ্ছে"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe বন্ধ হয়ে যাবে।"
+
+msgid "Couldn't install the update"
+msgstr "আপডেটটি ইনস্টল করা যায়নি"
+
+msgid "Checking for updates"
+msgstr "আপডেটের জন্য পরীক্ষা করা হচ্ছে"
+
+msgid "Downloading update"
+msgstr "আপডেট ডাউনলোড হচ্ছে"
+
+msgid "Update ready"
+msgstr "আপডেট প্রস্তুত"
+
+msgid "Version"
+msgstr "সংস্করণ"
+
+msgid "Downloaded"
+msgstr "ডাউনলোড করা হয়েছে"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "GitHub Releases-এ Windows-এর জন্য নতুন ইনস্টলার খোঁজা হচ্ছে।"
+
+msgid "A newer Windows release is available."
+msgstr "Windows-এর জন্য অ্যাপের আরও নতুন সংস্করণ পাওয়া যাচ্ছে।"
+
+msgid "The installer is ready to run."
+msgstr "ইনস্টলার চালানোর জন্য প্রস্তুত."
+
+msgid "Couldn't start the installer."
+msgstr "ইনস্টলার শুরু করা যায়নি।"
+
+msgid "Removed pause/resume from stable builds."
+msgstr "স্থিতিশীল সংস্করণ থেকে বিরতি ও পুনরায় চালানোর সুবিধা সরানো হয়েছে।"
+
+msgid "Separate experimental features from stable features."
+msgstr "পরীক্ষামূলক বৈশিষ্ট্যগুলো স্থিতিশীল বৈশিষ্ট্য থেকে আলাদা করা হয়েছে।"
+
+msgid "Volume control added."
+msgstr "ভলিউম নিয়ন্ত্রণ যোগ করা হয়েছে।"
+
+msgid "Karaoke"
+msgstr "কারাওকে"
+
+msgid "Show karaoke"
+msgstr "কারাওকে দেখান"
+
+msgid "Finding lyrics…"
+msgstr "গানের কথা খোঁজা হচ্ছে..."
+
+msgid "Just a moment"
+msgstr "শুধু একটি মুহূর্ত"
+
+msgid "No synchronized lyrics"
+msgstr "কোনো সিঙ্ক্রোনাইজড লিরিক নেই"
+
+msgid "This song can still be your tiny concert."
+msgstr "এই গানটি এখনও আপনার ছোট কনসার্ট হতে পারে।"
+
+msgid "Couldn't load lyrics"
+msgstr "গানের কথা লোড করা যায়নি"
+
+msgid "Try again in a moment."
+msgstr "কিছুক্ষণের মধ্যে আবার চেষ্টা করুন।"
+
+msgid "Lyrics by LRCLIB"
+msgstr "LRCLIB দ্বারা গানের কথা"
+
+msgid "Added lyrics."
+msgstr "গানের কথা যোগ করা হয়েছে।"
+
+msgid "Added a song progress bar."
+msgstr "একটি গান অগ্রগতি বার যোগ করা হয়েছে."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "শিল্পী ও গানের দীর্ঘ নাম মসৃণভাবে স্ক্রল হয়।"
+
+msgid "Hover over the title to see the full text."
+msgstr "সম্পূর্ণ লেখাটি দেখতে শিরোনামের উপর হোভার করুন।"
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "স্ক্রল হওয়া লেখা ও পটভূমির অ্যানিমেশন নড়াচড়া কমানোর সেটিং মেনে চলে।"

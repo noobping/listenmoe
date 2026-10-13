@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: ar\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "تشغيل %s"
+
+msgid "About"
+msgstr "حول"
+
+msgid "Connecting..."
+msgstr "جارٍ الاتصال..."
+
+msgid "Main Menu"
+msgstr "القائمة الرئيسية"
+
+msgid "Quit"
+msgstr "خروج"
+
+msgid "Keyboard Shortcuts"
+msgstr "اختصارات لوحة المفاتيح"
+
+msgid "General"
+msgstr "عام"
+
+msgid "Playback"
+msgstr "التشغيل"
+
+msgid "Volume"
+msgstr "مستوى الصوت"
+
+msgid "Play or pause"
+msgstr "تشغيل أو إيقاف مؤقت"
+
+msgid "Stop playback"
+msgstr "إيقاف التشغيل"
+
+msgid "Copy current track"
+msgstr "نسخ المقطع الحالي"
+
+msgid "Stations"
+msgstr "المحطات"
+
+msgid "Play J-POP"
+msgstr "تشغيل J-POP"
+
+msgid "Play K-POP"
+msgstr "تشغيل K-POP"
+
+msgid "Previous station"
+msgstr "المحطة السابقة"
+
+msgid "Next station"
+msgstr "المحطة التالية"
+
+msgid "Window"
+msgstr "النافذة"
+
+msgid "Open preferences"
+msgstr "فتح التفضيلات"
+
+msgid "Show shortcuts"
+msgstr "عرض الاختصارات"
+
+msgid "Preferences"
+msgstr "التفضيلات"
+
+msgid "Startup Defaults"
+msgstr "الإعدادات الافتراضية عند البدء"
+
+msgid "Experimental Features"
+msgstr "ميزات تجريبية"
+
+msgid "Default station"
+msgstr "المحطة الافتراضية"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "التشغيل التلقائي"
+
+msgid "Start playing automatically on launch"
+msgstr "بدء التشغيل تلقائيًا عند فتح التطبيق"
+
+msgid "Enable pause and resume"
+msgstr "تفعيل الإيقاف المؤقت والاستئناف"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "استخدام الإيقاف المؤقت والاستئناف لزر التشغيل الرئيسي"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "تفعيل Discord Rich Presence أثناء تشغيل التطبيق"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "لقد حان الوقت للتخلي عن أجهزة الراديو الأخرى. الدفق والبيانات الوصفية المقدمة من LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "راديو J-POP وK-POP"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "استمع إلى أغاني J-POP وK-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "إيقاف البث المباشر مؤقتًا واستئنافه"
+
+msgid "Animated sound bars that react to the music"
+msgstr "أشرطة صوتية متحركة تتفاعل مع الموسيقى"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "ألوان ديناميكية مستمدة من غلاف الألبوم أو صورة الفنان الحالي"
+
+msgid "No ads"
+msgstr "لا إعلانات"
+
+msgid "Initial release."
+msgstr "الإصدار الأولي."
+
+msgid "When connected and there is no album or artist image"
+msgstr "عند الاتصال وعدم توفر صورة للألبوم أو الفنان"
+
+msgid "Colored window when connected"
+msgstr "نافذة ملونة عند الاتصال"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "يركز هذا الإصدار على العناصر المرئية والتعريب."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "كشف دقيق للوضع الداكن/الفاتح حتى لا يتم الخلط بين الألوان الفاتحة والألوان الداكنة."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "ترجمات مصقولة وتحسين كيفية تطبيقها."
+
+msgid "Removed gaps between sound bars."
+msgstr "إزالة الفجوات بين أشرطة الصوت."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "يتعامل منطق البث الآن بشكل أفضل مع مشكلات الاتصال وتغييرات البث."
+
+msgid "Clarified the application description."
+msgstr "توضيح وصف التطبيق."
+
+msgid "Translated image captions"
+msgstr "تعليقات الصور المترجمة"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "تم تحديث لقطات الشاشة لاستخدام حجم نافذة أكثر معقولية"
+
+msgid "Updated application icon"
+msgstr "أيقونة التطبيق المحدثة"
+
+msgid "Display the application icon in media controls."
+msgstr "عرض رمز التطبيق في عناصر التحكم في الوسائط."
+
+msgid "Optional Discord activity sharing"
+msgstr "مشاركة اختيارية لنشاط Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "تمت إضافة مشاركة نشاط Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "إعادة الاتصال بـ Discord بدلًا من تعطيل هذه الميزة."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "تمت إضافة علامات للتحكم في سلوك الإيقاف المؤقت أو التشغيل التلقائي أو تعطيل تكامل Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "تم إصلاح مشكلة استئناف التشغيل المتوقف مؤقتًا أثناء انقطاع الشبكة."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "تمت إضافة التفضيلات واختصارات لوحة المفاتيح."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "تم تغيير سلوك الإيقاف المؤقت والاستئناف وتبديل المحطة."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "تمت إضافة خيارات بدء التشغيل للإيقاف المؤقت/الاستئناف أو الإيقاف، مع التشغيل/الإيقاف الآن كخيار افتراضي."
+
+msgid "Check for updates"
+msgstr "التحقق من وجود تحديثات"
+
+msgid "Cancel update"
+msgstr "إلغاء التحديث"
+
+msgid "Couldn't check for updates"
+msgstr "تعذر التحقق من وجود تحديثات"
+
+msgid "Try again later."
+msgstr "حاول مرة أخرى لاحقًا."
+
+msgid "Already up to date"
+msgstr "التطبيق محدّث بالفعل"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "لديك أحدث إصدار من Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "تفتقر البيانات الوصفية للإصدار إلى بصمة SHA-256 صالحة."
+
+msgid "Couldn't download the update"
+msgstr "تعذر تنزيل التحديث"
+
+msgid "Update canceled"
+msgstr "تم إلغاء التحديث"
+
+msgid "The update was canceled."
+msgstr "تم إلغاء التحديث."
+
+msgid "The update check was canceled."
+msgstr "تم إلغاء التحقق من التحديث."
+
+msgid "The downloaded installer will not be installed."
+msgstr "لن يتم تثبيت برنامج التثبيت الذي تم تنزيله."
+
+msgid "Installing update"
+msgstr "تثبيت التحديث"
+
+msgid "Listen Moe will close."
+msgstr "سيُغلق Listen Moe."
+
+msgid "Couldn't install the update"
+msgstr "تعذر تثبيت التحديث"
+
+msgid "Checking for updates"
+msgstr "جارٍ التحقق من وجود تحديثات"
+
+msgid "Downloading update"
+msgstr "جارٍ تنزيل التحديث"
+
+msgid "Update ready"
+msgstr "التحديث جاهز"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Downloaded"
+msgstr "تم التنزيل"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "جارٍ البحث عن مُثبّت أحدث للتطبيق على Windows في GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "يتوفر إصدار أحدث للتطبيق على Windows."
+
+msgid "The installer is ready to run."
+msgstr "المثبت جاهز للتشغيل."
+
+msgid "Couldn't start the installer."
+msgstr "تعذر بدء تشغيل برنامج التثبيت."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "تمت إزالة الإيقاف المؤقت/الاستئناف من الإصدارات المستقرة."
+
+msgid "Separate experimental features from stable features."
+msgstr "فصل الميزات التجريبية عن الميزات المستقرة."
+
+msgid "Volume control added."
+msgstr "تمت إضافة التحكم في مستوى الصوت."
+
+msgid "Karaoke"
+msgstr "كاريوكي"
+
+msgid "Show karaoke"
+msgstr "عرض الكاريوكي"
+
+msgid "Finding lyrics…"
+msgstr "جارٍ البحث عن كلمات الأغنية…"
+
+msgid "Just a moment"
+msgstr "لحظة من فضلك"
+
+msgid "No synchronized lyrics"
+msgstr "لا توجد كلمات متزامنة"
+
+msgid "This song can still be your tiny concert."
+msgstr "لا يزال من الممكن أن تكون هذه الأغنية حفلتك الموسيقية الصغيرة."
+
+msgid "Couldn't load lyrics"
+msgstr "تعذر تحميل كلمات الأغاني"
+
+msgid "Try again in a moment."
+msgstr "حاول مرة أخرى بعد قليل."
+
+msgid "Lyrics by LRCLIB"
+msgstr "كلمات الأغاني مقدمة من LRCLIB"
+
+msgid "Added lyrics."
+msgstr "أُضيفت كلمات الأغاني."
+
+msgid "Added a song progress bar."
+msgstr "تمت إضافة شريط تقدم الأغنية."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "يتم تمرير أسماء الفنانين والأغاني الطويلة بسلاسة."
+
+msgid "Hover over the title to see the full text."
+msgstr "مرّر مؤشر الفأرة فوق العنوان لرؤية النص كاملًا."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "يحترم تمرير النص ورسوم الخلفية المتحركة إعداد تقليل الحركة."

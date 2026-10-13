@@ -1,0 +1,319 @@
+# AI-generated translation; not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Codex (AI; not human-reviewed)\n"
+"Language-Team: sv\n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Spela %s"
+
+msgid "About"
+msgstr "Om"
+
+msgid "Connecting..."
+msgstr "Ansluter..."
+
+msgid "Main Menu"
+msgstr "Huvudmeny"
+
+msgid "Quit"
+msgstr "Avsluta"
+
+msgid "Keyboard Shortcuts"
+msgstr "Tangentbordsgenvägar"
+
+msgid "General"
+msgstr "Allmänt"
+
+msgid "Playback"
+msgstr "Uppspelning"
+
+msgid "Volume"
+msgstr "Volym"
+
+msgid "Play or pause"
+msgstr "Spela eller pausa"
+
+msgid "Stop playback"
+msgstr "Stoppa uppspelningen"
+
+msgid "Copy current track"
+msgstr "Kopiera aktuell låt"
+
+msgid "Stations"
+msgstr "Stationer"
+
+msgid "Play J-POP"
+msgstr "Spela J-POP"
+
+msgid "Play K-POP"
+msgstr "Spela K-POP"
+
+msgid "Previous station"
+msgstr "Föregående station"
+
+msgid "Next station"
+msgstr "Nästa station"
+
+msgid "Window"
+msgstr "Fönster"
+
+msgid "Open preferences"
+msgstr "Öppna inställningar"
+
+msgid "Show shortcuts"
+msgstr "Visa genvägar"
+
+msgid "Preferences"
+msgstr "Inställningar"
+
+msgid "Startup Defaults"
+msgstr "Standardvärden vid start"
+
+msgid "Experimental Features"
+msgstr "Experimentella funktioner"
+
+msgid "Default station"
+msgstr "Standardstation"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Automatisk uppspelning"
+
+msgid "Start playing automatically on launch"
+msgstr "Börja spela automatiskt vid start"
+
+msgid "Enable pause and resume"
+msgstr "Aktivera paus och återupptagning"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Använd paus och återupptagning för huvudknappen för uppspelning"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Aktivera Discord Rich Presence under körning"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Det är dags att byta radio. Ström och metadata tillhandahålls av LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP- och K-POP-radio"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Lyssna på J-POP och K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Pausa och återuppta direktsändningen"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Animerade ljudstaplar som reagerar på musiken"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Dynamiska färger baserade på aktuellt skivomslag eller artistbild"
+
+msgid "No ads"
+msgstr "Ingen reklam"
+
+msgid "Initial release."
+msgstr "Första utgåvan."
+
+msgid "When connected and there is no album or artist image"
+msgstr "När anslutningen är upprättad och skivomslag eller artistbild saknas"
+
+msgid "Colored window when connected"
+msgstr "Färgat fönster vid anslutning"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "AI translation (Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Den här utgåvan fokuserar på utseende och översättning."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Förbättrad identifiering av mörkt/ljust läge så att ljusa färger inte längre misstas för mörka."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Förbättrade översättningar och hur de tillämpas."
+
+msgid "Removed gaps between sound bars."
+msgstr "Borttagna mellanrum mellan ljudstaplarna."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Strömningen hanterar nu anslutningsproblem och strömbyten bättre."
+
+msgid "Clarified the application description."
+msgstr "Förtydligad programbeskrivning."
+
+msgid "Translated image captions"
+msgstr "Översatta bildtexter"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Uppdaterade skärmbilder med lämpligare fönsterstorlek"
+
+msgid "Updated application icon"
+msgstr "Uppdaterad programikon"
+
+msgid "Display the application icon in media controls."
+msgstr "Programikonen visas i mediekontrollerna."
+
+msgid "Optional Discord activity sharing"
+msgstr "Valfri delning av aktivitet på Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "Tillagd delning av aktivitet på Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Återansluter till Discord i stället för att inaktivera funktionen."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Tillagda flaggor för paus, automatisk uppspelning och inaktivering av Discord-integrationen."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Åtgärdat ett problem där pausad uppspelning återupptogs vid nätverksavbrott."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Tillagda inställningar och tangentbordsgenvägar."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Ändrat beteende för paus, återupptagning och stationsbyte."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Tillagda startalternativ för paus/återupptagning eller stopp, med spela/stoppa som standard."
+
+msgid "Check for updates"
+msgstr "Sök efter uppdateringar"
+
+msgid "Cancel update"
+msgstr "Avbryt uppdatering"
+
+msgid "Couldn't check for updates"
+msgstr "Kunde inte söka efter uppdateringar"
+
+msgid "Try again later."
+msgstr "Försök igen senare."
+
+msgid "Already up to date"
+msgstr "Redan uppdaterad"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Du har den senaste versionen av Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Utgåvans metadata saknar en giltig SHA-256-kontrollsumma."
+
+msgid "Couldn't download the update"
+msgstr "Kunde inte hämta uppdateringen"
+
+msgid "Update canceled"
+msgstr "Uppdatering avbruten"
+
+msgid "The update was canceled."
+msgstr "Uppdateringen avbröts."
+
+msgid "The update check was canceled."
+msgstr "Sökningen efter uppdateringar avbröts."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Det hämtade installationsprogrammet kommer inte att installeras."
+
+msgid "Installing update"
+msgstr "Installerar uppdatering"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe kommer att stängas."
+
+msgid "Couldn't install the update"
+msgstr "Kunde inte installera uppdateringen"
+
+msgid "Checking for updates"
+msgstr "Söker efter uppdateringar"
+
+msgid "Downloading update"
+msgstr "Hämtar uppdatering"
+
+msgid "Update ready"
+msgstr "Uppdatering klar"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Downloaded"
+msgstr "Hämtat"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Söker efter ett nyare installationsprogram för Windows på GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "En nyare Windows-utgåva finns tillgänglig."
+
+msgid "The installer is ready to run."
+msgstr "Installationsprogrammet är redo att köras."
+
+msgid "Couldn't start the installer."
+msgstr "Kunde inte starta installationsprogrammet."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Paus/återupptagning borttaget från stabila versioner."
+
+msgid "Separate experimental features from stable features."
+msgstr "Separering av experimentella och stabila funktioner."
+
+msgid "Volume control added."
+msgstr "Volymkontroll tillagd."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Visa karaoke"
+
+msgid "Finding lyrics…"
+msgstr "Söker efter låttext…"
+
+msgid "Just a moment"
+msgstr "Ett ögonblick"
+
+msgid "No synchronized lyrics"
+msgstr "Ingen synkroniserad låttext"
+
+msgid "This song can still be your tiny concert."
+msgstr "Den här låten kan ändå bli din lilla konsert."
+
+msgid "Couldn't load lyrics"
+msgstr "Kunde inte läsa in låttexten"
+
+msgid "Try again in a moment."
+msgstr "Försök igen om en stund."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Låttexter från LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Låttexter tillagda."
+
+msgid "Added a song progress bar."
+msgstr "Tillagt ett förloppsfält för låten."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Långa artist- och låtnamn rullar mjukt."
+
+msgid "Hover over the title to see the full text."
+msgstr "Håll pekaren över titeln för att se hela texten."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Rullande text och bakgrundsanimationer följer inställningen för minskad rörelse."

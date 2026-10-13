@@ -8,6 +8,8 @@ project(
 cargo = find_program('cargo', required: true)
 sh = find_program('sh', required: true)
 gnome = import('gnome')
+i18n = import('i18n')
+subdir('po')
 
 dependency('gtk4', version: '>= 4.0', required: true)
 dependency('libadwaita-1', version: '>= 1.5', required: true)
@@ -102,23 +104,22 @@ endif
 run_target('cargo-run', command: cargo_run_cmd)
 run_target('run', command: [listenmoe_bin])
 
-desktop_file = configure_file(
+i18n.merge_file(
   input: 'data/desktop.in',
   output: 'io.github.noobping.listenmoe.desktop',
-  copy: true,
-)
-install_data(
-  desktop_file,
+  type: 'desktop',
+  po_dir: 'po',
+  install: true,
   install_dir: join_paths(get_option('datadir'), 'applications'),
 )
 
-metainfo_file = configure_file(
+i18n.merge_file(
   input: 'data/metainfo.xml.in',
   output: 'io.github.noobping.listenmoe.metainfo.xml',
-  copy: true,
-)
-install_data(
-  metainfo_file,
+  type: 'xml',
+  args: ['--language=MetaInfo'],
+  po_dir: 'po',
+  install: true,
   install_dir: join_paths(get_option('datadir'), 'metainfo'),
 )
 

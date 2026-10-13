@@ -1,0 +1,319 @@
+# AI-generated translation; not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Codex (AI; not human-reviewed)\n"
+"Language-Team: ro\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Redă %s"
+
+msgid "About"
+msgstr "Despre"
+
+msgid "Connecting..."
+msgstr "Se conectează..."
+
+msgid "Main Menu"
+msgstr "Meniu principal"
+
+msgid "Quit"
+msgstr "Ieșire"
+
+msgid "Keyboard Shortcuts"
+msgstr "Scurtături de tastatură"
+
+msgid "General"
+msgstr "General"
+
+msgid "Playback"
+msgstr "Redare"
+
+msgid "Volume"
+msgstr "Volum"
+
+msgid "Play or pause"
+msgstr "Redă sau întrerupe"
+
+msgid "Stop playback"
+msgstr "Oprește redarea"
+
+msgid "Copy current track"
+msgstr "Copiază piesa curentă"
+
+msgid "Stations"
+msgstr "Posturi"
+
+msgid "Play J-POP"
+msgstr "Redă J-POP"
+
+msgid "Play K-POP"
+msgstr "Redă K-POP"
+
+msgid "Previous station"
+msgstr "Postul anterior"
+
+msgid "Next station"
+msgstr "Postul următor"
+
+msgid "Window"
+msgstr "Fereastră"
+
+msgid "Open preferences"
+msgstr "Deschide preferințele"
+
+msgid "Show shortcuts"
+msgstr "Arată scurtăturile"
+
+msgid "Preferences"
+msgstr "Preferințe"
+
+msgid "Startup Defaults"
+msgstr "Valori implicite la pornire"
+
+msgid "Experimental Features"
+msgstr "Funcții experimentale"
+
+msgid "Default station"
+msgstr "Post implicit"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Redare automată"
+
+msgid "Start playing automatically on launch"
+msgstr "Pornește redarea automat la lansare"
+
+msgid "Enable pause and resume"
+msgstr "Activează pauza și reluarea"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Folosește pauza și reluarea pentru butonul principal de redare"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Activează Discord Rich Presence în timpul rulării"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Este timpul să schimbi radioul. Fluxul și metadatele sunt furnizate de LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "Radio J-POP și K-POP"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Ascultă J-POP și K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Întrerupe și reia transmisia în direct"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Bare audio animate care reacționează la muzică"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Culori dinamice bazate pe coperta albumului sau imaginea artistului curent"
+
+msgid "No ads"
+msgstr "Fără reclame"
+
+msgid "Initial release."
+msgstr "Versiune inițială."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Când există conexiune, dar nu există imaginea albumului sau a artistului"
+
+msgid "Colored window when connected"
+msgstr "Fereastră colorată când există conexiune"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "AI translation (Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Această versiune se concentrează pe aspect și localizare."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Detecția modului întunecat/luminos a fost ajustată pentru a nu mai confunda culorile deschise cu cele închise."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Traduceri îmbunătățite și aplicare mai bună a acestora."
+
+msgid "Removed gaps between sound bars."
+msgstr "Spațiile dintre barele audio au fost eliminate."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Transmisia gestionează mai bine problemele de conexiune și schimbările de flux."
+
+msgid "Clarified the application description."
+msgstr "Descrierea aplicației a fost clarificată."
+
+msgid "Translated image captions"
+msgstr "Descrierile imaginilor au fost traduse"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Capturi de ecran actualizate cu o dimensiune mai potrivită a ferestrei"
+
+msgid "Updated application icon"
+msgstr "Pictograma aplicației a fost actualizată"
+
+msgid "Display the application icon in media controls."
+msgstr "Afișarea pictogramei aplicației în comenzile multimedia."
+
+msgid "Optional Discord activity sharing"
+msgstr "Partajare opțională a activității pe Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "A fost adăugată partajarea activității pe Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Reconectare la Discord în loc de dezactivarea acestei funcții."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Au fost adăugate opțiuni pentru pauză, redare automată sau dezactivarea integrării Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "A fost corectată reluarea redării întrerupte în timpul unei întreruperi de rețea."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Au fost adăugate preferințe și scurtături de tastatură."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "A fost schimbat comportamentul pauzei, reluării și schimbării postului."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Au fost adăugate opțiuni de pornire pentru pauză/reluare sau oprire, cu redare/oprire implicit."
+
+msgid "Check for updates"
+msgstr "Caută actualizări"
+
+msgid "Cancel update"
+msgstr "Anulează actualizarea"
+
+msgid "Couldn't check for updates"
+msgstr "Nu s-au putut căuta actualizări"
+
+msgid "Try again later."
+msgstr "Încearcă din nou mai târziu."
+
+msgid "Already up to date"
+msgstr "Deja actualizat"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Ai cea mai recentă versiune de Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Lipsește o sumă de control SHA-256 validă din metadatele versiunii."
+
+msgid "Couldn't download the update"
+msgstr "Actualizarea nu a putut fi descărcată"
+
+msgid "Update canceled"
+msgstr "Actualizare anulată"
+
+msgid "The update was canceled."
+msgstr "Actualizarea a fost anulată."
+
+msgid "The update check was canceled."
+msgstr "Căutarea actualizărilor a fost anulată."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Programul de instalare descărcat nu va fi instalat."
+
+msgid "Installing update"
+msgstr "Se instalează actualizarea"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe se va închide."
+
+msgid "Couldn't install the update"
+msgstr "Actualizarea nu a putut fi instalată"
+
+msgid "Checking for updates"
+msgstr "Se caută actualizări"
+
+msgid "Downloading update"
+msgstr "Se descarcă actualizarea"
+
+msgid "Update ready"
+msgstr "Actualizare pregătită"
+
+msgid "Version"
+msgstr "Versiune"
+
+msgid "Downloaded"
+msgstr "Descărcat"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Se caută un program de instalare Windows mai nou pe GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Este disponibilă o versiune Windows mai nouă."
+
+msgid "The installer is ready to run."
+msgstr "Programul de instalare este pregătit pentru rulare."
+
+msgid "Couldn't start the installer."
+msgstr "Programul de instalare nu a putut fi pornit."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Pauza/reluarea a fost eliminată din versiunile stabile."
+
+msgid "Separate experimental features from stable features."
+msgstr "Separarea funcțiilor experimentale de cele stabile."
+
+msgid "Volume control added."
+msgstr "A fost adăugat controlul volumului."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Arată karaoke"
+
+msgid "Finding lyrics…"
+msgstr "Se caută versurile…"
+
+msgid "Just a moment"
+msgstr "Un moment"
+
+msgid "No synchronized lyrics"
+msgstr "Nu există versuri sincronizate"
+
+msgid "This song can still be your tiny concert."
+msgstr "Această melodie poate fi în continuare micul tău concert."
+
+msgid "Couldn't load lyrics"
+msgstr "Versurile nu au putut fi încărcate"
+
+msgid "Try again in a moment."
+msgstr "Încearcă din nou peste un moment."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Versuri de la LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Au fost adăugate versuri."
+
+msgid "Added a song progress bar."
+msgstr "A fost adăugată o bară de progres a melodiei."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Numele lungi ale artiștilor și melodiilor se derulează lin."
+
+msgid "Hover over the title to see the full text."
+msgstr "Treci cursorul peste titlu pentru a vedea textul complet."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Textul derulant și animațiile de fundal respectă setarea de reducere a mișcării."

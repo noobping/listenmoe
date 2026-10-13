@@ -1,0 +1,319 @@
+# AI-generated translation; not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Codex (AI; not human-reviewed)\n"
+"Language-Team: pt\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Reproduzir %s"
+
+msgid "About"
+msgstr "Acerca"
+
+msgid "Connecting..."
+msgstr "A ligar..."
+
+msgid "Main Menu"
+msgstr "Menu principal"
+
+msgid "Quit"
+msgstr "Sair"
+
+msgid "Keyboard Shortcuts"
+msgstr "Atalhos de teclado"
+
+msgid "General"
+msgstr "Geral"
+
+msgid "Playback"
+msgstr "Reprodução"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Play or pause"
+msgstr "Reproduzir ou pausar"
+
+msgid "Stop playback"
+msgstr "Parar a reprodução"
+
+msgid "Copy current track"
+msgstr "Copiar a faixa atual"
+
+msgid "Stations"
+msgstr "Estações"
+
+msgid "Play J-POP"
+msgstr "Reproduzir J-POP"
+
+msgid "Play K-POP"
+msgstr "Reproduzir K-POP"
+
+msgid "Previous station"
+msgstr "Estação anterior"
+
+msgid "Next station"
+msgstr "Estação seguinte"
+
+msgid "Window"
+msgstr "Janela"
+
+msgid "Open preferences"
+msgstr "Abrir preferências"
+
+msgid "Show shortcuts"
+msgstr "Mostrar atalhos"
+
+msgid "Preferences"
+msgstr "Preferências"
+
+msgid "Startup Defaults"
+msgstr "Predefinições de arranque"
+
+msgid "Experimental Features"
+msgstr "Funcionalidades experimentais"
+
+msgid "Default station"
+msgstr "Estação predefinida"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Reprodução automática"
+
+msgid "Start playing automatically on launch"
+msgstr "Iniciar a reprodução automaticamente ao abrir"
+
+msgid "Enable pause and resume"
+msgstr "Ativar pausa e retoma"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Usar pausa e retoma no botão principal de reprodução"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Ativar Discord Rich Presence durante a execução"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Está na hora de mudar de rádio. Transmissão e metadados fornecidos por LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "Rádio J-POP e K-POP"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Ouça J-POP e K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Pause e retome a transmissão em direto"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Barras de som animadas que reagem à música"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Cores dinâmicas baseadas na capa do álbum ou imagem do artista atual"
+
+msgid "No ads"
+msgstr "Sem anúncios"
+
+msgid "Initial release."
+msgstr "Versão inicial."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Quando existe ligação e não há imagem do álbum ou artista"
+
+msgid "Colored window when connected"
+msgstr "Janela colorida quando existe ligação"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "AI translation (Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Esta versão centra-se no aspeto visual e na tradução."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Deteção do modo escuro/claro afinada para deixar de confundir cores claras com escuras."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Traduções aperfeiçoadas e melhorias na sua aplicação."
+
+msgid "Removed gaps between sound bars."
+msgstr "Removidos os espaços entre as barras de som."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "A transmissão lida melhor com problemas de ligação e mudanças de fluxo."
+
+msgid "Clarified the application description."
+msgstr "Descrição da aplicação clarificada."
+
+msgid "Translated image captions"
+msgstr "Legendas das imagens traduzidas"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Capturas de ecrã atualizadas com um tamanho de janela mais adequado"
+
+msgid "Updated application icon"
+msgstr "Ícone da aplicação atualizado"
+
+msgid "Display the application icon in media controls."
+msgstr "Apresentação do ícone da aplicação nos controlos multimédia."
+
+msgid "Optional Discord activity sharing"
+msgstr "Partilha opcional de atividade no Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "Adicionada partilha de atividade no Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Restabelece a ligação ao Discord em vez de desativar esta funcionalidade."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Adicionadas opções para controlar a pausa, a reprodução automática ou desativar a integração com o Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Corrigido um problema que retomava a reprodução pausada durante uma falha de rede."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Adicionadas preferências e atalhos de teclado."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Alterado o comportamento da pausa, retoma e mudança de estação."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Adicionadas opções de arranque para pausa/retoma ou paragem, com reprodução/paragem como predefinição."
+
+msgid "Check for updates"
+msgstr "Procurar atualizações"
+
+msgid "Cancel update"
+msgstr "Cancelar atualização"
+
+msgid "Couldn't check for updates"
+msgstr "Não foi possível procurar atualizações"
+
+msgid "Try again later."
+msgstr "Tente novamente mais tarde."
+
+msgid "Already up to date"
+msgstr "Já está atualizado"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Tem a versão mais recente do Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Os metadados da versão não contêm um resumo SHA-256 válido."
+
+msgid "Couldn't download the update"
+msgstr "Não foi possível transferir a atualização"
+
+msgid "Update canceled"
+msgstr "Atualização cancelada"
+
+msgid "The update was canceled."
+msgstr "A atualização foi cancelada."
+
+msgid "The update check was canceled."
+msgstr "A procura de atualizações foi cancelada."
+
+msgid "The downloaded installer will not be installed."
+msgstr "O instalador transferido não será instalado."
+
+msgid "Installing update"
+msgstr "A instalar a atualização"
+
+msgid "Listen Moe will close."
+msgstr "O Listen Moe será fechado."
+
+msgid "Couldn't install the update"
+msgstr "Não foi possível instalar a atualização"
+
+msgid "Checking for updates"
+msgstr "A procurar atualizações"
+
+msgid "Downloading update"
+msgstr "A transferir a atualização"
+
+msgid "Update ready"
+msgstr "Atualização pronta"
+
+msgid "Version"
+msgstr "Versão"
+
+msgid "Downloaded"
+msgstr "Transferido"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "A procurar um instalador Windows mais recente no GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Está disponível uma versão mais recente para Windows."
+
+msgid "The installer is ready to run."
+msgstr "O instalador está pronto a executar."
+
+msgid "Couldn't start the installer."
+msgstr "Não foi possível iniciar o instalador."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Removida a pausa/retoma das versões estáveis."
+
+msgid "Separate experimental features from stable features."
+msgstr "Separação das funcionalidades experimentais das estáveis."
+
+msgid "Volume control added."
+msgstr "Adicionado controlo de volume."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Mostrar karaoke"
+
+msgid "Finding lyrics…"
+msgstr "A procurar a letra…"
+
+msgid "Just a moment"
+msgstr "Só um momento"
+
+msgid "No synchronized lyrics"
+msgstr "Sem letra sincronizada"
+
+msgid "This song can still be your tiny concert."
+msgstr "Esta canção pode continuar a ser o seu pequeno concerto."
+
+msgid "Couldn't load lyrics"
+msgstr "Não foi possível carregar a letra"
+
+msgid "Try again in a moment."
+msgstr "Tente novamente dentro de instantes."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Letras fornecidas por LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Adicionadas letras."
+
+msgid "Added a song progress bar."
+msgstr "Adicionada uma barra de progresso da canção."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Os nomes longos de artistas e canções deslocam-se suavemente."
+
+msgid "Hover over the title to see the full text."
+msgstr "Passe o rato sobre o título para ver o texto completo."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "O texto em deslocamento e as animações de fundo respeitam a opção Reduzir movimento."

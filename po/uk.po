@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: uk\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Відтворити %s"
+
+msgid "About"
+msgstr "Про застосунок"
+
+msgid "Connecting..."
+msgstr "З’єднання..."
+
+msgid "Main Menu"
+msgstr "Головне меню"
+
+msgid "Quit"
+msgstr "Вийти"
+
+msgid "Keyboard Shortcuts"
+msgstr "Клавіатурні скорочення"
+
+msgid "General"
+msgstr "Загальні"
+
+msgid "Playback"
+msgstr "Відтворення"
+
+msgid "Volume"
+msgstr "Гучність"
+
+msgid "Play or pause"
+msgstr "Відтворити або призупинити"
+
+msgid "Stop playback"
+msgstr "Зупинити відтворення"
+
+msgid "Copy current track"
+msgstr "Копіювати поточну композицію"
+
+msgid "Stations"
+msgstr "Станції"
+
+msgid "Play J-POP"
+msgstr "Відтворити J-POP"
+
+msgid "Play K-POP"
+msgstr "Відтворити K-POP"
+
+msgid "Previous station"
+msgstr "Попередня станція"
+
+msgid "Next station"
+msgstr "Наступна станція"
+
+msgid "Window"
+msgstr "Вікно"
+
+msgid "Open preferences"
+msgstr "Відкрити налаштування"
+
+msgid "Show shortcuts"
+msgstr "Показати скорочення"
+
+msgid "Preferences"
+msgstr "Налаштування"
+
+msgid "Startup Defaults"
+msgstr "Початкові параметри"
+
+msgid "Experimental Features"
+msgstr "Експериментальні функції"
+
+msgid "Default station"
+msgstr "Типова станція"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Автовідтворення"
+
+msgid "Start playing automatically on launch"
+msgstr "Автоматично починати відтворення під час запуску"
+
+msgid "Enable pause and resume"
+msgstr "Увімкнути паузу та відновлення"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Використовувати паузу та відновлення для головної кнопки відтворення"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Увімкнути Discord Rich Presence під час роботи"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Настав час відмовитися від інших радіостанцій. Потік і метадані надає LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP і K-POP радіо"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Слухайте J-POP і K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Призупинити та відновити пряму трансляцію"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Анімовані звукові стовпчики, що реагують на музику"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Динамічні кольори на основі обкладинки поточного альбому або зображення виконавця"
+
+msgid "No ads"
+msgstr "Без реклами"
+
+msgid "Initial release."
+msgstr "Початковий випуск."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Коли з’єднання встановлено, але немає зображення альбому чи виконавця"
+
+msgid "Colored window when connected"
+msgstr "Кольорове вікно при підключенні"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "Цей випуск зосереджений на візуальних елементах і локалізації."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Удосконалено визначення темного/світлого режиму, щоб світлі кольори більше не сприймалися як темні."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Відшліфовані переклади та покращено спосіб їх застосування."
+
+msgid "Removed gaps between sound bars."
+msgstr "Прибрано проміжки між звуковими стовпчиками."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Потокова логіка тепер краще справляється з проблемами підключення та змінами потоку."
+
+msgid "Clarified the application description."
+msgstr "Уточнено опис застосунку."
+
+msgid "Translated image captions"
+msgstr "Переклад підписів до зображень"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Оновлено знімки екрана, щоб використовувати більш прийнятний розмір вікна"
+
+msgid "Updated application icon"
+msgstr "Оновлений значок програми"
+
+msgid "Display the application icon in media controls."
+msgstr "Відображати піктограму програми в елементах керування медіа."
+
+msgid "Optional Discord activity sharing"
+msgstr "Необов’язкове поширення активності в Discord"
+
+msgid "Added Discord activity sharing."
+msgstr "Додано поширення активності в Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Повторне з’єднання з Discord замість вимкнення цієї функції."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Додано прапорці для керування поведінкою паузи, автозапуску або вимкнення інтеграції Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Виправлено проблему, через яку призупинене відтворення відновлювалося під час збою мережі."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Додано параметри та комбінації клавіш."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Змінено режим паузи, відновлення та перемикання станцій."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Додано параметри запуску для поведінки паузи/відновлення або зупинки, із відтворенням/зупинкою тепер за замовчуванням."
+
+msgid "Check for updates"
+msgstr "Перевірити оновлення"
+
+msgid "Cancel update"
+msgstr "Скасувати оновлення"
+
+msgid "Couldn't check for updates"
+msgstr "Не вдалося перевірити наявність оновлень"
+
+msgid "Try again later."
+msgstr "Повторіть спробу пізніше."
+
+msgid "Already up to date"
+msgstr "Установлено найновішу версію"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "У вас остання версія Listen Moe."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "У метаданих випуску немає коректної контрольної суми SHA-256."
+
+msgid "Couldn't download the update"
+msgstr "Не вдалося завантажити оновлення"
+
+msgid "Update canceled"
+msgstr "Оновлення скасовано"
+
+msgid "The update was canceled."
+msgstr "Оновлення скасовано."
+
+msgid "The update check was canceled."
+msgstr "Перевірку оновлень скасовано."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Завантажений інсталятор не буде встановлено."
+
+msgid "Installing update"
+msgstr "Встановлення оновлення"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe буде закрито."
+
+msgid "Couldn't install the update"
+msgstr "Не вдалося встановити оновлення"
+
+msgid "Checking for updates"
+msgstr "Перевірка оновлень"
+
+msgid "Downloading update"
+msgstr "Завантаження оновлення"
+
+msgid "Update ready"
+msgstr "Оновлення готове"
+
+msgid "Version"
+msgstr "Версія"
+
+msgid "Downloaded"
+msgstr "Завантажено"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "Пошук новішого інсталятора для Windows на GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Доступна новіша версія для Windows."
+
+msgid "The installer is ready to run."
+msgstr "Інсталятор готовий до запуску."
+
+msgid "Couldn't start the installer."
+msgstr "Не вдалося запустити інсталятор."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Вилучено паузу/відновлення зі стабільних збірок."
+
+msgid "Separate experimental features from stable features."
+msgstr "Експериментальні функції відокремлено від стабільних."
+
+msgid "Volume control added."
+msgstr "Додано регулювання гучності."
+
+msgid "Karaoke"
+msgstr "Караоке"
+
+msgid "Show karaoke"
+msgstr "Показати караоке"
+
+msgid "Finding lyrics…"
+msgstr "Пошук тексту…"
+
+msgid "Just a moment"
+msgstr "Хвилинку"
+
+msgid "No synchronized lyrics"
+msgstr "Немає синхронізованих текстів"
+
+msgid "This song can still be your tiny concert."
+msgstr "Ця пісня все ще може стати вашим маленьким концертом."
+
+msgid "Couldn't load lyrics"
+msgstr "Не вдалося завантажити текст"
+
+msgid "Try again in a moment."
+msgstr "Повторіть спробу за мить."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Тексти пісень надає LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Додано тексти пісень."
+
+msgid "Added a song progress bar."
+msgstr "Додано смугу поступу пісні."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Довгі назви виконавців і пісень прокручуються плавно."
+
+msgid "Hover over the title to see the full text."
+msgstr "Наведіть курсор на назву, щоб переглянути повний текст."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Прокручування тексту та фонові анімації враховують налаштування зменшення руху."

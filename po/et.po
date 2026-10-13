@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: et\n"
+"Language: et\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Esita %s"
+
+msgid "About"
+msgstr "Teave"
+
+msgid "Connecting..."
+msgstr "Ühendamine..."
+
+msgid "Main Menu"
+msgstr "Peamenüü"
+
+msgid "Quit"
+msgstr "Välju"
+
+msgid "Keyboard Shortcuts"
+msgstr "Kiirklahvid"
+
+msgid "General"
+msgstr "Üldine"
+
+msgid "Playback"
+msgstr "Taasesitus"
+
+msgid "Volume"
+msgstr "Helitugevus"
+
+msgid "Play or pause"
+msgstr "Esita või peata ajutiselt"
+
+msgid "Stop playback"
+msgstr "Lõpeta taasesitus"
+
+msgid "Copy current track"
+msgstr "Kopeeri praegune lugu"
+
+msgid "Stations"
+msgstr "Raadiojaamad"
+
+msgid "Play J-POP"
+msgstr "Esita J-POP"
+
+msgid "Play K-POP"
+msgstr "Esita K-POP"
+
+msgid "Previous station"
+msgstr "Eelmine jaam"
+
+msgid "Next station"
+msgstr "Järgmine jaam"
+
+msgid "Window"
+msgstr "Aken"
+
+msgid "Open preferences"
+msgstr "Ava eelistused"
+
+msgid "Show shortcuts"
+msgstr "Näita kiirklahve"
+
+msgid "Preferences"
+msgstr "Eelistused"
+
+msgid "Startup Defaults"
+msgstr "Käivitamise vaikesätted"
+
+msgid "Experimental Features"
+msgstr "Katsetusjärgus funktsioonid"
+
+msgid "Default station"
+msgstr "Vaikimisi raadiojaam"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Automaatne taasesitus"
+
+msgid "Start playing automatically on launch"
+msgstr "Alusta taasesitust automaatselt käivitamisel"
+
+msgid "Enable pause and resume"
+msgstr "Luba peatamine ja jätkamine"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Kasuta peamisel taasesitusnupul peatamist ja jätkamist"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Luba Discord Rich Presence rakenduse töötamise ajal"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "On aeg loobuda teistest raadiotest. Voog ja metaandmed pakub LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "J-POP ja K-POP raadio"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Kuulake J-POP-i ja K-POP-i"
+
+msgid "Pause and resume the live stream"
+msgstr "Peatage ja jätkake otseülekannet"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Muusikale reageerivad animeeritud helitulbad"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Dünaamilised värvid praeguse albumi kaanepildi või esitaja pildi põhjal"
+
+msgid "No ads"
+msgstr "Reklaame pole"
+
+msgid "Initial release."
+msgstr "Esimene väljalase."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Kui ühendus on loodud, aga albumi või esitaja pilt puudub"
+
+msgid "Colored window when connected"
+msgstr "Ühendamisel värviline aken"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "See väljaanne keskendub visuaalidele ja lokaliseerimisele."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "Peenhäälestatud tumeda/heleda režiimi tuvastamine, et heledaid värve enam tumedatega segi ei ajaks."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Lihvitud tõlkeid ja täiustatud nende rakendamist."
+
+msgid "Removed gaps between sound bars."
+msgstr "Helitulpade vahed eemaldati."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Voogesitusloogika käsitleb nüüd paremini ühenduse probleeme ja voogesituse muudatusi."
+
+msgid "Clarified the application description."
+msgstr "Rakenduse kirjeldust täpsustati."
+
+msgid "Translated image captions"
+msgstr "Tõlgitud piltide pealdised"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Uuendatud ekraanipilte, et kasutada mõistlikumat akna suurust"
+
+msgid "Updated application icon"
+msgstr "Rakenduse ikooni uuendati"
+
+msgid "Display the application icon in media controls."
+msgstr "Kuvage meediumi juhtelementides rakenduse ikoon."
+
+msgid "Optional Discord activity sharing"
+msgstr "Valikuline Discordi tegevuste jagamine"
+
+msgid "Added Discord activity sharing."
+msgstr "Lisatud Discordi tegevuste jagamine."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Discordiga ühendatakse uuesti selle funktsiooni väljalülitamise asemel."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Lisatud lipud pausi käitumise, automaatesituse või Discordi integreerimise keelamiseks."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Lahendatud on probleem, mille puhul peatatud taasesitus jätkus võrguhäire ajal."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Lisatud eelistused ja kiirklahvid."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Muudetud pausi, jätkamise ja jaamade vahetamise käitumist."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Lisatud käivitusvalikud peatamiseks/jätkamiseks või peatamiseks, vaikeseadeks on esitus/peata nüüd."
+
+msgid "Check for updates"
+msgstr "Kontrolli uuendusi"
+
+msgid "Cancel update"
+msgstr "Tühista uuendus"
+
+msgid "Couldn't check for updates"
+msgstr "Värskendusi ei saanud otsida"
+
+msgid "Try again later."
+msgstr "Proovige hiljem uuesti."
+
+msgid "Already up to date"
+msgstr "Juba ajakohane"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Teil on rakenduse Listen Moe uusim versioon."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Väljalaske metaandmetest puudub kehtiv SHA-256-räsi."
+
+msgid "Couldn't download the update"
+msgstr "Värskendust ei saanud alla laadida"
+
+msgid "Update canceled"
+msgstr "Värskendus tühistati"
+
+msgid "The update was canceled."
+msgstr "Värskendus tühistati."
+
+msgid "The update check was canceled."
+msgstr "Värskenduste kontroll tühistati."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Allalaaditud installerit ei installita."
+
+msgid "Installing update"
+msgstr "Värskenduse installimine"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe suletakse."
+
+msgid "Couldn't install the update"
+msgstr "Värskendust ei saanud installida"
+
+msgid "Checking for updates"
+msgstr "Värskenduste otsimine"
+
+msgid "Downloading update"
+msgstr "Värskenduse allalaadimine"
+
+msgid "Update ready"
+msgstr "Värskendus valmis"
+
+msgid "Version"
+msgstr "Versioon"
+
+msgid "Downloaded"
+msgstr "Alla laaditud"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "GitHub Releasesist otsitakse uuemat Windowsi paigaldajat."
+
+msgid "A newer Windows release is available."
+msgstr "Saadaval on rakenduse uuem Windowsi versioon."
+
+msgid "The installer is ready to run."
+msgstr "Installer on tööks valmis."
+
+msgid "Couldn't start the installer."
+msgstr "Installerit ei saanud käivitada."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Stabiilsetest järgudest on paus/jätkamine eemaldatud."
+
+msgid "Separate experimental features from stable features."
+msgstr "Katsetusjärgus funktsioonid eraldati stabiilsetest."
+
+msgid "Volume control added."
+msgstr "Lisatud helitugevuse regulaator."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Näita karaoket"
+
+msgid "Finding lyrics…"
+msgstr "Laulusõnade otsimine…"
+
+msgid "Just a moment"
+msgstr "Üks hetk"
+
+msgid "No synchronized lyrics"
+msgstr "Sünkroonitud laulusõnu pole"
+
+msgid "This song can still be your tiny concert."
+msgstr "See laul võib ikkagi olla teie pisike kontsert."
+
+msgid "Couldn't load lyrics"
+msgstr "Laulusõnu ei saanud laadida"
+
+msgid "Try again in a moment."
+msgstr "Proovige hetke pärast uuesti."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Laulusõnad pärinevad LRCLIBist"
+
+msgid "Added lyrics."
+msgstr "Lisatud laulusõnad."
+
+msgid "Added a song progress bar."
+msgstr "Lisatud on laulu edenemisriba."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Pikad esitaja- ja laulunimed kerivad sujuvalt."
+
+msgid "Hover over the title to see the full text."
+msgstr "Täisteksti nägemiseks hõljutage kursorit pealkirja kohal."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "Keriv tekst ja taustaanimatsioonid järgivad liikumise vähendamise sätet."

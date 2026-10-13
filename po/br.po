@@ -1,0 +1,319 @@
+# Machine-generated translation (Google Translate, edited with Codex); not yet reviewed by a human.
+# Native-speaker corrections are welcome. See po/README.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: io.github.noobping.listenmoe 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/noobping/listenmoe/issues\n"
+"PO-Revision-Date: 2026-10-13 00:00+0000\n"
+"Last-Translator: Google Translate, edited with Codex (not human-reviewed)\n"
+"Language-Team: br\n"
+"Language: br\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Play %s"
+msgstr "Lenn %s"
+
+msgid "About"
+msgstr "Diwar-benn"
+
+msgid "Connecting..."
+msgstr "O kevreañ..."
+
+msgid "Main Menu"
+msgstr "Pennlañser"
+
+msgid "Quit"
+msgstr "Kuitaat"
+
+msgid "Keyboard Shortcuts"
+msgstr "Berradennoù klavier"
+
+msgid "General"
+msgstr "Hollek"
+
+msgid "Playback"
+msgstr "Lenn"
+
+msgid "Volume"
+msgstr "Ampled"
+
+msgid "Play or pause"
+msgstr "Lenn pe lakaat e pausa"
+
+msgid "Stop playback"
+msgstr "Arsaviñ al lenn"
+
+msgid "Copy current track"
+msgstr "Eilañ ar ganaouenn vremanel"
+
+msgid "Stations"
+msgstr "Arsavlec’hioù radio"
+
+msgid "Play J-POP"
+msgstr "Lenn J-POP"
+
+msgid "Play K-POP"
+msgstr "Lenn K-POP"
+
+msgid "Previous station"
+msgstr "Arsavlec’h kent"
+
+msgid "Next station"
+msgstr "Arsavlec’h da heul"
+
+msgid "Window"
+msgstr "Prenestr"
+
+msgid "Open preferences"
+msgstr "Digeriñ ar gwellvezioù"
+
+msgid "Show shortcuts"
+msgstr "Diskouez ar berradennoù"
+
+msgid "Preferences"
+msgstr "Gwellvezioù"
+
+msgid "Startup Defaults"
+msgstr "Arventennoù dre ziouer al loc’hañ"
+
+msgid "Experimental Features"
+msgstr "Arc’hwelioù arnodel"
+
+msgid "Default station"
+msgstr "Arsavlec’h dre ziouer"
+
+msgid "J-POP"
+msgstr "J-POP"
+
+msgid "K-POP"
+msgstr "K-POP"
+
+msgid "Autoplay"
+msgstr "Lenn emgefre"
+
+msgid "Start playing automatically on launch"
+msgstr "Kregiñ da lenn ent emgefre pa vez lañset"
+
+msgid "Enable pause and resume"
+msgstr "Gweredekaat ar pausa hag an adkregiñ"
+
+msgid "Use pause and resume for the main playback button"
+msgstr "Implijout ar pausa hag an adkregiñ evit ar bouton lenn pennañ"
+
+msgid "Discord Rich Presence"
+msgstr "Discord Rich Presence"
+
+msgid "Enable Discord Rich Presence at runtime"
+msgstr "Gweredekaat Discord Rich Presence e-pad an erounezadur"
+
+msgid "It is time to ditch other radios. Stream and metadata provided by LISTEN.moe."
+msgstr "Poent eo dilezel ar radioioù all. Al lanv hag ar metaroadennoù a vez pourchaset gant LISTEN.moe."
+
+msgid "J-POP and K-POP radio"
+msgstr "Radio J-POP ha K-POP"
+
+msgid "Listen to J-POP and K-POP"
+msgstr "Selaou J-POP ha K-POP"
+
+msgid "Pause and resume the live stream"
+msgstr "Paouez ha adkregiñ gant ar skignañ war-eeun"
+
+msgid "Animated sound bars that react to the music"
+msgstr "Barrennoù son bevaat a respont d'ar sonerezh"
+
+msgid "Dynamic colors based on the current album or artist cover"
+msgstr "Livioù dinamek hervez golo ar bladenn pe skeudenn an arzour bremanel"
+
+msgid "No ads"
+msgstr "Bruderezh ebet"
+
+msgid "Initial release."
+msgstr "Embann kentañ."
+
+msgid "When connected and there is no album or artist image"
+msgstr "Pa vez kevreet ha pa n’eus skeudenn ebet eus ar bladenn pe an arzour"
+
+msgid "Colored window when connected"
+msgstr "Prenestr livet pa vez kennasket"
+
+msgid "AI translation (GPT-5.2); reviewed by nobody"
+msgstr "Machine translation (Google Translate, edited with Codex); not human-reviewed"
+
+msgid "This release focuses on visuals and localization."
+msgstr "An embannadur-mañ a laka ar pouez war an neuz hag an treiñ."
+
+msgid "Fine-tuned dark/light mode detection so light colors are no longer mistaken for dark ones."
+msgstr "An detektadur mod teñval/gouloù kempennet evit ma ne vo ket mui kemmesket al livioù sklaer gant reoù teñval."
+
+msgid "Polished translations and improved how they are applied."
+msgstr "Gwellaat an troidigezhioù hag an doare ma vezont implijet."
+
+msgid "Removed gaps between sound bars."
+msgstr "Tennet eo bet an toulloù etre ar barrennoù son."
+
+msgid "Streaming logic now better handles connection issues and stream changes."
+msgstr "Al lanv a ra bremañ gwelloc’h war-dro kudennoù kevreañ ha kemmoù lanv."
+
+msgid "Clarified the application description."
+msgstr "Sklaeraet eo bet deskrivadur an arload."
+
+msgid "Translated image captions"
+msgstr "Titloù skeudennoù troet"
+
+msgid "Updated screenshots to use a more reasonable window size"
+msgstr "Skeudennoù skramm hizivaet evit implijout ur ment prenestr reizhoc'h"
+
+msgid "Updated application icon"
+msgstr "Arlun arload hizivaet"
+
+msgid "Display the application icon in media controls."
+msgstr "Diskouez arlun an arload e-barzh ar c'hontrolloù media."
+
+msgid "Optional Discord activity sharing"
+msgstr "Rannañ an obererezh war Discord diouzh an dibab"
+
+msgid "Added Discord activity sharing."
+msgstr "Ouzhpennet eo bet rannañ an obererezh war Discord."
+
+msgid "Reconnect to Discord instead of disabling this feature."
+msgstr "Adkevreit ouzh Discord e-lec'h diweredekaat an arc'hwel-mañ."
+
+msgid "Added flags to control pause behavior, autoplay, or disable Discord integration."
+msgstr "Ouzhpennet eo bet dibaboù evit kontrollañ ar pausa, al lenn emgefre pe diweredekaat enframmañ Discord."
+
+msgid "Fixed an issue where paused playback resumed during a network disruption."
+msgstr "Reizhet eo bet ur gudenn ma veze adkroget gant al lenn lakaet e pausa e-pad un troc’h rouedad."
+
+msgid "Added preferences and keyboard shortcuts."
+msgstr "Ouzhpennet eo bet gwellvezioù ha berradennoù klavier."
+
+msgid "Changed pause, resume, and station switching behavior."
+msgstr "Kemmet eo bet emzalc’h ar pausa, an adkregiñ hag ar c’hemm arsavlec’h."
+
+msgid "Added startup options for pause/resume or stop behavior, with play/stop now the default."
+msgstr "Ouzhpennet eo bet dibaboù loc’hañ evit pausa/adkregiñ pe arsaviñ, gant lenn/arsaviñ dre ziouer."
+
+msgid "Check for updates"
+msgstr "Klask hizivadennoù"
+
+msgid "Cancel update"
+msgstr "Nullañ an hizivadenn"
+
+msgid "Couldn't check for updates"
+msgstr "N'haller ket gwiriañ an hizivadennoù"
+
+msgid "Try again later."
+msgstr "Klaskit en-dro diwezhatoc'h."
+
+msgid "Already up to date"
+msgstr "Hizivaet dija"
+
+msgid "You have the latest version of Listen Moe."
+msgstr "Ar stumm diwezhañ eus Listen Moe a zo ganeoc'h."
+
+msgid "The release metadata is missing a valid SHA-256 digest."
+msgstr "Mankout a ra ur sammad gwiriañ SHA-256 reizh e metaroadennoù an embannadur."
+
+msgid "Couldn't download the update"
+msgstr "N'eus ket bet gallet pellgargañ an hizivadenn"
+
+msgid "Update canceled"
+msgstr "Nullet eo bet an hizivadenn"
+
+msgid "The update was canceled."
+msgstr "Nullet eo bet an hizivadenn."
+
+msgid "The update check was canceled."
+msgstr "Nullet eo bet ar gwiriadur hizivaat."
+
+msgid "The downloaded installer will not be installed."
+msgstr "Ne vo ket staliet ar staliadur pellgarget."
+
+msgid "Installing update"
+msgstr "O staliañ an hizivadenn"
+
+msgid "Listen Moe will close."
+msgstr "Listen Moe a vo serret."
+
+msgid "Couldn't install the update"
+msgstr "N'eus ket bet gallet staliañ an hizivadenn"
+
+msgid "Checking for updates"
+msgstr "O gwiriañ an hizivadurioù"
+
+msgid "Downloading update"
+msgstr "Pellgargañ an hizivadenn"
+
+msgid "Update ready"
+msgstr "Prest eo an hizivaat"
+
+msgid "Version"
+msgstr "Stumm"
+
+msgid "Downloaded"
+msgstr "Pellgarget"
+
+msgid "Looking for a newer Windows installer on GitHub Releases."
+msgstr "O klask ur staliadur Windows nevesoc’h war GitHub Releases."
+
+msgid "A newer Windows release is available."
+msgstr "Ur stumm nevesoc’h evit Windows zo hegerz."
+
+msgid "The installer is ready to run."
+msgstr "Prest eo ar staliadur da vont en-dro."
+
+msgid "Couldn't start the installer."
+msgstr "N'eus ket bet gallet loc'hañ ar staliadur."
+
+msgid "Removed pause/resume from stable builds."
+msgstr "Dilamet eo bet pausa/adkregiñ diouzh ar stummoù stabil."
+
+msgid "Separate experimental features from stable features."
+msgstr "Dispartiañ an elfennoù arnodel diouzh an elfennoù stabil."
+
+msgid "Volume control added."
+msgstr "Ouzhpennet eo bet ur reoler ampled."
+
+msgid "Karaoke"
+msgstr "Karaoke"
+
+msgid "Show karaoke"
+msgstr "Diskouez karaoke"
+
+msgid "Finding lyrics…"
+msgstr "O klask komzoù…"
+
+msgid "Just a moment"
+msgstr "Ur pennadig hepken"
+
+msgid "No synchronized lyrics"
+msgstr "Komzoù sinkronisaet ebet"
+
+msgid "This song can still be your tiny concert."
+msgstr "Ar ganaouenn-mañ a c'hell bezañ ho sonadeg vihan c'hoazh."
+
+msgid "Couldn't load lyrics"
+msgstr "N'eus ket bet gallet kargañ ar c'homzoù"
+
+msgid "Try again in a moment."
+msgstr "Klaskit en-dro a-benn ur pennadig."
+
+msgid "Lyrics by LRCLIB"
+msgstr "Komzoù gant LRCLIB"
+
+msgid "Added lyrics."
+msgstr "Komzoù ouzhpennet."
+
+msgid "Added a song progress bar."
+msgstr "Ouzhpennet eo bet ur varrenn araokaat ar ganaouenn."
+
+msgid "Long artist and song names scroll smoothly."
+msgstr "Anvioù hir an arzourien hag ar c’hanaouennoù a rikl flour."
+
+msgid "Hover over the title to see the full text."
+msgstr "Lakait ar reti a-us d’an titl evit gwelet an destenn a-bezh."
+
+msgid "Scrolling text and background animations respect Reduce Motion."
+msgstr "An destenn o riklañ hag ar buheziñ en drekleur a zouj d’an arventenn da vihanaat ar fiñv."
