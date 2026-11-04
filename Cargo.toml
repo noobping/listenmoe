@@ -18,7 +18,7 @@ ProductName = "LISTEN.moe"
 FileDescription = "J-POP and K-POP radio"
 
 [dependencies]
-rodio = { version = "0.22.2", default-features = false, features = ["playback"] }
+rodio = { version = "0.23.0", default-features = false, features = ["playback"] }
 symphonia = { version = "0.6.0", features = ["ogg", "vorbis", "mp3"] }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 adw = { version = "0.8.1", package = "libadwaita", features = ["v1_5"] }
@@ -28,7 +28,7 @@ tungstenite = { version = "0.30.0", default-features = false, features = ["hands
 dirs-next = "2.0.0"
 time = { version = "0.3.49", features = ["parsing"] }
 rustfft = "6.4.1"
-mpris-server =  "0.10.0"
+mpris-server =  "0.11.0"
 discord-rich-presence = "1.1.0"
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
